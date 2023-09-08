@@ -22,7 +22,7 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run linter
-      run: cargo clippy --all-targets --all-features
+      run: cargo clippy --all-targets --all-features --no-deps
     - name: Install formatting checker
       run: rustup component add rustfmt
     - name: Run formatting checker
