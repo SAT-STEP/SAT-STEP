@@ -3,7 +3,9 @@ use cadical::Callbacks;
 pub struct CadicalCallbackWrapper {}
 
 impl CadicalCallbackWrapper {
-    pub fn new() -> Self { Self {  } }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 impl Callbacks for CadicalCallbackWrapper {
