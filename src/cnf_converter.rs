@@ -84,6 +84,7 @@ pub fn cnf_identifier(row: i32, col: i32, val: i32) -> i32 {
 }
 
 pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>> {
+    // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
     for line in buf.lines() {
         let mut row_buf = Vec::with_capacity(9);
