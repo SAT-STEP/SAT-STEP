@@ -24,7 +24,7 @@ impl Callbacks for CadicalCallbackWrapper {
     }
 
     // called by the solver when a new derived clause is learnt
-    fn learn(&mut self, clause: &[i32]) {
+    fn learn(&mut self, _clause: &[i32]) {
         // println!("Learnt: {:?}", clause);
     }
 }

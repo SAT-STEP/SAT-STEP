@@ -17,13 +17,14 @@ pub fn sudoku_to_cnf(clues: Vec<Vec<Option<i32>>>) -> Vec<Vec<i32>> {
     for row in 1..=9 {
         for col in 1..=9 {
             for val1 in 1..=8 {
-                for val2 in (val1+1)..=9 {
-                    let mut cell_cnf: Vec<i32> = Vec::new();
-                    cell_cnf.push(-cnf_identifier(row, col, val1));
-                    cell_cnf.push(-cnf_identifier(row, col, val2));
+                for val2 in (val1 + 1)..=9 {
+                    let cell_cnf = vec![
+                        -cnf_identifier(row, col, val1),
+                        -cnf_identifier(row, col, val2),
+                    ];
                     clauses.push(cell_cnf);
                 }
-            } 
+            }
         }
     }
 
@@ -56,19 +57,23 @@ pub fn sudoku_to_cnf(clues: Vec<Vec<Option<i32>>>) -> Vec<Vec<i32>> {
                 let mut subgrid_cnf: Vec<i32> = Vec::with_capacity(9);
                 for row in 1..=3 {
                     for col in 1..=3 {
-                        subgrid_cnf.push(cnf_identifier(row + 3*subgrid_row, col + 3*subgrid_col, val));
+                        subgrid_cnf.push(cnf_identifier(
+                            row + 3 * subgrid_row,
+                            col + 3 * subgrid_col,
+                            val,
+                        ));
                     }
                 }
                 clauses.push(subgrid_cnf);
             }
         }
     }
-    
+
     // respect all the clues
     for (row, line) in clues.iter().enumerate() {
         for (col, val) in line.iter().enumerate() {
             if let Some(val) = val {
-                clauses.push(vec![cnf_identifier(row as i32 +1, col as i32 +1, *val)]);
+                clauses.push(vec![cnf_identifier(row as i32 + 1, col as i32 + 1, *val)]);
             }
         }
     }
@@ -80,7 +85,7 @@ pub fn sudoku_to_cnf(clues: Vec<Vec<Option<i32>>>) -> Vec<Vec<i32>> {
 pub fn cnf_identifier(row: i32, col: i32, val: i32) -> i32 {
     // Creates cnf identifier from sudoku based on row, column and value
     // So every row, column and value combination has a unique identifier
-    (row-1) * 9 * 9 + (col - 1) * 9 + val
+    (row - 1) * 9 * 9 + (col - 1) * 9 + val
 }
 
 pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>> {
@@ -89,7 +94,9 @@ pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>
     for line in buf.lines() {
         let mut row_buf = Vec::with_capacity(9);
         for val in line.split("") {
-            if val == empty_value { row_buf.push(None) }
+            if val == empty_value {
+                row_buf.push(None)
+            }
             if let Ok(val) = val.parse() {
                 row_buf.push(Some(val));
             }
@@ -100,14 +107,12 @@ pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>
     clues
 }
 
-
 mod tests {
     #[test]
     fn test_string_to_clues() {
         use super::clues_from_string;
 
-        let test_sudoku = 
-                "..3......\n\
+        let test_sudoku = "..3......\n\
                  1........\n\
                  .........\n\
                  .........\n\
@@ -127,8 +132,7 @@ mod tests {
     fn test_cnf_converter_respects_clues() {
         use super::*;
 
-        let test_sudoku = 
-                "..3......\n\
+        let test_sudoku = "..3......\n\
                  1........\n\
                  .........\n\
                  .........\n\
@@ -140,7 +144,7 @@ mod tests {
 
         let clues = clues_from_string(test_sudoku.to_owned(), ".");
         let clauses = sudoku_to_cnf(clues);
-        
-        assert_eq!(clauses[clauses.len()-1][0], cnf_identifier(9, 6, 6));
+
+        assert_eq!(clauses[clauses.len() - 1][0], cnf_identifier(9, 6, 6));
     }
 }

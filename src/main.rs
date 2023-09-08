@@ -5,10 +5,8 @@ mod gui;
 use std::fs;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::sudoku_to_cnf;
+use cnf_converter::*;
 use gui::SATApp;
-
-use crate::cnf_converter::{cnf_identifier, clues_from_string};
 
 fn main() -> Result<(), eframe::Error> {
     let cb_wrapper = CadicalCallbackWrapper::new();
@@ -39,7 +37,7 @@ fn main() -> Result<(), eframe::Error> {
                 }
             }
         }
-        println!("");
+        println!();
     }
 
     let options = eframe::NativeOptions::default();
