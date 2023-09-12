@@ -11,11 +11,10 @@ env:
   BRANCH_COV_REQ: 0.6
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -Dwarnings -Cinstrument-coverage
-  CARGO_INCREMENTAL: 0
   LLVM_PROFILE_FILE: cargo-test-%p-%m.profraw
 
 jobs:
-  check:
+  ci:
 
     runs-on: ubuntu-latest
 
@@ -31,9 +30,10 @@ jobs:
       run: rustup component add rustfmt
     - name: Run formatting checker
       run: cargo fmt --all -- --check
+    - name: Install coverage report generator
+      run: cargo install grcov
     - name: Generate coverage report
-      run:  cargo install grcov; grcov . --binary-path ./target/debug/ -s . \
-            -t cobertura --branch --ignore-not-existing --keep-only "src/*" -o target/coverage/
+      run:  grcov . --binary-path ./target/debug/ -s . -t cobertura --branch --ignore-not-existing --keep-only "src/*" -o target/coverage/
     - name: Check line coverage
       run: |
         export LINE_COV=$(xmllint --xpath "string(//coverage/@line-rate)" target/coverage/cobertura.xml);
