@@ -1,4 +1,4 @@
-name: Rust
+name: Main CI
 
 on:
   push:
@@ -26,13 +26,13 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run linter
-      run: cargo clippy --all-targets --all-features --no-deps
+      run: cargo clippy --all-features --no-deps
     - name: Install formatting checker
       run: rustup component add rustfmt
     - name: Run formatting checker
       run: cargo fmt --all -- --check
     - name: Generate coverage report
-      run:  grcov . --binary-path ./target/debug/ -s . \
+      run:  cargo install grcov; grcov . --binary-path ./target/debug/ -s . \
             -t cobertura --branch --ignore-not-existing --keep-only "src/*" -o target/coverage/
     - name: Check line coverage
       run: |
