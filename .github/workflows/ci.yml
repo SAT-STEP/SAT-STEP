@@ -31,7 +31,7 @@ jobs:
     - name: Run formatting checker
       run: cargo fmt --all -- --check
     - name: Install coverage report generator
-      run: cargo install grcov
+      run: rustup component add llvm-tools-preview; cargo install grcov
     - name: Generate coverage report
       run:  grcov . --binary-path ./target/debug/ -s . -t cobertura --branch --ignore-not-existing --keep-only "src/*" -o target/coverage/
     - name: Check line coverage
