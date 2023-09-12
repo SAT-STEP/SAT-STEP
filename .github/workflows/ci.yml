@@ -34,6 +34,8 @@ jobs:
       run: rustup component add llvm-tools-preview; cargo install grcov
     - name: Generate coverage report
       run:  mkdir ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" -o ./target/coverage/
+    - name: Install xmllint
+      run: sudo apt-get install -y libxml2-utils
     - name: Check line coverage
       run: |
         export LINE_COV=$(xmllint --xpath "string(//coverage/@line-rate)" target/coverage/cobertura.xml);
