@@ -33,7 +33,7 @@ jobs:
     - name: Install coverage report generator
       run: rustup component add llvm-tools-preview; cargo install grcov
     - name: Generate coverage report
-      run:  grcov . --binary-path ./target/debug/ -s . -t cobertura --branch --ignore-not-existing --keep-only "src/*" -o target/coverage/
+      run:  mkdir ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" -o ./target/coverage/
     - name: Check line coverage
       run: |
         export LINE_COV=$(xmllint --xpath "string(//coverage/@line-rate)" target/coverage/cobertura.xml);
@@ -52,3 +52,7 @@ jobs:
         else
           echo "Insufficient branch coverage: $BRANCH_COV"; exit 1;
         fi
+    - name: Upload coverage report to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./target/coverage/lcov
