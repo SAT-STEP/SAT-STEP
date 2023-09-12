@@ -7,8 +7,12 @@ on:
     branches: [ "main" ]
 
 env:
+  LINE_COV_REQ: 0.6
+  BRANCH_COV_REQ: 0.6
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: -Dwarnings
+  RUSTFLAGS: -Dwarnings -Cinstrument-coverage
+  CARGO_INCREMENTAL: 0
+  LLVM_PROFILE_FILE: cargo-test-%p-%m.profraw
 
 jobs:
   check:
@@ -27,3 +31,24 @@ jobs:
       run: rustup component add rustfmt
     - name: Run formatting checker
       run: cargo fmt --all -- --check
+    - name: Generate coverage report
+      run:  grcov . --binary-path ./target/debug/ -s . \
+            -t cobertura --branch --ignore-not-existing --keep-only "src/*" -o target/coverage/
+    - name: Check line coverage
+      run: |
+        export LINE_COV=$(xmllint --xpath "string(//coverage/@line-rate)" target/coverage/cobertura.xml);
+        if (($(echo "$LINE_COV >= $LINE_COV_REQ" | bc)));
+        then
+          echo "Sufficient line coverage: $LINE_COV";
+        else
+          echo "Insufficient line coverage: $LINE_COV"; exit 1;
+        fi
+    - name: Check branch coverage
+      run: |
+        export BRANCH_COV=$(xmllint --xpath "string(//coverage/@branch-rate)" target/coverage/cobertura.xml);
+        if (($(echo "$BRANCH_COV >= $BRANCH_COV_REQ" | bc))) || (($(echo "$BRANCH_COV == 0" | bc)));
+        then
+          echo "Sufficient branch coverage: $BRANCH_COV";
+        else
+          echo "Insufficient branch coverage: $BRANCH_COV"; exit 1;
+        fi
