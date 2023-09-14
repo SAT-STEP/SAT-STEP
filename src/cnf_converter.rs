@@ -94,7 +94,11 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     // Reverse CNF-identifier creation
     // Return tuple of (row, col, val) from identifier
     identifier -= 1;
-    (identifier / (9*9) + 1, (identifier % 81) / 9 + 1, identifier % 9 + 1)
+    (
+        identifier / (9 * 9) + 1,
+        (identifier % 81) / 9 + 1,
+        identifier % 9 + 1,
+    )
 }
 
 pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>> {
@@ -160,8 +164,8 @@ mod tests {
     #[test]
     fn test_to_id_and_back() {
         use super::*;
-        assert_eq!((1,1,1), identifier_to_tuple(cnf_identifier(1,1,1)));
-        assert_eq!((1,2,3), identifier_to_tuple(cnf_identifier(1,2,3)));
-        assert_eq!((9,9,9), identifier_to_tuple(cnf_identifier(9,9,9)));
+        assert_eq!((1, 1, 1), identifier_to_tuple(cnf_identifier(1, 1, 1)));
+        assert_eq!((1, 2, 3), identifier_to_tuple(cnf_identifier(1, 2, 3)));
+        assert_eq!((9, 9, 9), identifier_to_tuple(cnf_identifier(9, 9, 9)));
     }
 }
