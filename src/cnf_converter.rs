@@ -88,6 +88,15 @@ pub fn cnf_identifier(row: i32, col: i32, val: i32) -> i32 {
     (row - 1) * 9 * 9 + (col - 1) * 9 + val
 }
 
+#[allow(dead_code)]
+#[inline(always)]
+pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
+    // Reverse CNF-identifier creation
+    // Return tuple of (row, col, val) from identifier
+    identifier -= 1;
+    (identifier / (9*9) + 1, (identifier % 81) / 9 + 1, identifier % 9 + 1)
+}
+
 pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>> {
     // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
@@ -146,5 +155,13 @@ mod tests {
         let clauses = sudoku_to_cnf(clues);
 
         assert_eq!(clauses[clauses.len() - 1][0], cnf_identifier(9, 6, 6));
+    }
+
+    #[test]
+    fn test_to_id_and_back() {
+        use super::*;
+        assert_eq!((1,1,1), identifier_to_tuple(cnf_identifier(1,1,1)));
+        assert_eq!((1,2,3), identifier_to_tuple(cnf_identifier(1,2,3)));
+        assert_eq!((9,9,9), identifier_to_tuple(cnf_identifier(9,9,9)));
     }
 }
