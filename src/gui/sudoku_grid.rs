@@ -13,6 +13,7 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
         let mut top_left = Pos2::new(width, 0.0);
         let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
 
+        // row
         for i in 0..9 {
             // block divider
             if i % 3 == 0 && i != 0 {
@@ -20,9 +21,9 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
                 bottom_right = top_left + Vec2::new(cell_size, cell_size);
             }
 
-            // row
+            // column
             for ii in 0..9 {
-                // new row inside block
+                // block divider
                 if ii % 3 == 0 && ii != 0 {
                     top_left.x += spacing;
                     bottom_right.x = top_left.x + cell_size;

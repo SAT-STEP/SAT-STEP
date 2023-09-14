@@ -38,6 +38,7 @@ impl eframe::App for SATApp<'_> {
             // per column
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
+
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
                     constraint_list(ui);
