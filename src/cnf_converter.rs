@@ -1,4 +1,4 @@
-pub fn sudoku_to_cnf(clues: Vec<Vec<Option<i32>>>) -> Vec<Vec<i32>> {
+pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
@@ -156,7 +156,7 @@ mod tests {
                  .....6...\n";
 
         let clues = clues_from_string(test_sudoku.to_owned(), ".");
-        let clauses = sudoku_to_cnf(clues);
+        let clauses = sudoku_to_cnf(&clues);
 
         assert_eq!(clauses[clauses.len() - 1][0], cnf_identifier(9, 6, 6));
     }
