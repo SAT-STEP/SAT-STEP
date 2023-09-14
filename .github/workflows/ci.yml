@@ -33,7 +33,7 @@ jobs:
     - name: Install coverage report generator
       run: rustup component add llvm-tools-preview; cargo install grcov
     - name: Generate coverage report
-      run:  mkdir ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" --ignore "gui*" -o ./target/coverage/
+      run:  mkdir ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" --ignore "src/gui*" -o ./target/coverage/
     - name: Install xmllint
       run: sudo apt-get install -y libxml2-utils
     - name: Check line coverage
