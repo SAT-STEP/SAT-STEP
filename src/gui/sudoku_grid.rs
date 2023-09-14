@@ -14,7 +14,7 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
         let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
 
         // row
-        for i in 0..9 {
+        for (i, row) in sudoku.iter().enumerate().take(9) {
             // block divider
             if i % 3 == 0 && i != 0 {
                 top_left.y += spacing;
@@ -22,7 +22,7 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
             }
 
             // column
-            for ii in 0..9 {
+            for (ii, val) in row.iter().enumerate().take(9) {
                 // block divider
                 if ii % 3 == 0 && ii != 0 {
                     top_left.x += spacing;
@@ -39,7 +39,7 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
 
                 ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
 
-                if let Some(num) = sudoku[i][ii] {
+                if let Some(num) = val {
                     let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
                     ui.painter().text(
                         center,
