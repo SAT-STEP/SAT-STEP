@@ -36,7 +36,7 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
                     println!("Rect at row:{i} column:{ii} clicked");
                 }
 
-                ui.painter().rect_filled(rect, 0.0, Color32::WHITE);
+                ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
 
                 if let Some(num) = sudoku[i][ii] {
                     let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
@@ -45,7 +45,7 @@ pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i3
                         egui::Align2::CENTER_CENTER,
                         num.to_string(),
                         egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
-                        Color32::BLUE,
+                        Color32::BLACK,
                     );
                 }
 
