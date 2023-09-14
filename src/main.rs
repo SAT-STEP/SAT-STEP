@@ -19,7 +19,7 @@ fn main() -> Result<(), eframe::Error> {
 
     let sudoku = fs::read_to_string("data/sample_sudoku.txt").unwrap();
     let clues = clues_from_string(sudoku, ".");
-    let cnf_clauses = sudoku_to_cnf(clues);
+    let cnf_clauses = sudoku_to_cnf(&clues);
 
     for clause in cnf_clauses {
         sat_solver.add_clause(clause);
@@ -27,24 +27,22 @@ fn main() -> Result<(), eframe::Error> {
 
     assert_eq!(sat_solver.solve(), Some(true));
 
-    // print the solved sudoku
+    let mut solved: Vec<Vec<Option<i32>>> = Vec::new();
     for row in 1..=9 {
+        let mut row_values = Vec::with_capacity(9);
         for col in 1..=9 {
             for val in 1..=9 {
                 if sat_solver.value(cnf_identifier(row, col, val)).unwrap() {
-                    print!("{val} ");
+                    row_values.push(Some(val));
                     break;
                 }
             }
         }
-        println!();
+        solved.push(row_values);
     }
 
     let options = eframe::NativeOptions::default();
+    let app = Box::new(SATApp::new(solved, Vec::new()));
 
-    eframe::run_native(
-        "SAT STEP",
-        options,
-        Box::new(|_cc| Box::<SATApp>::default()),
-    )
+    eframe::run_native("SAT STEP", options, Box::new(|_cc| app))
 }
