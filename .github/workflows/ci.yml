@@ -1,4 +1,4 @@
-name: Rust
+name: Main CI
 
 on:
   push:
@@ -7,11 +7,14 @@ on:
     branches: [ "main" ]
 
 env:
+  LINE_COV_REQ: 0.6
+  BRANCH_COV_REQ: 0.6
   CARGO_TERM_COLOR: always
-  RUSTFLAGS: -Dwarnings
+  RUSTFLAGS: -Dwarnings -Cinstrument-coverage
+  LLVM_PROFILE_FILE: cargo-test-%p-%m.profraw
 
 jobs:
-  check:
+  ci:
 
     runs-on: ubuntu-latest
 
@@ -22,8 +25,36 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run linter
-      run: cargo clippy --all-targets --all-features --no-deps
+      run: cargo clippy --all-features --no-deps
     - name: Install formatting checker
       run: rustup component add rustfmt
     - name: Run formatting checker
       run: cargo fmt --all -- --check
+    - name: Install coverage report generator
+      run: rustup component add llvm-tools-preview; cargo install grcov
+    - name: Generate coverage report
+      run:  mkdir ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" -o ./target/coverage/
+    - name: Install xmllint
+      run: sudo apt-get install -y libxml2-utils
+    - name: Check line coverage
+      run: |
+        export LINE_COV=$(xmllint --xpath "string(//coverage/@line-rate)" target/coverage/cobertura.xml);
+        if (($(echo "$LINE_COV >= $LINE_COV_REQ" | bc)));
+        then
+          echo "Sufficient line coverage: $LINE_COV";
+        else
+          echo "Insufficient line coverage: $LINE_COV"; exit 1;
+        fi
+    - name: Check branch coverage
+      run: |
+        export BRANCH_COV=$(xmllint --xpath "string(//coverage/@branch-rate)" target/coverage/cobertura.xml);
+        if (($(echo "$BRANCH_COV >= $BRANCH_COV_REQ" | bc))) || (($(echo "$BRANCH_COV == 0" | bc)));
+        then
+          echo "Sufficient branch coverage: $BRANCH_COV";
+        else
+          echo "Insufficient branch coverage: $BRANCH_COV"; exit 1;
+        fi
+    - name: Upload coverage report to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./target/coverage/lcov
