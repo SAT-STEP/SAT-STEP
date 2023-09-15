@@ -1,5 +1,6 @@
 use cadical::Callbacks;
 
+#[derive(Clone)]
 pub struct CadicalCallbackWrapper {}
 
 impl CadicalCallbackWrapper {
