@@ -1,15 +1,13 @@
 mod cadical_wrapper;
 mod cnf_converter;
 mod gui;
+mod service;
 
-use std::fs;
-
-use cnf_converter::clues_from_string;
 use gui::SATApp;
+use service::get_sudoku;
 
 fn main() -> Result<(), eframe::Error> {
-    let sudoku = fs::read_to_string("data/sample_sudoku.txt").unwrap();
-    let clues = clues_from_string(sudoku, ".");
+    let clues = get_sudoku("data/sample_sudoku.txt".to_string());
     let options = eframe::NativeOptions::default();
     let app = Box::new(SATApp::new(clues, Vec::new()));
 
