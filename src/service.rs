@@ -40,3 +40,24 @@ pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
     let sudoku = fs::read_to_string(filename).unwrap();
     clues_from_string(sudoku, ".")
 }
+
+mod tests {
+    #[test]
+    fn test_get_sudoku() {
+        use super::*;
+
+        let sudoku = get_sudoku("data/sample_sudoku.txt".to_string());
+        let should_be = vec![
+            vec![None, None, None, None, None, None, None, Some(1), None],
+            vec![Some(4), None, None, None, None, None, None, None, None],
+            vec![None, Some(2), None, None, None, None, None, None, None],
+            vec![None, None, None, None, Some(5), None, Some(4), None, Some(7)],
+            vec![None, None, Some(8), None, None, None, Some(3), None, None],
+            vec![None, None, Some(1), None, Some(9), None, None, None, None],
+            vec![Some(3), None, None, Some(4), None, None, Some(2), None, None],
+            vec![None, Some(5), None, Some(1), None, None, None, None, None],
+            vec![None, None, None, Some(8), None, Some(6), None, None, None],
+        ];
+        assert_eq!(sudoku, should_be);
+    }
+}
