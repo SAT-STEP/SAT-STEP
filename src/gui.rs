@@ -18,11 +18,10 @@ pub struct SATApp {
 }
 
 impl SATApp {
-    pub fn new(
-        sudoku: Vec<Vec<Option<i32>>>,
-    ) -> Self {
+    pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
         let constraints = ConstraintList::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
+        let callback_wrapper =
+            CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
         Self {
@@ -38,7 +37,8 @@ impl SATApp {
 impl Default for SATApp {
     fn default() -> Self {
         let constraints = ConstraintList::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
+        let callback_wrapper =
+            CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
         Self {

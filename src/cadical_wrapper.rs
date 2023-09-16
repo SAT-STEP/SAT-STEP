@@ -9,9 +9,7 @@ pub struct CadicalCallbackWrapper {
 
 impl CadicalCallbackWrapper {
     pub fn new(learned_clauses: ConstraintList) -> Self {
-        Self {
-            learned_clauses
-        }
+        Self { learned_clauses }
     }
 }
 
