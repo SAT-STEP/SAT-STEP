@@ -1,13 +1,13 @@
 use cadical::Solver;
 use egui::{Response, ScrollArea, Ui};
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, service::solve_sudoku};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, service::{solve_sudoku, ConstraintList}};
 
 pub fn constraint_list(
     ui: &mut Ui,
     sudoku: &mut Vec<Vec<Option<i32>>>,
     solver: &mut Solver<CadicalCallbackWrapper>,
-    learned_clauses: Vec<Vec<i32>>,
+    learned_clauses: ConstraintList,
 ) -> Response {
     // let constraints: Vec<&[i32]> = vec![&[123, 43, 829, 432], &[-123, 32, 543], &[53]];
     ui.vertical(|ui| {
@@ -23,7 +23,7 @@ pub fn constraint_list(
             }
         }
         ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
-            for constraint in learned_clauses.iter() {
+            for constraint in learned_clauses.constraints.borrow().iter() {
                 ui.label(format!("{:?}", constraint));
             }
         });

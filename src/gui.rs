@@ -57,12 +57,7 @@ impl eframe::App for SATApp {
             // per column
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
-            let clauses: Vec<Vec<i32>> = self.constraints.constraints.borrow().clone();
-            if clauses.len() > 0 {
-                println!("{:?}", clauses);
-            } else {
-                println!("No clauses learned yet");
-            }
+            let clauses: ConstraintList = ConstraintList::clone(&self.constraints.constraints);
 
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
