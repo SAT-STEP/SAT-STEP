@@ -36,7 +36,7 @@ impl Callbacks for CadicalCallbackWrapper {
     fn learn(&mut self, clause: &[i32]) {
         // println!("Learned clause: {:?}", clause.to_vec());
         let tmp_vector: Vec<i32> = clause.to_vec();
-        if clause.len() != 0 {
+        if !clause.is_empty() {
             self.learned_clauses.push(tmp_vector);
         }
     }
