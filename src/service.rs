@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, rc::Rc, cell::RefCell};
 
 use cadical::Solver;
 
@@ -6,6 +6,30 @@ use crate::{
     cadical_wrapper::CadicalCallbackWrapper,
     cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf},
 };
+
+/// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
+#[derive(Clone)]
+pub struct ConstraintList {
+    pub constraints: Rc<RefCell<Vec<Vec<i32>>>>,
+}
+
+impl ConstraintList {
+    pub fn new() -> Self {
+        Self {
+            constraints: Rc::new(RefCell::new(Vec::new())),
+        }
+    }
+
+    pub fn clone(constraints: &Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
+        Self {
+            constraints: Rc::clone(constraints),
+        }
+    }
+
+    pub fn push(&mut self, constraint: Vec<i32>) {
+        self.constraints.borrow_mut().push(constraint);
+    }
+}
 
 pub fn solve_sudoku(
     sudoku_clues: &[Vec<Option<i32>>],
@@ -67,7 +91,7 @@ mod tests {
 
         let sudoku = get_sudoku("data/sample_sudoku.txt".to_string());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
-        let callback_wrapper = CadicalCallbackWrapper::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
         solver.set_callbacks(Some(callback_wrapper.clone()));
 
         let solved = solve_sudoku(&sudoku, &mut solver).unwrap();

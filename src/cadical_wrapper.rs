@@ -1,11 +1,17 @@
 use cadical::Callbacks;
 
+use crate::service::ConstraintList;
+
 #[derive(Clone)]
-pub struct CadicalCallbackWrapper {}
+pub struct CadicalCallbackWrapper {
+    pub learned_clauses: ConstraintList,
+}
 
 impl CadicalCallbackWrapper {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(learned_clauses: ConstraintList) -> Self {
+        Self {
+            learned_clauses
+        }
     }
 }
 
@@ -27,7 +33,11 @@ impl Callbacks for CadicalCallbackWrapper {
     }
 
     // called by the solver when a new derived clause is learnt
-    fn learn(&mut self, _clause: &[i32]) {
-        // println!("Learnt: {:?}", clause);
+    fn learn(&mut self, clause: &[i32]) {
+        // println!("Learned clause: {:?}", clause.to_vec());
+        let tmp_vector: Vec<i32> = clause.to_vec();
+        if clause.len() != 0 {
+            self.learned_clauses.push(tmp_vector);
+        }
     }
 }
