@@ -1,10 +1,7 @@
 use cadical::Solver;
 use egui::{Response, ScrollArea, Ui};
 
-use crate::{
-    cadical_wrapper::CadicalCallbackWrapper,
-    service::{solve_sudoku, ConstraintList},
-};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList};
 
 pub fn constraint_list(
     ui: &mut Ui,

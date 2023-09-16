@@ -1,11 +1,13 @@
+mod cadical_wrapper;
+mod cnf_converter;
+pub mod gui;
+
 use std::{cell::RefCell, fs, rc::Rc};
 
 use cadical::Solver;
 
-use crate::{
-    cadical_wrapper::CadicalCallbackWrapper,
-    cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf},
-};
+use cadical_wrapper::CadicalCallbackWrapper;
+use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
@@ -28,6 +30,12 @@ impl ConstraintList {
 
     pub fn push(&mut self, constraint: Vec<i32>) {
         self.constraints.borrow_mut().push(constraint);
+    }
+}
+
+impl Default for ConstraintList {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

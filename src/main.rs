@@ -1,10 +1,5 @@
-mod cadical_wrapper;
-mod cnf_converter;
-mod gui;
-mod service;
-
-use gui::SATApp;
-use service::get_sudoku;
+use sat_step::get_sudoku;
+use sat_step::gui::SATApp;
 
 fn main() -> Result<(), eframe::Error> {
     let clues = get_sudoku("data/sample_sudoku.txt".to_string());

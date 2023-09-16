@@ -1,6 +1,6 @@
 use cadical::Callbacks;
 
-use crate::service::ConstraintList;
+use crate::ConstraintList;
 
 #[derive(Clone)]
 pub struct CadicalCallbackWrapper {
