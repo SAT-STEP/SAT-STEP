@@ -2,7 +2,12 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-pub fn sudoku_grid(ui: &mut Ui, height: f32, mut width: f32, sudoku: &[Vec<Option<i32>>]) -> Response {
+pub fn sudoku_grid(
+    ui: &mut Ui,
+    height: f32,
+    mut width: f32,
+    sudoku: &[Vec<Option<i32>>],
+) -> Response {
     ui.horizontal_wrapped(|ui| {
         let spacing = 2.0;
         width += spacing;

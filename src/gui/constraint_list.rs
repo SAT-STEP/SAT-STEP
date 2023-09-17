@@ -10,7 +10,6 @@ pub fn constraint_list(
     learned_clauses: ConstraintList,
     font_id: FontId,
     row_height: f32,
-    num_rows: usize,
     width: f32,
 ) -> Response {
     ui.vertical(|ui| {
@@ -30,6 +29,7 @@ pub fn constraint_list(
             .auto_shrink([false; 2])
             .stick_to_bottom(false)
             .show_viewport(ui, |ui, viewport| {
+                let num_rows = learned_clauses.constraints.borrow().len();
                 ui.set_height(row_height * num_rows as f32);
                 let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                 let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
@@ -37,8 +37,6 @@ pub fn constraint_list(
                 let mut used_rect = Rect::NOTHING;
                 let clauses_binding = learned_clauses.constraints.borrow();
                 let mut clauses = clauses_binding.iter().skip(first_item);
-
-                println!("rendering {} items", last_item-first_item);
 
                 for i in first_item..last_item {
                     let x = ui.min_rect().left();

@@ -62,11 +62,18 @@ impl eframe::App for SATApp {
 
             let font_id = TextStyle::Body.resolve(ui.style());
             let row_height = ui.fonts(|f| f.row_height(&font_id));
-            let num_rows = self.constraints.constraints.borrow().len();
 
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
-                    constraint_list(ui, &mut self.sudoku, &mut self.solver, clauses, font_id, row_height, num_rows, width);
+                    constraint_list(
+                        ui,
+                        &mut self.sudoku,
+                        &mut self.solver,
+                        clauses,
+                        font_id,
+                        row_height,
+                        width,
+                    );
                 });
                 columns[1].vertical_centered(|ui| {
                     sudoku_grid(ui, height, width, &self.sudoku);
