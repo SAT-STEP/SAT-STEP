@@ -39,22 +39,21 @@ pub fn constraint_list(
                 let mut clauses = clauses_binding.iter().skip(first_item);
 
                 for i in first_item..last_item {
-                    let x = ui.min_rect().left();
-                    let y = ui.min_rect().top() + i as f32 * row_height;
-                    let mut text = String::from("");
-
                     if let Some(clause) = clauses.next() {
-                        text = format!("{:?}\n", clause);
-                    }
+                        let x = ui.min_rect().left();
+                        let y = ui.min_rect().top() + i as f32 * row_height;
 
-                    let text_rect = ui.painter().text(
-                        egui::pos2(x, y),
-                        egui::Align2::LEFT_TOP,
-                        text,
-                        font_id.clone(),
-                        ui.visuals().text_color(),
-                    );
-                    used_rect = used_rect.union(text_rect);
+                        let text = format!("{:?}\n", clause);
+                        let text_rect = ui.painter().text(
+                            egui::pos2(x, y),
+                            egui::Align2::LEFT_TOP,
+                            text,
+                            font_id.clone(),
+                            ui.visuals().text_color(),
+                        );
+
+                        used_rect = used_rect.union(text_rect);
+                    }
                 }
 
                 used_rect.set_right(width - 10.0);
