@@ -23,9 +23,11 @@ pub fn constraint_list(
             }
         }
         ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
+            let mut constraints_text = String::new();
             for constraint in learned_clauses.constraints.borrow().iter() {
-                ui.label(format!("{:?}", constraint));
+                constraints_text.push_str(&format!("{:?}\n", constraint));
             }
+            ui.label(constraints_text);
         });
     })
     .response
