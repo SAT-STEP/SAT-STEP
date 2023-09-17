@@ -2,9 +2,10 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-pub fn sudoku_grid(ui: &mut Ui, height: f32, width: f32, sudoku: &[Vec<Option<i32>>]) -> Response {
+pub fn sudoku_grid(ui: &mut Ui, height: f32, mut width: f32, sudoku: &[Vec<Option<i32>>]) -> Response {
     ui.horizontal_wrapped(|ui| {
         let spacing = 2.0;
+        width += spacing;
         let mut cell_size = cmp::min(height as i32, width as i32) as f32;
         cell_size /= 9.0;
 
