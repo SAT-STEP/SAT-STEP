@@ -7,10 +7,18 @@ pub fn constraint_list(
     ui: &mut Ui,
     sudoku: &mut Vec<Vec<Option<i32>>>,
     solver: &mut Solver<CadicalCallbackWrapper>,
+    callback_wrapper: &CadicalCallbackWrapper,
     learned_clauses: ConstraintList,
 ) -> Response {
-    // let constraints: Vec<&[i32]> = vec![&[123, 43, 829, 432], &[-123, 32, 543], &[53]];
-    ui.vertical(|ui| {
+    ui.horizontal(|ui| {
+        if ui.button("Open file...").clicked() {
+            if let Some(file_path) = rfd::FileDialog::new().pick_file() {
+                *sudoku = crate::get_sudoku(file_path.display().to_string());
+                learned_clauses.constraints.borrow_mut().clear();
+                *solver = Solver::with_config("plain").unwrap();
+                solver.set_callbacks(Some(callback_wrapper.clone()));
+            }
+        }
         if ui.button("Solve sudoku").clicked() {
             let solve_result = solve_sudoku(sudoku, solver);
             match solve_result {
@@ -22,6 +30,14 @@ pub fn constraint_list(
                 }
             }
         }
+
+        ui.label(format!(
+            "Learned constraints: {}",
+            learned_clauses.constraints.borrow().len()
+        ));
+    });
+    ui.vertical(|ui| {
+        ui.separator();
         ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
             let mut constraints_text = String::new();
             for constraint in learned_clauses.constraints.borrow().iter() {
