@@ -4,6 +4,7 @@
 - The code is sufficiently automatically tested
   - Every acceptance criterion for a user story is checked by a test
   - Code coverage  at least 60%
+- Errors are handled appropriately in the whole codebase
 
 # Git branching
 - 'main' branch contains only code meeting the definition of done
