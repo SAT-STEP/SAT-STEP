@@ -7,12 +7,21 @@ pub fn constraint_list(
     ui: &mut Ui,
     sudoku: &mut Vec<Vec<Option<i32>>>,
     solver: &mut Solver<CadicalCallbackWrapper>,
+    callback_wrapper: &CadicalCallbackWrapper,
     learned_clauses: ConstraintList,
     font_id: FontId,
     row_height: f32,
     width: f32,
 ) -> Response {
-    ui.vertical(|ui| {
+    ui.horizontal(|ui| {
+        if ui.button("Open file...").clicked() {
+            if let Some(file_path) = rfd::FileDialog::new().pick_file() {
+                *sudoku = crate::get_sudoku(file_path.display().to_string());
+                learned_clauses.constraints.borrow_mut().clear();
+                *solver = Solver::with_config("plain").unwrap();
+                solver.set_callbacks(Some(callback_wrapper.clone()));
+            }
+        }
         if ui.button("Solve sudoku").clicked() {
             let solve_result = solve_sudoku(sudoku, solver);
             match solve_result {
@@ -24,7 +33,13 @@ pub fn constraint_list(
                 }
             }
         }
+        ui.label(format!(
+            "Learned constraints: {}",
+            learned_clauses.constraints.borrow().len()
+        ));
+    });
 
+    ui.vertical(|ui| {
         ScrollArea::vertical()
             .auto_shrink([false; 2])
             .stick_to_bottom(false)

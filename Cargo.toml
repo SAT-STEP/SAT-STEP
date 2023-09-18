@@ -9,3 +9,4 @@ edition = "2021"
 cadical = "0.1.14"
 eframe = "0.22.0"
 egui = "0.22.0"
+rfd = {version = "0.12.0", default-features = false, features = ["xdg-portal"]}

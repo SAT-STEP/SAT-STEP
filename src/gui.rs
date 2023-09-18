@@ -69,6 +69,7 @@ impl eframe::App for SATApp {
                         ui,
                         &mut self.sudoku,
                         &mut self.solver,
+                        &self.callback_wrapper,
                         clauses,
                         font_id,
                         row_height,
