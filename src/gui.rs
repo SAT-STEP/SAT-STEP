@@ -71,7 +71,6 @@ impl eframe::App for SATApp {
                         &mut self.solver,
                         &self.callback_wrapper,
                         clauses,
-                        font_id,
                         row_height,
                         width,
                     );

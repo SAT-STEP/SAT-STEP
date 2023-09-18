@@ -1,5 +1,5 @@
 use cadical::Solver;
-use egui::{FontId, NumExt, Rect, Response, ScrollArea, Ui};
+use egui::{NumExt, Rect, Response, ScrollArea, TextStyle, Ui};
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList};
 
@@ -9,7 +9,6 @@ pub fn constraint_list(
     solver: &mut Solver<CadicalCallbackWrapper>,
     callback_wrapper: &CadicalCallbackWrapper,
     learned_clauses: ConstraintList,
-    font_id: FontId,
     row_height: f32,
     width: f32,
 ) -> Response {
@@ -44,6 +43,8 @@ pub fn constraint_list(
             .auto_shrink([false; 2])
             .stick_to_bottom(false)
             .show_viewport(ui, |ui, viewport| {
+                let font_id = TextStyle::Body.resolve(ui.style());
+
                 let num_rows = learned_clauses.constraints.borrow().len();
                 ui.set_height(row_height * num_rows as f32);
                 let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
