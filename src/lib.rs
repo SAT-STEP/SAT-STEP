@@ -285,4 +285,22 @@ mod tests {
         let applied = apply_max_length(&max_length);
         assert_eq!(applied, None);
     }
-}
+
+    #[test]
+    fn test_filter_by_max_length() {
+        use super::*;
+
+        let constraints = RefCell::new(
+        vec![
+            vec![0;10],
+            vec![0;3],
+            vec![0;5],
+        ]);
+        let filtered = filter_by_max_length(constraints.borrow(), 4);
+        assert_eq!(filtered.len(), 1);
+
+        let filtered2 = filter_by_max_length(constraints.borrow(), 5);
+        assert_eq!(filtered2.len(), 2);
+    }
+    
+    }
