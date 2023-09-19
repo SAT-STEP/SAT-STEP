@@ -2,7 +2,7 @@ mod cadical_wrapper;
 mod cnf_converter;
 pub mod gui;
 
-use std::{cell::RefCell, fs, rc::Rc, num::ParseIntError};
+use std::{cell::RefCell, fs, rc::Rc, num::ParseIntError, cell::Ref};
 
 use cadical::Solver;
 
@@ -86,6 +86,11 @@ pub fn apply_max_length(input: &String) -> Option<i32> {
     }
 }
 
+pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) -> Vec<Vec<i32>> {
+    constraints.clone().into_iter().filter(move |item| {
+        item.len() as i32 <= max_length
+    }).collect()
+}
 
 mod tests {
     #[test]
