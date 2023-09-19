@@ -73,7 +73,7 @@ pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
     clues_from_string(sudoku, ".")
 }
 
-pub fn apply_max_length(input: &mut String) -> Option<i32> {
+pub fn apply_max_length(input: &String) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {
         Ok(parsed) => {
@@ -239,5 +239,45 @@ mod tests {
             ],
         ];
         assert_eq!(solved, should_be);
+    }
+
+    #[test]
+    fn test_apply_max_length_valid_input() {
+        use super::*;
+
+        let max_length = String::from("10");
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, Some(10));
+    }
+
+    #[test]
+    fn test_apply_max_length_negative() {
+        use super::*;
+
+        let max_length = String::from("-10");
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, None);
+    }
+
+    #[test]
+    fn test_apply_max_length_not_numeric() {
+        use super::*;
+
+        let max_length = String::from("test");
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, None);
+    }
+
+    #[test]
+    fn test_apply_max_length_empty() {
+        use super::*;
+
+        let max_length = String::new();
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, None);
     }
 }
