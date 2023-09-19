@@ -78,6 +78,7 @@ impl eframe::App for SATApp {
                         clauses,
                         &mut self.max_length,
                         &mut self.max_length_input,
+                        &mut self.filtered_constraints,
                     );
                 });
                 columns[1].vertical_centered(|ui| {

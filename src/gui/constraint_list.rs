@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{Response, ScrollArea, Ui};
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList, apply_max_length};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList, apply_max_length, filter_by_max_length};
 
 pub fn constraint_list(
     ui: &mut Ui,
@@ -11,6 +11,7 @@ pub fn constraint_list(
     learned_clauses: ConstraintList,
     max_length_value: &mut Option<i32>,
     max_length_input: &mut String,
+    filtered_clauses: &mut Vec<Vec<i32>>,
 ) -> Response {
     ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
@@ -43,6 +44,13 @@ pub fn constraint_list(
         ui.text_edit_singleline(max_length_input).labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
             *max_length_value = apply_max_length(max_length_input);
+            if let Some(max_length) = max_length_value {
+                *filtered_clauses = filter_by_max_length(learned_clauses.constraints.borrow(), max_length.clone());
+            }
+        }
+        if ui.button("Clear filters").clicked() {
+            filtered_clauses.clear();
+            *max_length_value = None;
         }
     });
 
@@ -50,8 +58,15 @@ pub fn constraint_list(
         ui.separator();
         ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
             let mut constraints_text = String::new();
-            for constraint in learned_clauses.constraints.borrow().iter() {
-                constraints_text.push_str(&format!("{:?}\n", constraint));
+            if filtered_clauses.len() > 0 {
+                for constraint in filtered_clauses.iter() {
+                    constraints_text.push_str(&format!("{:?}\n", constraint));
+                }
+
+            } else {
+                for constraint in learned_clauses.constraints.borrow().iter() {
+                    constraints_text.push_str(&format!("{:?}\n", constraint));
+                }
             }
             ui.label(constraints_text);
         });
