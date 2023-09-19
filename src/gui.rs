@@ -17,6 +17,7 @@ pub struct SATApp {
     solver: Solver<CadicalCallbackWrapper>,
     filtered_constraints: Vec<Vec<i32>>,
     max_length: Option<i32>,
+    max_length_input: String,
 }
 
 impl SATApp {
@@ -32,7 +33,8 @@ impl SATApp {
             callback_wrapper,
             solver,
             filtered_constraints: Vec::new(),
-            max_length: None,    
+            max_length: None,
+            max_length_input: String::new(),
         }
     }
 }
@@ -52,6 +54,7 @@ impl Default for SATApp {
             solver,
             filtered_constraints: Vec::new(),
             max_length: None,
+            max_length_input: String::new(),
         }
     }
 }
@@ -73,6 +76,8 @@ impl eframe::App for SATApp {
                         &mut self.solver,
                         &self.callback_wrapper,
                         clauses,
+                        &mut self.max_length,
+                        &mut self.max_length_input,
                     );
                 });
                 columns[1].vertical_centered(|ui| {

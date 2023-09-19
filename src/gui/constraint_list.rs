@@ -9,6 +9,8 @@ pub fn constraint_list(
     solver: &mut Solver<CadicalCallbackWrapper>,
     callback_wrapper: &CadicalCallbackWrapper,
     learned_clauses: ConstraintList,
+    max_length_value: &mut Option<i32>,
+    max_length_input: &mut String,
 ) -> Response {
     ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
@@ -36,6 +38,11 @@ pub fn constraint_list(
             learned_clauses.constraints.borrow().len()
         ));
     });
+    ui.horizontal(|ui| {
+        let max_length_label = ui.label("Max length: ");
+        ui.text_edit_singleline(max_length_input).labelled_by(max_length_label.id);
+    });
+
     ui.vertical(|ui| {
         ui.separator();
         ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
