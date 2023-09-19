@@ -12,6 +12,7 @@ pub fn constraint_list(
     max_length_value: &mut Option<i32>,
     max_length_input: &mut String,
     filtered_clauses: &mut Vec<Vec<i32>>,
+    is_filtered: &mut bool,
 ) -> Response {
     ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
@@ -46,11 +47,14 @@ pub fn constraint_list(
             *max_length_value = apply_max_length(max_length_input);
             if let Some(max_length) = max_length_value {
                 *filtered_clauses = filter_by_max_length(learned_clauses.constraints.borrow(), max_length.clone());
+                *is_filtered = true;
             }
         }
         if ui.button("Clear filters").clicked() {
             filtered_clauses.clear();
+            max_length_input.clear();
             *max_length_value = None;
+            *is_filtered = false;
         }
     });
 
@@ -58,7 +62,7 @@ pub fn constraint_list(
         ui.separator();
         ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
             let mut constraints_text = String::new();
-            if filtered_clauses.len() > 0 {
+            if is_filtered.clone() {
                 for constraint in filtered_clauses.iter() {
                     constraints_text.push_str(&format!("{:?}\n", constraint));
                 }

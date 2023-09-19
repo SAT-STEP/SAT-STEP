@@ -18,6 +18,7 @@ pub struct SATApp {
     filtered_constraints: Vec<Vec<i32>>,
     max_length: Option<i32>,
     max_length_input: String,
+    filtered: bool,
 }
 
 impl SATApp {
@@ -35,6 +36,7 @@ impl SATApp {
             filtered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
+            filtered: false,
         }
     }
 }
@@ -55,6 +57,7 @@ impl Default for SATApp {
             filtered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
+            filtered: false,
         }
     }
 }
@@ -79,6 +82,7 @@ impl eframe::App for SATApp {
                         &mut self.max_length,
                         &mut self.max_length_input,
                         &mut self.filtered_constraints,
+                        &mut self.filtered,
                     );
                 });
                 columns[1].vertical_centered(|ui| {
