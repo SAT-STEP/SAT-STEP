@@ -15,6 +15,8 @@ pub struct SATApp {
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
+    filtered_constraints: Vec<Vec<i32>>,
+    max_length: Option<i32>,
 }
 
 impl SATApp {
@@ -29,6 +31,8 @@ impl SATApp {
             constraints,
             callback_wrapper,
             solver,
+            filtered_constraints: Vec::new(),
+            max_length: None,    
         }
     }
 }
@@ -46,6 +50,8 @@ impl Default for SATApp {
             constraints,
             callback_wrapper,
             solver,
+            filtered_constraints: Vec::new(),
+            max_length: None,
         }
     }
 }
