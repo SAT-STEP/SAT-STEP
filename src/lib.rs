@@ -2,7 +2,7 @@ mod cadical_wrapper;
 mod cnf_converter;
 pub mod gui;
 
-use std::{cell::RefCell, fs, rc::Rc};
+use std::{cell::RefCell, fs, rc::Rc, num::ParseIntError};
 
 use cadical::Solver;
 
@@ -72,6 +72,20 @@ pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
     let sudoku = fs::read_to_string(filename).unwrap();
     clues_from_string(sudoku, ".")
 }
+
+pub fn apply_max_length(input: &mut String) -> Option<i32> {
+    let parse_result: Result<i32, ParseIntError> = input.parse();
+    match parse_result {
+        Ok(parsed) => {
+            if parsed < 1 {
+                    return  None;
+                }
+            return Some(parsed)
+        }
+        Err(_err) => return None
+    }
+}
+
 
 mod tests {
     #[test]

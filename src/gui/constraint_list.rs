@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{Response, ScrollArea, Ui};
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList, apply_max_length};
 
 pub fn constraint_list(
     ui: &mut Ui,
@@ -41,6 +41,9 @@ pub fn constraint_list(
     ui.horizontal(|ui| {
         let max_length_label = ui.label("Max length: ");
         ui.text_edit_singleline(max_length_input).labelled_by(max_length_label.id);
+        if ui.button("Filter").clicked() {
+            *max_length_value = apply_max_length(max_length_input);
+        }
     });
 
     ui.vertical(|ui| {
