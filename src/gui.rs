@@ -10,7 +10,6 @@ use sudoku_grid::sudoku_grid;
 use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList};
 
 /// Main app struct
-#[allow(dead_code)]
 pub struct SATApp {
     sudoku: Vec<Vec<Option<i32>>>,
     constraints: ConstraintList,
