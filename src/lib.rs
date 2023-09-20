@@ -2,7 +2,7 @@ mod cadical_wrapper;
 mod cnf_converter;
 pub mod gui;
 
-use std::{cell::RefCell, fs, rc::Rc, num::ParseIntError, cell::Ref};
+use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
 
 use cadical::Solver;
 
@@ -78,18 +78,20 @@ pub fn apply_max_length(input: &String) -> Option<i32> {
     match parse_result {
         Ok(parsed) => {
             if parsed < 1 {
-                    return  None;
-                }
-            return Some(parsed)
+                return None;
+            }
+            Some(parsed)
         }
-        Err(_err) => return None
+        Err(_err) => None,
     }
 }
 
 pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) -> Vec<Vec<i32>> {
-    constraints.clone().into_iter().filter(move |item| {
-        item.len() as i32 <= max_length
-    }).collect()
+    constraints
+        .clone()
+        .into_iter()
+        .filter(move |item| item.len() as i32 <= max_length)
+        .collect()
 }
 
 mod tests {
@@ -290,17 +292,11 @@ mod tests {
     fn test_filter_by_max_length() {
         use super::*;
 
-        let constraints = RefCell::new(
-        vec![
-            vec![0;10],
-            vec![0;3],
-            vec![0;5],
-        ]);
+        let constraints = RefCell::new(vec![vec![0; 10], vec![0; 3], vec![0; 5]]);
         let filtered = filter_by_max_length(constraints.borrow(), 4);
         assert_eq!(filtered.len(), 1);
 
         let filtered2 = filter_by_max_length(constraints.borrow(), 5);
         assert_eq!(filtered2.len(), 2);
     }
-    
-    }
+}

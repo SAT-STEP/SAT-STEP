@@ -1,7 +1,10 @@
 use cadical::Solver;
 use egui::{Response, ScrollArea, Ui};
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList, apply_max_length, filter_by_max_length};
+use crate::{
+    apply_max_length, cadical_wrapper::CadicalCallbackWrapper, filter_by_max_length, solve_sudoku,
+    ConstraintList,
+};
 
 pub fn constraint_list(
     ui: &mut Ui,
@@ -42,11 +45,13 @@ pub fn constraint_list(
     });
     ui.horizontal(|ui| {
         let max_length_label = ui.label("Max length: ");
-        ui.text_edit_singleline(max_length_input).labelled_by(max_length_label.id);
+        ui.text_edit_singleline(max_length_input)
+            .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
             *max_length_value = apply_max_length(max_length_input);
             if let Some(max_length) = max_length_value {
-                *filtered_clauses = filter_by_max_length(learned_clauses.constraints.borrow(), max_length.clone());
+                *filtered_clauses =
+                    filter_by_max_length(learned_clauses.constraints.borrow(), max_length.clone());
                 *is_filtered = true;
             }
         }
@@ -66,7 +71,6 @@ pub fn constraint_list(
                 for constraint in filtered_clauses.iter() {
                     constraints_text.push_str(&format!("{:?}\n", constraint));
                 }
-
             } else {
                 for constraint in learned_clauses.constraints.borrow().iter() {
                     constraints_text.push_str(&format!("{:?}\n", constraint));
