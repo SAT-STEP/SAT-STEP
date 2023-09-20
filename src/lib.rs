@@ -298,5 +298,8 @@ mod tests {
 
         let filtered2 = filter_by_max_length(constraints.borrow(), 5);
         assert_eq!(filtered2.len(), 2);
+
+        let filtered3 = filter_by_max_length(constraints.borrow(), 1);
+        assert_eq!(filtered3.len(), 0)
     }
 }
