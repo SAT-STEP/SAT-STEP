@@ -73,6 +73,7 @@ pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
     clues_from_string(sudoku, ".")
 }
 
+/// Parses the max_length filter input for applying the filter.
 pub fn apply_max_length(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {
@@ -86,6 +87,7 @@ pub fn apply_max_length(input: &str) -> Option<i32> {
     }
 }
 
+/// Filters the constraints by the given max_length.
 pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) -> Vec<Vec<i32>> {
     constraints
         .clone()
