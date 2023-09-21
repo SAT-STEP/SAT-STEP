@@ -69,21 +69,10 @@ impl eframe::App for SATApp {
             // per column
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
-            let clauses: ConstraintList = ConstraintList::clone(&self.constraints.constraints);
 
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
-                    constraint_list(
-                        ui,
-                        &mut self.sudoku,
-                        &mut self.solver,
-                        &self.callback_wrapper,
-                        clauses,
-                        &mut self.max_length,
-                        &mut self.max_length_input,
-                        &mut self.filtered_constraints,
-                        &mut self.filtered,
-                    );
+                    constraint_list(self, ui);
                 });
                 columns[1].vertical_centered(|ui| {
                     sudoku_grid(ui, height, width, &self.sudoku);

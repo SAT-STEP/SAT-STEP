@@ -73,7 +73,7 @@ pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
     clues_from_string(sudoku, ".")
 }
 
-pub fn apply_max_length(input: &String) -> Option<i32> {
+pub fn apply_max_length(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {
         Ok(parsed) => {
