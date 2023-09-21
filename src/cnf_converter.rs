@@ -1,3 +1,5 @@
+use crate::error::GenericError;
+
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
@@ -114,7 +116,10 @@ pub fn create_tupples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i
     tupples
 }
 
-pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>> {
+pub fn clues_from_string(
+    buf: String,
+    empty_value: &str,
+) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
     // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
     for line in buf.lines() {
@@ -127,10 +132,15 @@ pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>
                 row_buf.push(Some(val));
             }
         }
+        if row_buf.len() != 9 {
+            return Err(GenericError {
+                msg: "Invalid sudoku format!".to_owned(),
+            });
+        }
         clues.push(row_buf);
     }
 
-    clues
+    Ok(clues)
 }
 
 mod tests {
@@ -148,7 +158,7 @@ mod tests {
                  .........\n\
                  .....6...\n";
 
-        let clues = clues_from_string(test_sudoku.to_owned(), ".");
+        let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
         assert_eq!(clues[0][2], Some(3));
         assert_eq!(clues[1][0], Some(1));
         assert_eq!(clues[4][2], Some(8));
@@ -168,7 +178,7 @@ mod tests {
                  .........\n\
                  .....6...\n";
 
-        let clues = clues_from_string(test_sudoku.to_owned(), ".");
+        let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
         let clauses = sudoku_to_cnf(&clues);
 
         assert_eq!(clauses[clauses.len() - 1][0], cnf_identifier(9, 6, 6));

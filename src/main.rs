@@ -1,4 +1,5 @@
 use egui::Vec2;
+
 use sat_step::gui::SATApp;
 
 fn main() -> Result<(), eframe::Error> {
