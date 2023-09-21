@@ -4,6 +4,7 @@ mod sudoku_grid;
 use cadical::Solver;
 use constraint_list::constraint_list;
 use eframe::egui;
+use egui::TextStyle;
 use sudoku_grid::sudoku_grid;
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList};
@@ -15,10 +16,9 @@ pub struct SATApp {
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
-    filtered_constraints: Vec<Vec<i32>>,
+    rendered_constraints: Vec<Vec<i32>>,
     max_length: Option<i32>,
     max_length_input: String,
-    filtered: bool,
 }
 
 impl SATApp {
@@ -33,10 +33,9 @@ impl SATApp {
             constraints,
             callback_wrapper,
             solver,
-            filtered_constraints: Vec::new(),
+            rendered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
-            filtered: false,
         }
     }
 }
@@ -54,10 +53,9 @@ impl Default for SATApp {
             constraints,
             callback_wrapper,
             solver,
-            filtered_constraints: Vec::new(),
+            rendered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
-            filtered: false,
         }
     }
 }
@@ -70,9 +68,12 @@ impl eframe::App for SATApp {
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
 
+            let font_id = TextStyle::Body.resolve(ui.style());
+            let row_height = ui.fonts(|f| f.row_height(&font_id));
+
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
-                    constraint_list(self, ui);
+                    constraint_list(self, ui, row_height, width);
                 });
                 columns[1].vertical_centered(|ui| {
                     sudoku_grid(ui, height, width, &self.sudoku);

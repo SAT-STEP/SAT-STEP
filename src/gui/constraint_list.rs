@@ -1,11 +1,11 @@
 use cadical::Solver;
-use egui::{Response, ScrollArea, Ui};
+use egui::{NumExt, Rect, Response, ScrollArea, TextStyle, Ui};
 
 use crate::{apply_max_length, filter_by_max_length, solve_sudoku};
 
 use super::SATApp;
 
-pub fn constraint_list(app: &mut SATApp, ui: &mut Ui) -> Response {
+pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, row_height: f32, width: f32) -> Response {
     ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
             if let Some(file_path) = rfd::FileDialog::new().pick_file() {
@@ -20,13 +20,13 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui) -> Response {
             match solve_result {
                 Ok(solved) => {
                     app.sudoku = solved;
+                    app.rendered_constraints = app.constraints.constraints.borrow().clone();
                 }
                 Err(err) => {
                     println!("{}", err);
                 }
             }
         }
-
         ui.label(format!(
             "Learned constraints: {}",
             app.constraints.constraints.borrow().len()
@@ -39,34 +39,54 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui) -> Response {
         if ui.button("Filter").clicked() {
             app.max_length = apply_max_length(app.max_length_input.as_str());
             if let Some(max_length) = app.max_length {
-                app.filtered_constraints =
+                app.rendered_constraints =
                     filter_by_max_length(app.constraints.constraints.borrow(), max_length);
-                app.filtered = true;
             }
         }
         if ui.button("Clear filters").clicked() {
-            app.filtered_constraints.clear();
+            app.rendered_constraints = app.constraints.constraints.borrow().clone();
             app.max_length_input.clear();
             app.max_length = None;
-            app.filtered = false;
         }
     });
 
     ui.vertical(|ui| {
-        ui.separator();
-        ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
-            let mut constraints_text = String::new();
-            if app.filtered {
-                for constraint in app.filtered_constraints.iter() {
-                    constraints_text.push_str(&format!("{:?}\n", constraint));
+        ScrollArea::vertical()
+            .auto_shrink([false; 2])
+            .stick_to_bottom(false)
+            .show_viewport(ui, |ui, viewport| {
+                let font_id = TextStyle::Body.resolve(ui.style());
+
+                let num_rows: usize = app.rendered_constraints.len();
+                let clauses_binding: &Vec<Vec<i32>> = &app.rendered_constraints;
+                ui.set_height(row_height * num_rows as f32);
+                let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
+                let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
+
+                let mut used_rect = Rect::NOTHING;
+                let mut clauses = clauses_binding.iter().skip(first_item);
+
+                for i in first_item..last_item {
+                    if let Some(clause) = clauses.next() {
+                        let x = ui.min_rect().left();
+                        let y = ui.min_rect().top() + i as f32 * row_height;
+
+                        let text = format!("{:?}\n", clause);
+                        let text_rect = ui.painter().text(
+                            egui::pos2(x, y),
+                            egui::Align2::LEFT_TOP,
+                            text,
+                            font_id.clone(),
+                            ui.visuals().text_color(),
+                        );
+
+                        used_rect = used_rect.union(text_rect);
+                    }
                 }
-            } else {
-                for constraint in app.constraints.constraints.borrow().iter() {
-                    constraints_text.push_str(&format!("{:?}\n", constraint));
-                }
-            }
-            ui.label(constraints_text);
-        });
+
+                used_rect.set_right(width - 10.0);
+                ui.allocate_rect(used_rect, egui::Sense::drag())
+            });
     })
     .response
 }
