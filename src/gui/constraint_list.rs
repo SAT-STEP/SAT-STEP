@@ -6,32 +6,30 @@ use egui::{
 use std::ops::Add;
 
 use crate::{
-    cadical_wrapper::CadicalCallbackWrapper, cnf_converter::identifier_to_tuple, get_sudoku,
-    solve_sudoku, ConstraintList,
+    apply_max_length, cnf_converter::identifier_to_tuple, filter_by_max_length, get_sudoku,
+    solve_sudoku,
 };
 
-pub fn constraint_list(
-    ui: &mut Ui,
-    sudoku: &mut Vec<Vec<Option<i32>>>,
-    solver: &mut Solver<CadicalCallbackWrapper>,
-    callback_wrapper: &CadicalCallbackWrapper,
-    learned_clauses: ConstraintList,
-    width: f32,
-) -> Response {
+use super::SATApp;
+
+/// Constraint list GUI element
+pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
+    // Row for basic functionality buttons
     ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
             if let Some(file_path) = rfd::FileDialog::new().pick_file() {
-                *sudoku = get_sudoku(file_path.display().to_string());
-                learned_clauses.constraints.borrow_mut().clear();
-                *solver = Solver::with_config("plain").unwrap();
-                solver.set_callbacks(Some(callback_wrapper.clone()));
+                app.sudoku = get_sudoku(file_path.display().to_string());
+                app.constraints.constraints.borrow_mut().clear();
+                app.solver = Solver::with_config("plain").unwrap();
+                app.solver.set_callbacks(Some(app.callback_wrapper.clone()));
             }
         }
         if ui.button("Solve sudoku").clicked() {
-            let solve_result = solve_sudoku(sudoku, solver);
+            let solve_result = solve_sudoku(&app.sudoku, &mut app.solver);
             match solve_result {
                 Ok(solved) => {
-                    *sudoku = solved;
+                    app.sudoku = solved;
+                    app.rendered_constraints = app.constraints.constraints.borrow().clone();
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -40,32 +38,61 @@ pub fn constraint_list(
         }
         ui.label(format!(
             "Learned constraints: {}",
-            learned_clauses.constraints.borrow().len()
+            app.constraints.constraints.borrow().len()
         ));
     });
 
+    // Row for filtering functionality
+    ui.horizontal(|ui| {
+        let max_length_label = ui.label("Max length: ");
+        ui.text_edit_singleline(&mut app.max_length_input)
+            .labelled_by(max_length_label.id);
+        if ui.button("Filter").clicked() {
+            app.max_length = apply_max_length(app.max_length_input.as_str());
+            if let Some(max_length) = app.max_length {
+                app.rendered_constraints =
+                    filter_by_max_length(app.constraints.constraints.borrow(), max_length);
+            }
+        }
+        if ui.button("Clear filters").clicked() {
+            app.rendered_constraints = app.constraints.constraints.borrow().clone();
+            app.max_length_input.clear();
+            app.max_length = None;
+        }
+    });
+
+    // The list of constraints
     ui.vertical(|ui| {
         ScrollArea::vertical()
             .auto_shrink([false; 2])
             .stick_to_bottom(false)
             .show_viewport(ui, |ui, viewport| {
                 let font_id = TextStyle::Body.resolve(ui.style());
-                let large_font = FontId::new(font_id.size * width / 300.0, font_id.family.clone());
-                let small_font = FontId::new(large_font.size * 0.65, font_id.family.clone());
 
-                let num_rows = learned_clauses.constraints.borrow().len();
-                let row_height = ui.fonts(|f| f.row_height(&large_font)) + 2.0;
+                let large_font_size = font_id.size * width / 300.0;
+                let small_font_size = large_font_size * 0.65;
+                let spacing = 2.0;
+                let top_margin = 5.0;
+                let side_margin = 10.0;
+                let bg_color = Color32::from_rgb(20, 20, 20);
+
+                let large_font = FontId::new(large_font_size, font_id.family.clone());
+                let small_font = FontId::new(small_font_size, font_id.family.clone());
+
+                let num_rows: usize = app.rendered_constraints.len();
+                let row_height = ui.fonts(|f| f.row_height(&large_font)) + spacing;
+
                 ui.set_height(row_height * num_rows as f32);
                 let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                 let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                let clauses_binding = learned_clauses.constraints.borrow();
+                let clauses_binding: &Vec<Vec<i32>> = &app.rendered_constraints;
                 let mut clauses = clauses_binding.iter().skip(first_item);
 
                 for i in first_item..last_item {
                     if let Some(clause) = clauses.next() {
                         let x = ui.min_rect().left();
-                        let y = ui.min_rect().top() + 5.0 + i as f32 * row_height;
+                        let y = ui.min_rect().top() + top_margin + i as f32 * row_height;
 
                         let mut text_job = LayoutJob::default();
                         let mut identifiers = clause.iter().peekable();
@@ -117,15 +144,14 @@ pub fn constraint_list(
                             galley.rect.left_top().add(Vec2 { x, y }),
                             galley.rect.right_bottom().add(Vec2 { x, y }),
                         );
-                        galley_rect.set_right(width - 10.0);
+                        galley_rect.set_right(width - side_margin);
 
                         let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                         if rect_action.clicked() {
                             println!("Constraint {i} clicked");
                         }
 
-                        ui.painter()
-                            .rect_filled(galley_rect, 0.0, Color32::from_rgb(20, 20, 20));
+                        ui.painter().rect_filled(galley_rect, 0.0, bg_color);
                         ui.painter().galley(egui::pos2(x, y), galley);
                     }
                 }
