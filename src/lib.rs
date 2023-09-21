@@ -1,5 +1,6 @@
 mod cadical_wrapper;
 mod cnf_converter;
+mod error;
 pub mod gui;
 
 use std::{cell::RefCell, fs, rc::Rc};
@@ -8,6 +9,7 @@ use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
@@ -68,7 +70,7 @@ pub fn solve_sudoku(
     Err(String::from("Solving sudoku failed!"))
 }
 
-pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
+pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
     let sudoku = fs::read_to_string(filename).unwrap();
     clues_from_string(sudoku, ".")
 }

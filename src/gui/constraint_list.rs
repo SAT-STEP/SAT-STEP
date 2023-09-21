@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{NumExt, Rect, Response, ScrollArea, TextStyle, Ui};
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList, error::GenericError};
 
 pub fn constraint_list(
     ui: &mut Ui,
@@ -11,14 +11,27 @@ pub fn constraint_list(
     learned_clauses: ConstraintList,
     row_height: f32,
     width: f32,
-) -> Response {
-    ui.horizontal(|ui| {
+    ctx: &egui::Context,
+    current_error: &mut Option<GenericError>,
+) -> Response { ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
-            if let Some(file_path) = rfd::FileDialog::new().pick_file() {
-                *sudoku = crate::get_sudoku(file_path.display().to_string());
-                learned_clauses.constraints.borrow_mut().clear();
-                *solver = Solver::with_config("plain").unwrap();
-                solver.set_callbacks(Some(callback_wrapper.clone()));
+            if let Some(file_path) = rfd::FileDialog::new()
+                .add_filter("text", &["txt"])
+                .pick_file()
+            {
+                let sudoku_result = crate::get_sudoku(file_path.display().to_string());
+                match sudoku_result {
+                    Ok(sudoku_vec) => {
+                        *sudoku = sudoku_vec;
+                        learned_clauses.constraints.borrow_mut().clear();
+                        *solver = Solver::with_config("plain").unwrap();
+                        solver.set_callbacks(Some(callback_wrapper.clone()));
+                    }
+                    Err(e) => {
+                        *current_error = Some(e);
+                    }
+                }
+                //*sudoku = crate::get_sudoku(file_path.display().to_string());
             }
         }
         if ui.button("Solve sudoku").clicked() {
@@ -36,6 +49,12 @@ pub fn constraint_list(
             "Learned constraints: {}",
             learned_clauses.constraints.borrow().len()
         ));
+
+        //if let Some(e) = current_error {
+        //    egui::Window::new("Error").show(ctx, |ui| {
+        //        ui.label(&e.msg);
+        //    });
+        //}
     });
 
     ui.vertical(|ui| {

@@ -7,7 +7,7 @@ use eframe::egui;
 use egui::TextStyle;
 use sudoku_grid::sudoku_grid;
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, error::GenericError};
 
 /// Main app struct
 #[allow(dead_code)]
@@ -16,6 +16,7 @@ pub struct SATApp {
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
+    current_error: Option<GenericError>,
 }
 
 impl SATApp {
@@ -25,11 +26,13 @@ impl SATApp {
             CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
+        let current_error = None;
         Self {
             sudoku,
             constraints,
             callback_wrapper,
             solver,
+            current_error,
         }
     }
 }
@@ -42,11 +45,13 @@ impl Default for SATApp {
             CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
+        let current_error = None;
         Self {
             sudoku: Vec::new(),
             constraints,
             callback_wrapper,
             solver,
+            current_error,
         }
     }
 }
@@ -63,22 +68,34 @@ impl eframe::App for SATApp {
             let font_id = TextStyle::Body.resolve(ui.style());
             let row_height = ui.fonts(|f| f.row_height(&font_id));
 
-            ui.columns(2, |columns| {
-                columns[0].vertical_centered(|ui| {
-                    constraint_list(
-                        ui,
-                        &mut self.sudoku,
-                        &mut self.solver,
-                        &self.callback_wrapper,
-                        clauses,
-                        row_height,
-                        width,
-                    );
+            let mut error_open = true;
+            if let Some(e) = &self.current_error {
+                egui::Window::new("Error").open(&mut error_open).show(ctx, |ui| {
+                    ui.label(&e.msg);
                 });
-                columns[1].vertical_centered(|ui| {
-                    sudoku_grid(ui, height, width, &self.sudoku);
+                if !error_open {
+                    self.current_error = None;
+                }
+            } else {
+                ui.columns(2, |columns| {
+                    columns[0].vertical_centered(|ui| {
+                        constraint_list(
+                            ui,
+                            &mut self.sudoku,
+                            &mut self.solver,
+                            &self.callback_wrapper,
+                            clauses,
+                            row_height,
+                            width,
+                            ctx,
+                            &mut self.current_error,
+                            );
+                    });
+                    columns[1].vertical_centered(|ui| {
+                        sudoku_grid(ui, height, width, &self.sudoku);
+                    });
                 });
-            });
+            }
         });
     }
 }
