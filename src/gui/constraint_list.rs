@@ -68,7 +68,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
             .stick_to_bottom(false)
             .show_viewport(ui, |ui, viewport| {
                 let font_id = TextStyle::Body.resolve(ui.style());
-
+              
                 // Parameters we might want to adjust or get from elsewhere later
                 let large_font_size = font_id.size * width / 300.0;
                 let small_font_size = large_font_size * 0.65;
@@ -82,6 +82,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
 
                 let num_rows: usize = app.rendered_constraints.len();
                 let row_height = ui.fonts(|f| f.row_height(&large_font)) + spacing;
+
                 ui.set_height(row_height * num_rows as f32);
 
                 let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
