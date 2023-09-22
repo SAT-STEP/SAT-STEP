@@ -2,7 +2,7 @@ mod cadical_wrapper;
 mod cnf_converter;
 pub mod gui;
 
-use std::{cell::RefCell, fs, rc::Rc};
+use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
 
 use cadical::Solver;
 
@@ -71,6 +71,29 @@ pub fn solve_sudoku(
 pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
     let sudoku = fs::read_to_string(filename).unwrap();
     clues_from_string(sudoku, ".")
+}
+
+/// Parses the max_length filter input for applying the filter.
+pub fn apply_max_length(input: &str) -> Option<i32> {
+    let parse_result: Result<i32, ParseIntError> = input.parse();
+    match parse_result {
+        Ok(parsed) => {
+            if parsed < 1 {
+                return None;
+            }
+            Some(parsed)
+        }
+        Err(_err) => None,
+    }
+}
+
+/// Filters the constraints by the given max_length.
+pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) -> Vec<Vec<i32>> {
+    constraints
+        .clone()
+        .into_iter()
+        .filter(move |item| item.len() as i32 <= max_length)
+        .collect()
 }
 
 mod tests {
@@ -225,5 +248,60 @@ mod tests {
             ],
         ];
         assert_eq!(solved, should_be);
+    }
+
+    #[test]
+    fn test_apply_max_length_valid_input() {
+        use super::*;
+
+        let max_length = String::from("10");
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, Some(10));
+    }
+
+    #[test]
+    fn test_apply_max_length_negative() {
+        use super::*;
+
+        let max_length = String::from("-10");
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, None);
+    }
+
+    #[test]
+    fn test_apply_max_length_not_numeric() {
+        use super::*;
+
+        let max_length = String::from("test");
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, None);
+    }
+
+    #[test]
+    fn test_apply_max_length_empty() {
+        use super::*;
+
+        let max_length = String::new();
+
+        let applied = apply_max_length(&max_length);
+        assert_eq!(applied, None);
+    }
+
+    #[test]
+    fn test_filter_by_max_length() {
+        use super::*;
+
+        let constraints = RefCell::new(vec![vec![0; 10], vec![0; 3], vec![0; 5]]);
+        let filtered = filter_by_max_length(constraints.borrow(), 4);
+        assert_eq!(filtered.len(), 1);
+
+        let filtered2 = filter_by_max_length(constraints.borrow(), 5);
+        assert_eq!(filtered2.len(), 2);
+
+        let filtered3 = filter_by_max_length(constraints.borrow(), 1);
+        assert_eq!(filtered3.len(), 0)
     }
 }

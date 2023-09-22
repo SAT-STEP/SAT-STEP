@@ -1,31 +1,28 @@
 use cadical::Solver;
 use egui::{NumExt, Rect, Response, ScrollArea, TextStyle, Ui};
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, ConstraintList};
+use crate::{apply_max_length, filter_by_max_length, solve_sudoku};
 
-pub fn constraint_list(
-    ui: &mut Ui,
-    sudoku: &mut Vec<Vec<Option<i32>>>,
-    solver: &mut Solver<CadicalCallbackWrapper>,
-    callback_wrapper: &CadicalCallbackWrapper,
-    learned_clauses: ConstraintList,
-    row_height: f32,
-    width: f32,
-) -> Response {
+use super::SATApp;
+
+/// Constraint list GUI element
+pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, row_height: f32, width: f32) -> Response {
+    // Row for basic functionality buttons
     ui.horizontal(|ui| {
         if ui.button("Open file...").clicked() {
             if let Some(file_path) = rfd::FileDialog::new().pick_file() {
-                *sudoku = crate::get_sudoku(file_path.display().to_string());
-                learned_clauses.constraints.borrow_mut().clear();
-                *solver = Solver::with_config("plain").unwrap();
-                solver.set_callbacks(Some(callback_wrapper.clone()));
+                app.sudoku = crate::get_sudoku(file_path.display().to_string());
+                app.constraints.constraints.borrow_mut().clear();
+                app.solver = Solver::with_config("plain").unwrap();
+                app.solver.set_callbacks(Some(app.callback_wrapper.clone()));
             }
         }
         if ui.button("Solve sudoku").clicked() {
-            let solve_result = solve_sudoku(sudoku, solver);
+            let solve_result = solve_sudoku(&app.sudoku, &mut app.solver);
             match solve_result {
                 Ok(solved) => {
-                    *sudoku = solved;
+                    app.sudoku = solved;
+                    app.rendered_constraints = app.constraints.constraints.borrow().clone();
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -34,10 +31,30 @@ pub fn constraint_list(
         }
         ui.label(format!(
             "Learned constraints: {}",
-            learned_clauses.constraints.borrow().len()
+            app.constraints.constraints.borrow().len()
         ));
     });
 
+    // Row for filtering functionality
+    ui.horizontal(|ui| {
+        let max_length_label = ui.label("Max length: ");
+        ui.text_edit_singleline(&mut app.max_length_input)
+            .labelled_by(max_length_label.id);
+        if ui.button("Filter").clicked() {
+            app.max_length = apply_max_length(app.max_length_input.as_str());
+            if let Some(max_length) = app.max_length {
+                app.rendered_constraints =
+                    filter_by_max_length(app.constraints.constraints.borrow(), max_length);
+            }
+        }
+        if ui.button("Clear filters").clicked() {
+            app.rendered_constraints = app.constraints.constraints.borrow().clone();
+            app.max_length_input.clear();
+            app.max_length = None;
+        }
+    });
+
+    // The list of constraints
     ui.vertical(|ui| {
         ScrollArea::vertical()
             .auto_shrink([false; 2])
@@ -45,13 +62,13 @@ pub fn constraint_list(
             .show_viewport(ui, |ui, viewport| {
                 let font_id = TextStyle::Body.resolve(ui.style());
 
-                let num_rows = learned_clauses.constraints.borrow().len();
+                let num_rows: usize = app.rendered_constraints.len();
+                let clauses_binding: &Vec<Vec<i32>> = &app.rendered_constraints;
                 ui.set_height(row_height * num_rows as f32);
                 let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                 let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
                 let mut used_rect = Rect::NOTHING;
-                let clauses_binding = learned_clauses.constraints.borrow();
                 let mut clauses = clauses_binding.iter().skip(first_item);
 
                 for i in first_item..last_item {
