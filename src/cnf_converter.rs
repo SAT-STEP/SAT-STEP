@@ -92,6 +92,7 @@ pub fn cnf_identifier(row: i32, col: i32, val: i32) -> i32 {
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     // Reverse CNF-identifier creation
     // Return tuple of (row, col, val) from identifier
+    // Val will be negative for negative ids, positive otherwise
     let negation_multiplier = if identifier > 0 { 1 } else { -1 };
     identifier = identifier.abs() - 1;
     (
