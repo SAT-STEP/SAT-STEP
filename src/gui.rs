@@ -4,13 +4,11 @@ mod sudoku_grid;
 use cadical::Solver;
 use constraint_list::constraint_list;
 use eframe::egui;
-use egui::TextStyle;
 use sudoku_grid::sudoku_grid;
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList};
 
 /// Main app struct
-#[allow(dead_code)]
 pub struct SATApp {
     sudoku: Vec<Vec<Option<i32>>>,
     constraints: ConstraintList,
@@ -68,12 +66,9 @@ impl eframe::App for SATApp {
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
 
-            let font_id = TextStyle::Body.resolve(ui.style());
-            let row_height = ui.fonts(|f| f.row_height(&font_id));
-
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
-                    constraint_list(self, ui, row_height, width);
+                    constraint_list(self, ui, width);
                 });
                 columns[1].vertical_centered(|ui| {
                     sudoku_grid(ui, height, width, &self.sudoku);

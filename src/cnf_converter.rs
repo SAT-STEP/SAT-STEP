@@ -88,16 +88,17 @@ pub fn cnf_identifier(row: i32, col: i32, val: i32) -> i32 {
     (row - 1) * 9 * 9 + (col - 1) * 9 + val
 }
 
-#[allow(dead_code)]
 #[inline(always)]
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     // Reverse CNF-identifier creation
     // Return tuple of (row, col, val) from identifier
-    identifier -= 1;
+    // Val will be negative for negative ids, positive otherwise
+    let negation_multiplier = if identifier > 0 { 1 } else { -1 };
+    identifier = identifier.abs() - 1;
     (
         identifier / (9 * 9) + 1,
         (identifier % 81) / 9 + 1,
-        identifier % 9 + 1,
+        negation_multiplier * (identifier % 9 + 1),
     )
 }
 
@@ -167,5 +168,9 @@ mod tests {
         assert_eq!((1, 1, 1), identifier_to_tuple(cnf_identifier(1, 1, 1)));
         assert_eq!((1, 2, 3), identifier_to_tuple(cnf_identifier(1, 2, 3)));
         assert_eq!((9, 9, 9), identifier_to_tuple(cnf_identifier(9, 9, 9)));
+        assert_eq!(
+            (6, 2, -8),
+            identifier_to_tuple(-1 * cnf_identifier(6, 2, 8))
+        );
     }
 }
