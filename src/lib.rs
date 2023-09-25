@@ -3,6 +3,7 @@ mod cnf_converter;
 pub mod gui;
 
 use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
+use std::collections::{HashMap, HashSet};
 
 use cadical::Solver;
 
@@ -96,6 +97,9 @@ pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) ->
         .collect()
 }
 
+pub fn filter_by_cell(filtered_constraints: Vec<Vec<i32>>, x: i32, y: i32) -> HashMap<(i32, i32), HashSet<i32>> {
+
+}
 mod tests {
     #[test]
     fn test_get_sudoku() {
