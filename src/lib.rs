@@ -40,6 +40,28 @@ impl Default for ConstraintList {
     }
 }
 
+struct ListFilter {
+    constraints: Rc<RefCell<Vec<Vec<i32>>>>,
+    pub length_filter: HashSet<usize>,
+    pub cell_filter: HashSet<usize>,
+}
+
+impl ListFilter {
+    pub fn rebuild_filtered_list(&self) -> Vec<Vec<i32>> {
+        let mut final_set = self.length_filter.clone();
+
+        // Add additional filters with && in the same closure
+        final_set.retain( |index| self.cell_filter.contains(index));
+
+        let mut final_list = Vec::new();
+        for index in final_set {
+            final_list.push(self.constraints.borrow()[index].clone());
+        }
+
+        final_list
+    }
+}
+
 pub fn solve_sudoku(
     sudoku_clues: &[Vec<Option<i32>>],
     solver: &mut Solver<CadicalCallbackWrapper>,
@@ -97,11 +119,11 @@ pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) ->
         .collect()
 }
 
-pub fn filter_by_cell(filtered_constraints: Vec<Vec<i32>>, x: i32, y: i32) -> HashMap<(i32, i32), HashSet<i32>> {
-    for n in 1..filtered_contraints.len() {
-        
-    }
-}
+//pub fn filter_by_cell(filtered_constraints: Vec<Vec<i32>>, x: i32, y: i32) -> HashMap<(i32, i32), HashSet<i32>> {
+//    for n in 1..filtered_contraints.len() {
+//        
+//    }
+//}
 mod tests {
     #[test]
     fn test_get_sudoku() {
