@@ -5,10 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{
-    apply_max_length, cnf_converter::identifier_to_tuple, filter_by_max_length, get_sudoku,
-    solve_sudoku,
-};
+use crate::{apply_max_length, cnf_converter::identifier_to_tuple, get_sudoku, solve_sudoku};
 
 use super::SATApp;
 
@@ -30,6 +27,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 Ok(solved) => {
                     app.sudoku = solved;
                     app.rendered_constraints = app.constraints.constraints.borrow().clone();
+                    app.filter.clear();
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -50,13 +48,12 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
         if ui.button("Filter").clicked() {
             app.max_length = apply_max_length(app.max_length_input.as_str());
             if let Some(max_length) = app.max_length {
-                app.rendered_constraints =
-                    filter_by_max_length(app.constraints.constraints.borrow(), max_length);
+                app.rendered_constraints = app.filter.by_max_length(max_length);
             }
         }
         if ui.button("Clear filters").clicked() {
             app.rendered_constraints = app.constraints.constraints.borrow().clone();
-            app.max_length_input.clear();
+            app.filter.clear();
             app.max_length = None;
         }
     });

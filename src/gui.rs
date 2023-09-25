@@ -1,12 +1,14 @@
 mod constraint_list;
 mod sudoku_grid;
 
+use std::rc::Rc;
+
 use cadical::Solver;
 use constraint_list::constraint_list;
 use eframe::egui;
 use sudoku_grid::sudoku_grid;
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, ListFilter};
 
 /// Main app struct
 pub struct SATApp {
@@ -17,6 +19,7 @@ pub struct SATApp {
     rendered_constraints: Vec<Vec<i32>>,
     max_length: Option<i32>,
     max_length_input: String,
+    filter: ListFilter,
 }
 
 impl SATApp {
@@ -26,6 +29,7 @@ impl SATApp {
             CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
+        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
         Self {
             sudoku,
             constraints,
@@ -34,6 +38,7 @@ impl SATApp {
             rendered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
+            filter,
         }
     }
 }
@@ -46,6 +51,7 @@ impl Default for SATApp {
             CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
+        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
         Self {
             sudoku: Vec::new(),
             constraints,
@@ -54,6 +60,7 @@ impl Default for SATApp {
             rendered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
+            filter,
         }
     }
 }

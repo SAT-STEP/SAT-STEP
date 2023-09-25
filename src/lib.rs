@@ -2,8 +2,8 @@ mod cadical_wrapper;
 mod cnf_converter;
 pub mod gui;
 
-use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
 use std::collections::{HashMap, HashSet};
+use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
 
 use cadical::Solver;
 
@@ -42,16 +42,24 @@ impl Default for ConstraintList {
 
 struct ListFilter {
     constraints: Rc<RefCell<Vec<Vec<i32>>>>,
-    pub length_filter: HashSet<usize>,
-    pub cell_filter: HashSet<usize>,
+    length_filter: HashSet<usize>,
+    cell_filter: HashSet<usize>,
 }
 
 impl ListFilter {
-    pub fn rebuild_filtered_list(&self) -> Vec<Vec<i32>> {
+    pub fn new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
+        Self {
+            constraints: Rc::clone(&constraints),
+            length_filter: (0..constraints.borrow().len()).collect(),
+            cell_filter: (0..constraints.borrow().len()).collect(),
+        }
+    }
+
+    fn rebuild_filtered_list(&self) -> Vec<Vec<i32>> {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
-        final_set.retain( |index| self.cell_filter.contains(index));
+        final_set.retain(|index| self.cell_filter.contains(index));
 
         let mut final_list = Vec::new();
         for index in final_set {
@@ -59,6 +67,31 @@ impl ListFilter {
         }
 
         final_list
+    }
+    /// Filters the constraints by the given max_length.
+    pub fn by_max_length(&mut self, max_length: i32) -> Vec<Vec<i32>> {
+        let mut filter_set = HashSet::new();
+        for (index, constraint) in self.constraints.borrow().iter().enumerate() {
+            if constraint.len() as i32 <= max_length {
+                filter_set.insert(index);
+            }
+        }
+        self.length_filter = filter_set;
+        // Return new filtered list
+        self.rebuild_filtered_list()
+    }
+
+    pub fn clear_length(&mut self) {
+        self.length_filter = (0..self.constraints.borrow().len()).collect();
+    }
+
+    pub fn clear_cell(&mut self) {
+        self.cell_filter = (0..self.constraints.borrow().len()).collect();
+    }
+
+    pub fn clear(&mut self) {
+        self.clear_length();
+        self.clear_cell();
     }
 }
 
@@ -110,18 +143,9 @@ pub fn apply_max_length(input: &str) -> Option<i32> {
     }
 }
 
-/// Filters the constraints by the given max_length.
-pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) -> Vec<Vec<i32>> {
-    constraints
-        .clone()
-        .into_iter()
-        .filter(move |item| item.len() as i32 <= max_length)
-        .collect()
-}
-
 //pub fn filter_by_cell(filtered_constraints: Vec<Vec<i32>>, x: i32, y: i32) -> HashMap<(i32, i32), HashSet<i32>> {
 //    for n in 1..filtered_contraints.len() {
-//        
+//
 //    }
 //}
 mod tests {
