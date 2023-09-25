@@ -98,7 +98,9 @@ pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) ->
 }
 
 pub fn filter_by_cell(filtered_constraints: Vec<Vec<i32>>, x: i32, y: i32) -> HashMap<(i32, i32), HashSet<i32>> {
-
+    for n in 1..filtered_contraints.len() {
+        
+    }
 }
 mod tests {
     #[test]
