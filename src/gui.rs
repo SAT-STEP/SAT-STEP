@@ -14,9 +14,11 @@ pub struct SATApp {
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
-    rendered_constraints: Vec<Vec<i32>>,
+    //rendered_constraints: Vec<Vec<i32>>,
+    rendered_constraints: Vec<Vec<(i32, i32, i32)>>,
     max_length: Option<i32>,
     max_length_input: String,
+    clicked_constraint_index: Option<usize>,
 }
 
 impl SATApp {
@@ -34,6 +36,7 @@ impl SATApp {
             rendered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
+            clicked_constraint_index: None,
         }
     }
 }
@@ -54,6 +57,7 @@ impl Default for SATApp {
             rendered_constraints: Vec::new(),
             max_length: None,
             max_length_input: String::new(),
+            clicked_constraint_index: None,
         }
     }
 }
@@ -71,7 +75,7 @@ impl eframe::App for SATApp {
                     constraint_list(self, ui, width);
                 });
                 columns[1].vertical_centered(|ui| {
-                    sudoku_grid(ui, height, width, &self.sudoku);
+                    sudoku_grid(self, ui, height, width);
                 });
             });
         });

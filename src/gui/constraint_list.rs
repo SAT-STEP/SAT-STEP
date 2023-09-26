@@ -20,6 +20,8 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
             if let Some(file_path) = rfd::FileDialog::new().pick_file() {
                 app.sudoku = get_sudoku(file_path.display().to_string());
                 app.constraints.constraints.borrow_mut().clear();
+                app.rendered_constraints = Vec::new();
+                app.clicked_constraint_index = None;
                 app.solver = Solver::with_config("plain").unwrap();
                 app.solver.set_callbacks(Some(app.callback_wrapper.clone()));
             }
@@ -29,7 +31,13 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
             match solve_result {
                 Ok(solved) => {
                     app.sudoku = solved;
-                    app.rendered_constraints = app.constraints.constraints.borrow().clone();
+                    for constraint in app.constraints.constraints.borrow().iter() {
+                        let mut tupples = Vec::with_capacity(constraint.len());
+                        for value in constraint {
+                            tupples.push(identifier_to_tuple(*value));
+                        }
+                        app.rendered_constraints.push(tupples);
+                    }
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -50,12 +58,32 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
         if ui.button("Filter").clicked() {
             app.max_length = apply_max_length(app.max_length_input.as_str());
             if let Some(max_length) = app.max_length {
-                app.rendered_constraints =
-                    filter_by_max_length(app.constraints.constraints.borrow(), max_length);
+                app.rendered_constraints = Vec::new();
+
+                for constraint in
+                    &filter_by_max_length(app.constraints.constraints.borrow(), max_length)
+                {
+                    let mut tupples = Vec::with_capacity(constraint.len());
+                    for value in constraint {
+                        tupples.push(identifier_to_tuple(*value));
+                    }
+                    app.rendered_constraints.push(tupples);
+                }
+                app.clicked_constraint_index = None;
             }
         }
         if ui.button("Clear filters").clicked() {
-            app.rendered_constraints = app.constraints.constraints.borrow().clone();
+            app.rendered_constraints = Vec::new();
+            app.clicked_constraint_index = None;
+
+            for constraint in app.constraints.constraints.borrow().iter() {
+                let mut tupples = Vec::with_capacity(constraint.len());
+                for value in constraint {
+                    tupples.push(identifier_to_tuple(*value));
+                }
+                app.rendered_constraints.push(tupples);
+            }
+
             app.max_length_input.clear();
             app.max_length = None;
         }
@@ -88,7 +116,8 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                 let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                let clauses_binding: &Vec<Vec<i32>> = &app.rendered_constraints;
+                //let clauses_binding: &Vec<Vec<i32>> = &app.rendered_constraints;
+                let clauses_binding = &app.rendered_constraints;
                 let mut clauses = clauses_binding.iter().skip(first_item);
 
                 // Create element for each constraint
@@ -101,7 +130,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
 
                         // Large while block just constructs the LayoutJob
                         while let Some(identifier) = identifiers.next() {
-                            let (row, col, val) = identifier_to_tuple(*identifier);
+                            let (row, col, val) = *identifier;
 
                             let (lead_char, color) = if val > 0 {
                                 ("", ui.visuals().text_color())
@@ -158,7 +187,17 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                         //Add binding for reacting to clicks
                         let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                         if rect_action.clicked() {
-                            println!("Constraint {i} clicked");
+                            match app.clicked_constraint_index {
+                                Some(index) => {
+                                    // clicking constraint again clears little numbers
+                                    if index == i {
+                                        app.clicked_constraint_index = None;
+                                    } else {
+                                        app.clicked_constraint_index = Some(i);
+                                    }
+                                }
+                                None => app.clicked_constraint_index = Some(i),
+                            }
                         }
 
                         // Background and click-detection
