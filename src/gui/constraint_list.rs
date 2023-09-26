@@ -27,7 +27,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 Ok(solved) => {
                     app.sudoku = solved;
                     app.rendered_constraints = app.constraints.constraints.borrow().clone();
-                    app.filter.clear();
+                    app.filter.reinit();
                 }
                 Err(err) => {
                     println!("{}", err);
@@ -53,7 +53,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
         }
         if ui.button("Clear filters").clicked() {
             app.rendered_constraints = app.constraints.constraints.borrow().clone();
-            app.filter.clear();
+            app.filter.clear_all();
             app.max_length = None;
         }
     });

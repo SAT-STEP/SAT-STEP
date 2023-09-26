@@ -8,7 +8,7 @@ use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf, identifier_to_tuple};
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
@@ -44,6 +44,7 @@ struct ListFilter {
     constraints: Rc<RefCell<Vec<Vec<i32>>>>,
     length_filter: HashSet<usize>,
     cell_filter: HashSet<usize>,
+    cell_constraints: HashMap<(i32, i32),HashSet<usize>>,
 }
 
 impl ListFilter {
@@ -52,10 +53,11 @@ impl ListFilter {
             constraints: Rc::clone(&constraints),
             length_filter: (0..constraints.borrow().len()).collect(),
             cell_filter: (0..constraints.borrow().len()).collect(),
+            cell_constraints: HashMap::new()
         }
     }
 
-    fn rebuild_filtered_list(&self) -> Vec<Vec<i32>> {
+    fn apply_filters(&self) -> Vec<Vec<i32>> {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
@@ -68,6 +70,28 @@ impl ListFilter {
 
         final_list
     }
+
+    pub fn reinit(&mut self) {
+        self.create_cell_map();
+        self.clear_all();
+    }
+
+    fn create_cell_map(&mut self) {
+        for row in 1..=9 {
+            for col in 1..=9 {
+                self.cell_constraints.insert((row, col), HashSet::new());
+            }
+        }
+        for (index, list) in self.constraints.borrow().iter().enumerate() {
+            for identifier in list {
+                let (row, col, _) = identifier_to_tuple(*identifier);
+                if let Some(cell_set) = self.cell_constraints.get_mut(&(row,col)) {
+                    cell_set.insert(index);
+                }
+            }
+        }
+    }
+
     /// Filters the constraints by the given max_length.
     pub fn by_max_length(&mut self, max_length: i32) -> Vec<Vec<i32>> {
         let mut filter_set = HashSet::new();
@@ -78,7 +102,7 @@ impl ListFilter {
         }
         self.length_filter = filter_set;
         // Return new filtered list
-        self.rebuild_filtered_list()
+        self.apply_filters()
     }
 
     pub fn clear_length(&mut self) {
@@ -89,9 +113,16 @@ impl ListFilter {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
     }
 
-    pub fn clear(&mut self) {
+    pub fn clear_all(&mut self) {
         self.clear_length();
         self.clear_cell();
+    }
+
+    pub fn by_cell(&mut self, row: i32, col: i32,) -> Vec<Vec<i32>> {
+        if let Some(cell_set) = self.cell_constraints.get(&(row, col)) {
+            self.cell_filter = cell_set.clone()
+        }
+        self.apply_filters()
     }
 }
 
@@ -143,11 +174,6 @@ pub fn apply_max_length(input: &str) -> Option<i32> {
     }
 }
 
-//pub fn filter_by_cell(filtered_constraints: Vec<Vec<i32>>, x: i32, y: i32) -> HashMap<(i32, i32), HashSet<i32>> {
-//    for n in 1..filtered_contraints.len() {
-//
-//    }
-//}
 mod tests {
     #[test]
     fn test_get_sudoku() {
