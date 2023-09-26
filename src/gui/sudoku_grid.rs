@@ -4,12 +4,7 @@ use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
 use super::SATApp;
 
-pub fn sudoku_grid(
-    app: &mut SATApp,
-    ui: &mut Ui,
-    height: f32,
-    mut width: f32,
-) -> Response {
+pub fn sudoku_grid(app: &mut SATApp, ui: &mut Ui, height: f32, mut width: f32) -> Response {
     ui.horizontal_wrapped(|ui| {
         let spacing = 2.0;
         width += spacing;

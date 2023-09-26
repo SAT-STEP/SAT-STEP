@@ -88,7 +88,7 @@ struct GUIState {
     selected_cell: Option<(i32, i32)>,
 }
 
-impl GUIState{
+impl GUIState {
     pub fn new() -> Self {
         Self {
             max_length: None,
