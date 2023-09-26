@@ -106,6 +106,9 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
 pub fn clues_from_string(buf: String, empty_value: &str) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
     // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
+    if buf.len()<9 {
+        return Err(GenericError { msg: "Invalid sudoku format!".to_owned() });   
+    }
     for line in buf.lines() {
         let mut row_buf = Vec::with_capacity(9);
         for val in line.split("") {

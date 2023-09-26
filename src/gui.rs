@@ -1,11 +1,17 @@
 mod constraint_list;
 mod sudoku_grid;
-
+use egui::FontFamily::Proportional;
+use egui::FontId;
+use egui::containers;
 use cadical::Solver;
 use constraint_list::constraint_list;
 use eframe::egui;
 use egui::TextStyle;
 use sudoku_grid::sudoku_grid;
+use egui::Color32;
+use egui::RichText;
+use egui::Margin;
+use egui::Stroke;
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, error::GenericError};
 
@@ -70,8 +76,23 @@ impl eframe::App for SATApp {
 
             let mut error_open = true;
             if let Some(e) = &self.current_error {
-                egui::Window::new("Error").open(&mut error_open).show(ctx, |ui| {
-                    ui.label(&e.msg);
+                let default_margin = 10.0;
+                let error_window_margin = Margin {
+                    left: default_margin,
+                    right: default_margin,
+                    top: default_margin,
+                    bottom: default_margin,
+                };
+
+                let errorwindow = containers::Frame {
+                    fill: Color32::from_rgb(50, 50, 50),
+                    inner_margin: error_window_margin,
+                    ..Default::default()
+
+                };
+                let error_window_title = RichText::new("Error").color(Color32::from_rgb(255, 0, 0));
+                egui::Window::new(error_window_title).frame(errorwindow).open(&mut error_open).show(ctx, |ui| {
+                    ui.label(egui::RichText::new(&e.msg).heading().color(Color32::from_rgb(255, 0, 0)));
                 });
                 if !error_open {
                     self.current_error = None;
