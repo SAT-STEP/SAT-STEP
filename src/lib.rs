@@ -105,17 +105,21 @@ impl ListFilter {
         self.apply_filters()
     }
 
-    pub fn clear_length(&mut self) {
+    pub fn clear_length(&mut self) -> Vec<Vec<i32>> {
         self.length_filter = (0..self.constraints.borrow().len()).collect();
+        self.apply_filters()
     }
 
-    pub fn clear_cell(&mut self) {
+    pub fn clear_cell(&mut self) -> Vec<Vec<i32>> {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
+        self.apply_filters()
     }
 
-    pub fn clear_all(&mut self) {
+    pub fn clear_all(&mut self) -> Vec<Vec<i32>> {
+        // This will apply the filters several times, but avoids code repetition
+        // Change if this becomes a problem!
         self.clear_length();
-        self.clear_cell();
+        self.clear_cell()
     }
 
     pub fn by_cell(&mut self, row: i32, col: i32,) -> Vec<Vec<i32>> {

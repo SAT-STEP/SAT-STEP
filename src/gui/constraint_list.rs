@@ -38,23 +38,27 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
             "Learned constraints: {}",
             app.constraints.constraints.borrow().len()
         ));
+        ui.label(format!(
+            "Constraints after filtering: {}",
+            app.rendered_constraints.len()
+        ));
     });
 
     // Row for filtering functionality
     ui.horizontal(|ui| {
         let max_length_label = ui.label("Max length: ");
-        ui.text_edit_singleline(&mut app.max_length_input)
+        ui.text_edit_singleline(&mut app.state.max_length_input)
             .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
-            app.max_length = apply_max_length(app.max_length_input.as_str());
-            if let Some(max_length) = app.max_length {
+            app.state.max_length = apply_max_length(app.state.max_length_input.as_str());
+            if let Some(max_length) = app.state.max_length {
                 app.rendered_constraints = app.filter.by_max_length(max_length);
             }
         }
         if ui.button("Clear filters").clicked() {
-            app.rendered_constraints = app.constraints.constraints.borrow().clone();
-            app.filter.clear_all();
-            app.max_length = None;
+            app.rendered_constraints = app.filter.clear_all();
+            app.state.max_length = None;
+            app.state.selected_cell = None;
         }
     });
 
