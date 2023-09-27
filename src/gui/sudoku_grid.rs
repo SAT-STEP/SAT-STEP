@@ -79,12 +79,20 @@ pub fn sudoku_grid(app: &mut SATApp, ui: &mut Ui, height: f32, mut width: f32) -
                             little_top_left.x = top_left.x;
                         }
 
+                        // if value of the picked cell is negative, it will be shown in red,
+                        // if not negative, in blue
+                        let c_value = constraints[c_index].2;
+                        let mut c_value_color = Color32::BLUE;
+                        if c_value < 0 {
+                            c_value_color = Color32::RED;
+                        }
+
                         ui.painter().text(
                             little_top_left,
                             egui::Align2::LEFT_TOP,
                             constraints[c_index].2.to_string(),
                             egui::FontId::new(block_size / 15.0, egui::FontFamily::Monospace),
-                            Color32::BLACK,
+                            c_value_color,
                         );
                         little_top_left.x += cell_size / 3.0;
                         c_index += 1;
