@@ -27,6 +27,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 Ok(solved) => {
                     app.sudoku = solved;
                     app.rendered_constraints = app.constraints.constraints.borrow().clone();
+                    // Reinitialize filrening for a new sudoku
                     app.filter.reinit();
                 }
                 Err(err) => {
@@ -52,11 +53,13 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
         if ui.button("Filter").clicked() {
             app.state.max_length = apply_max_length(app.state.max_length_input.as_str());
             if let Some(max_length) = app.state.max_length {
-                app.rendered_constraints = app.filter.by_max_length(max_length);
+                app.filter.by_max_length(max_length);
+                app.rendered_constraints = app.filter.get_filtered();
             }
         }
         if ui.button("Clear filters").clicked() {
-            app.rendered_constraints = app.filter.clear_all();
+            app.filter.clear_all();
+            app.rendered_constraints = app.filter.get_filtered();
             app.state.max_length = None;
             app.state.selected_cell = None;
         }

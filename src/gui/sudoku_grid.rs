@@ -47,11 +47,12 @@ pub fn sudoku_grid(app: &mut SATApp, ui: &mut Ui, height: f32, mut width: f32) -
                 if rect_action.clicked() {
                     if app.state.selected_cell == Some((i as i32 + 1, ii as i32 + 1)) {
                         app.state.selected_cell = None;
-                        app.rendered_constraints = app.filter.clear_cell();
+                        app.filter.clear_cell();
                     } else {
                         app.state.selected_cell = Some((i as i32 + 1, ii as i32 + 1));
-                        app.rendered_constraints = app.filter.by_cell(i as i32 + 1, ii as i32 + 1);
+                        app.filter.by_cell(i as i32 + 1, ii as i32 + 1);
                     }
+                    app.rendered_constraints = app.filter.get_filtered();
                 }
 
                 if app.state.selected_cell == Some((i as i32 + 1, ii as i32 + 1)) {

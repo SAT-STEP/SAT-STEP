@@ -58,7 +58,7 @@ impl ListFilter {
         }
     }
 
-    fn apply_filters(&self) -> Vec<Vec<i32>> {
+    fn get_filtered(&self) -> Vec<Vec<i32>> {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
@@ -94,7 +94,7 @@ impl ListFilter {
     }
 
     /// Filters the constraints by the given max_length.
-    pub fn by_max_length(&mut self, max_length: i32) -> Vec<Vec<i32>> {
+    pub fn by_max_length(&mut self, max_length: i32) {
         let mut filter_set = HashSet::new();
         for (index, constraint) in self.constraints.borrow().iter().enumerate() {
             if constraint.len() as i32 <= max_length {
@@ -102,32 +102,25 @@ impl ListFilter {
             }
         }
         self.length_filter = filter_set;
-        // Return new filtered list
-        self.apply_filters()
     }
 
-    pub fn clear_cell(&mut self) -> Vec<Vec<i32>> {
-        self.cell_filter = (0..self.constraints.borrow().len()).collect();
-        self.apply_filters()
-    }
-
-    pub fn clear_all(&mut self) -> Vec<Vec<i32>> {
-        // This will apply the filters several times, but avoids code repetition
-        // Change if this becomes a problem!
-        self.clear_length();
-        self.clear_cell()
-    }
-
-    pub fn by_cell(&mut self, row: i32, col: i32) -> Vec<Vec<i32>> {
+    pub fn by_cell(&mut self, row: i32, col: i32) {
         if let Some(cell_set) = self.cell_constraints.get(&(row, col)) {
             self.cell_filter = cell_set.clone()
         }
-        self.apply_filters()
     }
 
-    pub fn clear_length(&mut self) -> Vec<Vec<i32>> {
+    pub fn clear_length(&mut self) {
         self.length_filter = (0..self.constraints.borrow().len()).collect();
-        self.apply_filters()
+    }
+
+    pub fn clear_cell(&mut self) {
+        self.cell_filter = (0..self.constraints.borrow().len()).collect();
+    }
+
+    pub fn clear_all(&mut self) {
+        self.clear_length();
+        self.clear_cell();
     }
 }
 
