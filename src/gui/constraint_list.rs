@@ -103,7 +103,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 let spacing = 2.0;
                 let top_margin = 5.0;
                 let side_margin = 10.0;
-                let bg_color = Color32::from_rgb(15, 15, 15);
+                // let bg_color = Color32::from_rgb(15, 15, 15);
 
                 let large_font = FontId::new(large_font_size, font_id.family.clone());
                 let small_font = FontId::new(small_font_size, font_id.family.clone());
@@ -184,14 +184,19 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                         // Keep everything from overflowing
                         galley_rect.set_right(width - side_margin);
 
+                        // Background and click-detection
+                        // ui.painter().rect_filled(galley_rect, 0.0, bg_color);
+
                         //Add binding for reacting to clicks
                         let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                         if rect_action.clicked() {
+                            ui.painter().rect_filled(rect_action.rect, 0.0, Color32::YELLOW);
                             match app.clicked_constraint_index {
                                 Some(index) => {
                                     // clicking constraint again clears little numbers
                                     if index == i {
                                         app.clicked_constraint_index = None;
+                                        ui.painter().rect_filled(rect_action.rect, 0.0, Color32::LIGHT_BLUE);
                                     } else {
                                         app.clicked_constraint_index = Some(i);
                                     }
@@ -199,9 +204,6 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                                 None => app.clicked_constraint_index = Some(i),
                             }
                         }
-
-                        // Background and click-detection
-                        ui.painter().rect_filled(galley_rect, 0.0, bg_color);
 
                         // Text itself
                         ui.painter().galley(egui::pos2(x, y), galley);
