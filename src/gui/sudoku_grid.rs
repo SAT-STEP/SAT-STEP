@@ -9,8 +9,10 @@ pub fn sudoku_grid(
     sudoku: &[Vec<Option<i32>>],
 ) -> Response {
     ui.horizontal_wrapped(|ui| {
-        let spacing = 2.0;
-        width += spacing;
+        let block_spacing = 2.0;
+        let square_spacing = 1.0;
+
+        width += block_spacing;
         let mut cell_size = cmp::min(height as i32, width as i32) as f32;
         cell_size /= 9.0;
 
@@ -23,17 +25,23 @@ pub fn sudoku_grid(
         for (i, row) in sudoku.iter().enumerate().take(9) {
             // block divider
             if i % 3 == 0 && i != 0 {
-                top_left.y += spacing;
+                top_left.y += block_spacing;
                 bottom_right = top_left + Vec2::new(cell_size, cell_size);
             }
+            // square divider
+            top_left.y += square_spacing;
+            bottom_right.y += square_spacing;
 
             // column
             for (ii, val) in row.iter().enumerate().take(9) {
                 // block divider
                 if ii % 3 == 0 && ii != 0 {
-                    top_left.x += spacing;
+                    top_left.x += block_spacing;
                     bottom_right.x = top_left.x + cell_size;
                 }
+                // square divider
+                top_left.x += square_spacing;
+                bottom_right.x += square_spacing;
 
                 let rect = Rect::from_two_pos(top_left, bottom_right);
                 let rect_action = ui.allocate_rect(rect, egui::Sense::click());
