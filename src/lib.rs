@@ -129,7 +129,6 @@ impl ListFilter {
         self.length_filter = (0..self.constraints.borrow().len()).collect();
         self.apply_filters()
     }
-
 }
 
 pub fn solve_sudoku(
