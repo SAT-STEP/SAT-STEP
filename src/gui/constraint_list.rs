@@ -45,7 +45,8 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
     // Row for filtering functionality
     ui.horizontal_wrapped(|ui| {
         let max_length_label = ui.label("Max length: ");
-        ui.text_edit_singleline(&mut app.max_length_input)
+        //ui.text_edit_singleline(&mut app.max_length_input)
+        ui.add(egui::TextEdit::singleline(&mut app.max_length_input).desired_width(50.0))
             .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
             app.max_length = apply_max_length(app.max_length_input.as_str());

@@ -19,8 +19,8 @@ pub fn sudoku_grid(
         let block_size = cell_size * 3.0;
 
         // using these centers the sudoku in the middle of its column
-        height = (height - block_size*3.0) / 2.0;
-        width = width + (width - block_size*3.0) / 2.0; 
+        height = (height - block_size * 3.0) / 2.0;
+        width = width + (width - block_size * 3.0) / 2.0;
 
         let mut top_left = Pos2::new(width, height);
         let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
