@@ -190,18 +190,22 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                         //Add binding for reacting to clicks
                         let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                         if rect_action.clicked() {
-                            ui.painter().rect_filled(rect_action.rect, 0.0, Color32::YELLOW);
                             match app.clicked_constraint_index {
                                 Some(index) => {
                                     // clicking constraint again clears little numbers
                                     if index == i {
                                         app.clicked_constraint_index = None;
-                                        ui.painter().rect_filled(rect_action.rect, 0.0, Color32::LIGHT_BLUE);
                                     } else {
                                         app.clicked_constraint_index = Some(i);
                                     }
                                 }
                                 None => app.clicked_constraint_index = Some(i),
+                            }
+                        }
+
+                        if let Some(clicked_index) = app.clicked_constraint_index {
+                            if clicked_index == i {
+                                ui.painter().rect_filled(rect_action.rect, 0.0, Color32::YELLOW);
                             }
                         }
 
