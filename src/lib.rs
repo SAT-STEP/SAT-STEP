@@ -1,13 +1,15 @@
 mod cadical_wrapper;
 mod cnf_converter;
 pub mod gui;
+mod tests;
 
-use std::{cell::Ref, cell::RefCell, fs, num::ParseIntError, rc::Rc};
+use std::collections::{HashMap, HashSet};
+use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc};
 
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use cnf_converter::{clues_from_string, cnf_identifier, identifier_to_tuple, sudoku_to_cnf};
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
@@ -36,6 +38,89 @@ impl ConstraintList {
 impl Default for ConstraintList {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+struct ListFilter {
+    constraints: Rc<RefCell<Vec<Vec<i32>>>>,
+    length_filter: HashSet<usize>,
+    cell_filter: HashSet<usize>,
+    cell_constraints: HashMap<(i32, i32), HashSet<usize>>,
+}
+
+impl ListFilter {
+    pub fn new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
+        Self {
+            constraints: Rc::clone(&constraints),
+            length_filter: (0..constraints.borrow().len()).collect(),
+            cell_filter: (0..constraints.borrow().len()).collect(),
+            cell_constraints: HashMap::new(),
+        }
+    }
+
+    fn get_filtered(&self) -> Vec<Vec<i32>> {
+        let mut final_set = self.length_filter.clone();
+
+        // Add additional filters with && in the same closure
+        final_set.retain(|index| self.cell_filter.contains(index));
+
+        let mut final_list = Vec::new();
+        for index in final_set {
+            final_list.push(self.constraints.borrow()[index].clone());
+        }
+
+        final_list
+    }
+
+    pub fn reinit(&mut self) {
+        self.create_cell_map();
+        self.clear_all();
+    }
+
+    fn create_cell_map(&mut self) {
+        for row in 1..=9 {
+            for col in 1..=9 {
+                self.cell_constraints.insert((row, col), HashSet::new());
+            }
+        }
+        for (index, list) in self.constraints.borrow().iter().enumerate() {
+            for identifier in list {
+                let (row, col, _) = identifier_to_tuple(*identifier);
+                if let Some(cell_set) = self.cell_constraints.get_mut(&(row, col)) {
+                    cell_set.insert(index);
+                }
+            }
+        }
+    }
+
+    /// Filters the constraints by the given max_length.
+    pub fn by_max_length(&mut self, max_length: i32) {
+        let mut filter_set = HashSet::new();
+        for (index, constraint) in self.constraints.borrow().iter().enumerate() {
+            if constraint.len() as i32 <= max_length {
+                filter_set.insert(index);
+            }
+        }
+        self.length_filter = filter_set;
+    }
+
+    pub fn by_cell(&mut self, row: i32, col: i32) {
+        if let Some(cell_set) = self.cell_constraints.get(&(row, col)) {
+            self.cell_filter = cell_set.clone()
+        }
+    }
+
+    pub fn clear_length(&mut self) {
+        self.length_filter = (0..self.constraints.borrow().len()).collect();
+    }
+
+    pub fn clear_cell(&mut self) {
+        self.cell_filter = (0..self.constraints.borrow().len()).collect();
+    }
+
+    pub fn clear_all(&mut self) {
+        self.clear_length();
+        self.clear_cell();
     }
 }
 
@@ -84,224 +169,5 @@ pub fn apply_max_length(input: &str) -> Option<i32> {
             Some(parsed)
         }
         Err(_err) => None,
-    }
-}
-
-/// Filters the constraints by the given max_length.
-pub fn filter_by_max_length(constraints: Ref<Vec<Vec<i32>>>, max_length: i32) -> Vec<Vec<i32>> {
-    constraints
-        .clone()
-        .into_iter()
-        .filter(move |item| item.len() as i32 <= max_length)
-        .collect()
-}
-
-mod tests {
-    #[test]
-    fn test_get_sudoku() {
-        use super::*;
-
-        let sudoku = get_sudoku("data/sample_sudoku.txt".to_string());
-        let should_be = vec![
-            vec![None, None, None, None, None, None, None, Some(1), None],
-            vec![Some(4), None, None, None, None, None, None, None, None],
-            vec![None, Some(2), None, None, None, None, None, None, None],
-            vec![
-                None,
-                None,
-                None,
-                None,
-                Some(5),
-                None,
-                Some(4),
-                None,
-                Some(7),
-            ],
-            vec![None, None, Some(8), None, None, None, Some(3), None, None],
-            vec![None, None, Some(1), None, Some(9), None, None, None, None],
-            vec![
-                Some(3),
-                None,
-                None,
-                Some(4),
-                None,
-                None,
-                Some(2),
-                None,
-                None,
-            ],
-            vec![None, Some(5), None, Some(1), None, None, None, None, None],
-            vec![None, None, None, Some(8), None, Some(6), None, None, None],
-        ];
-        assert_eq!(sudoku, should_be);
-    }
-
-    #[test]
-    fn test_solve_sudoku() {
-        use super::*;
-
-        let sudoku = get_sudoku("data/sample_sudoku.txt".to_string());
-        let mut solver = cadical::Solver::with_config("plain").unwrap();
-        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
-        solver.set_callbacks(Some(callback_wrapper.clone()));
-
-        let solved = solve_sudoku(&sudoku, &mut solver).unwrap();
-        let should_be = vec![
-            vec![
-                Some(6),
-                Some(9),
-                Some(3),
-                Some(7),
-                Some(8),
-                Some(4),
-                Some(5),
-                Some(1),
-                Some(2),
-            ],
-            vec![
-                Some(4),
-                Some(8),
-                Some(7),
-                Some(5),
-                Some(1),
-                Some(2),
-                Some(9),
-                Some(3),
-                Some(6),
-            ],
-            vec![
-                Some(1),
-                Some(2),
-                Some(5),
-                Some(9),
-                Some(6),
-                Some(3),
-                Some(8),
-                Some(7),
-                Some(4),
-            ],
-            vec![
-                Some(9),
-                Some(3),
-                Some(2),
-                Some(6),
-                Some(5),
-                Some(1),
-                Some(4),
-                Some(8),
-                Some(7),
-            ],
-            vec![
-                Some(5),
-                Some(6),
-                Some(8),
-                Some(2),
-                Some(4),
-                Some(7),
-                Some(3),
-                Some(9),
-                Some(1),
-            ],
-            vec![
-                Some(7),
-                Some(4),
-                Some(1),
-                Some(3),
-                Some(9),
-                Some(8),
-                Some(6),
-                Some(2),
-                Some(5),
-            ],
-            vec![
-                Some(3),
-                Some(1),
-                Some(9),
-                Some(4),
-                Some(7),
-                Some(5),
-                Some(2),
-                Some(6),
-                Some(8),
-            ],
-            vec![
-                Some(8),
-                Some(5),
-                Some(6),
-                Some(1),
-                Some(2),
-                Some(9),
-                Some(7),
-                Some(4),
-                Some(3),
-            ],
-            vec![
-                Some(2),
-                Some(7),
-                Some(4),
-                Some(8),
-                Some(3),
-                Some(6),
-                Some(1),
-                Some(5),
-                Some(9),
-            ],
-        ];
-        assert_eq!(solved, should_be);
-    }
-
-    #[test]
-    fn test_apply_max_length_valid_input() {
-        use super::*;
-
-        let max_length = String::from("10");
-
-        let applied = apply_max_length(&max_length);
-        assert_eq!(applied, Some(10));
-    }
-
-    #[test]
-    fn test_apply_max_length_negative() {
-        use super::*;
-
-        let max_length = String::from("-10");
-
-        let applied = apply_max_length(&max_length);
-        assert_eq!(applied, None);
-    }
-
-    #[test]
-    fn test_apply_max_length_not_numeric() {
-        use super::*;
-
-        let max_length = String::from("test");
-
-        let applied = apply_max_length(&max_length);
-        assert_eq!(applied, None);
-    }
-
-    #[test]
-    fn test_apply_max_length_empty() {
-        use super::*;
-
-        let max_length = String::new();
-
-        let applied = apply_max_length(&max_length);
-        assert_eq!(applied, None);
-    }
-
-    #[test]
-    fn test_filter_by_max_length() {
-        use super::*;
-
-        let constraints = RefCell::new(vec![vec![0; 10], vec![0; 3], vec![0; 5]]);
-        let filtered = filter_by_max_length(constraints.borrow(), 4);
-        assert_eq!(filtered.len(), 1);
-
-        let filtered2 = filter_by_max_length(constraints.borrow(), 5);
-        assert_eq!(filtered2.len(), 2);
-
-        let filtered3 = filter_by_max_length(constraints.borrow(), 1);
-        assert_eq!(filtered3.len(), 0)
     }
 }
