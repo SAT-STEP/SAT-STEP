@@ -15,7 +15,7 @@ use super::SATApp;
 /// Constraint list GUI element
 pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
     // Row for basic functionality buttons
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         if ui.button("Open file...").clicked() {
             if let Some(file_path) = rfd::FileDialog::new().pick_file() {
                 app.sudoku = get_sudoku(file_path.display().to_string());
@@ -43,7 +43,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
     });
 
     // Row for filtering functionality
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         let max_length_label = ui.label("Max length: ");
         ui.text_edit_singleline(&mut app.max_length_input)
             .labelled_by(max_length_label.id);
