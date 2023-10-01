@@ -270,3 +270,20 @@ fn test_clear_filters_and_multiple_filters() {
     let cleared3 = filter.get_filtered();
     assert_eq!(cleared3.len(), 3);
 }
+
+#[test]
+fn test_constraint_list() {
+    use super::*;
+
+    let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
+    let mut c_list = ConstraintList::_new(Rc::new(RefCell::new(constraints)));
+
+    assert_eq!(c_list.len(), 2);
+
+    c_list.push(vec![5, 6, 7]);
+    assert_eq!(c_list.len(), 3);
+
+    c_list.clear();
+    assert_eq!(c_list.len(), 0);
+    assert_eq!(c_list.is_empty(), true);
+}
