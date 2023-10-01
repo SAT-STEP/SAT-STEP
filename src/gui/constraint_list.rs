@@ -20,7 +20,6 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 app.sudoku = get_sudoku(file_path.display().to_string());
                 app.constraints.constraints.borrow_mut().clear();
                 app.rendered_constraints = Vec::new();
-                app.clicked_constraint_index = None;
                 app.solver = Solver::with_config("plain").unwrap();
                 app.solver.set_callbacks(Some(app.callback_wrapper.clone()));
             }
@@ -58,7 +57,6 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
             .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
             app.state.max_length = apply_max_length(app.state.max_length_input.as_str());
-            app.clicked_constraint_index = None;
             if let Some(max_length) = app.state.max_length {
                 app.filter.by_max_length(max_length);
                 app.rendered_constraints =
@@ -67,7 +65,6 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
         }
         if ui.button("Clear filters").clicked() {
             app.filter.clear_all();
-            app.clicked_constraint_index = None;
             app.rendered_constraints = create_tupples_from_constraints(app.filter.get_filtered());
             app.state.max_length = None;
             app.state.selected_cell = None;
@@ -175,20 +172,20 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                         //Add binding for reacting to clicks
                         let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                         if rect_action.clicked() {
-                            match app.clicked_constraint_index {
+                            match app.filter.clicked_constraint_index {
                                 Some(index) => {
                                     // clicking constraint again clears little numbers
                                     if index == i {
-                                        app.clicked_constraint_index = None;
+                                        app.filter.clear_clicked_constraint_index();
                                     } else {
-                                        app.clicked_constraint_index = Some(i);
+                                        app.filter.by_constraint_index(i);
                                     }
                                 }
-                                None => app.clicked_constraint_index = Some(i),
+                                None => app.filter.by_constraint_index(i),
                             }
                         }
 
-                        if let Some(clicked_index) = app.clicked_constraint_index {
+                        if let Some(clicked_index) = app.filter.clicked_constraint_index {
                             if clicked_index == i {
                                 ui.painter()
                                     .rect_filled(rect_action.rect, 0.0, Color32::YELLOW);

@@ -19,7 +19,6 @@ pub struct SATApp {
     rendered_constraints: Vec<Vec<(i32, i32, i32)>>,
     state: GUIState,
     filter: ListFilter,
-    clicked_constraint_index: Option<usize>,
 }
 
 impl SATApp {
@@ -38,7 +37,6 @@ impl SATApp {
             rendered_constraints: Vec::new(),
             state: GUIState::new(),
             filter,
-            clicked_constraint_index: None,
         }
     }
 }
@@ -60,7 +58,6 @@ impl Default for SATApp {
             rendered_constraints: Vec::new(),
             state: GUIState::new(),
             filter,
-            clicked_constraint_index: None,
         }
     }
 }

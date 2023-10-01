@@ -23,7 +23,7 @@ pub fn sudoku_grid(app: &mut SATApp, ui: &mut Ui, height: f32, mut width: f32) -
         let mut draw_constraints = false;
         let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
-        if let Some(num) = app.clicked_constraint_index {
+        if let Some(num) = app.filter.clicked_constraint_index {
             constraints = app.rendered_constraints[num].clone();
             draw_constraints = true;
 
