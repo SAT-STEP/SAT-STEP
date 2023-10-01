@@ -58,6 +58,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
             .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
             app.state.max_length = apply_max_length(app.state.max_length_input.as_str());
+            app.clicked_constraint_index = None;
             if let Some(max_length) = app.state.max_length {
                 app.filter.by_max_length(max_length);
                 app.rendered_constraints =
@@ -66,6 +67,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
         }
         if ui.button("Clear filters").clicked() {
             app.filter.clear_all();
+            app.clicked_constraint_index = None;
             app.rendered_constraints = create_tupples_from_constraints(app.filter.get_filtered());
             app.state.max_length = None;
             app.state.selected_cell = None;
@@ -86,7 +88,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 let spacing = 2.0;
                 let top_margin = 5.0;
                 let side_margin = 10.0;
-                // let bg_color = Color32::from_rgb(15, 15, 15);
+                let bg_color = Color32::from_rgb(15, 15, 15);
 
                 let large_font = FontId::new(large_font_size, font_id.family.clone());
                 let small_font = FontId::new(small_font_size, font_id.family.clone());
@@ -168,7 +170,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                         galley_rect.set_right(width - side_margin);
 
                         // Background and click-detection
-                        // ui.painter().rect_filled(galley_rect, 0.0, bg_color);
+                        ui.painter().rect_filled(galley_rect, 0.0, bg_color);
 
                         //Add binding for reacting to clicks
                         let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
