@@ -85,7 +85,6 @@ impl SATApp {
                             create_tupples_from_constraints(self.filter.get_filtered());
                     }
 
-
                     if self.state.selected_cell == Some((i as i32 + 1, ii as i32 + 1)) {
                         ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
                     } else {
