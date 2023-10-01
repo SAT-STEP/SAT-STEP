@@ -102,6 +102,18 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     )
 }
 
+pub fn create_tupples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
+    let mut tupples = Vec::new();
+    for constraint in constraints.iter() {
+        let mut temp = Vec::with_capacity(constraint.len());
+        for value in constraint {
+            temp.push(identifier_to_tuple(*value));
+        }
+        tupples.push(temp);
+    }
+    tupples
+}
+
 pub fn clues_from_string(buf: String, empty_value: &str) -> Vec<Vec<Option<i32>>> {
     // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
@@ -172,5 +184,21 @@ mod tests {
             (6, 2, -8),
             identifier_to_tuple(-1 * cnf_identifier(6, 2, 8))
         );
+    }
+
+    #[test]
+    fn test_create_tupples_from_constraints() {
+        use super::*;
+
+        let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
+        let tupples = create_tupples_from_constraints(constraints);
+
+        assert_eq!((1, 1, 1), tupples[0][0]);
+        assert_eq!((1, 1, 2), tupples[0][1]);
+        assert_eq!((1, 1, 3), tupples[0][2]);
+
+        assert_eq!((1, 2, 1), tupples[1][0]);
+        assert_eq!((1, 2, 2), tupples[1][1]);
+        assert_eq!((1, 2, 3), tupples[1][2]);
     }
 }

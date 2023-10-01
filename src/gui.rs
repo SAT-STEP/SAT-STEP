@@ -16,7 +16,7 @@ pub struct SATApp {
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
-    rendered_constraints: Vec<Vec<i32>>,
+    rendered_constraints: Vec<Vec<(i32, i32, i32)>>,
     state: GUIState,
     filter: ListFilter,
 }
