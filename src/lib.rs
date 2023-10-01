@@ -116,7 +116,6 @@ impl ListFilter {
     }
 
     pub fn by_constraint_index(&mut self, index: usize) {
-        self.clear_all();
         self.clicked_constraint_index = Some(index);
     }
 
