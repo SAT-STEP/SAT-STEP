@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Label, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -12,7 +12,7 @@ use super::SATApp;
 /// Constraint list GUI element
 pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
     // Row for basic functionality buttons
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         if ui.button("Open file...").clicked() {
             if let Some(file_path) = rfd::FileDialog::new().pick_file() {
                 app.sudoku = get_sudoku(file_path.display().to_string());
@@ -35,20 +35,27 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 }
             }
         }
-        ui.label(format!(
-            "Learned constraints: {}",
-            app.constraints.constraints.borrow().len()
-        ));
-        ui.label(format!(
-            "Constraints after filtering: {}",
-            app.rendered_constraints.len()
-        ));
+        ui.add(
+            Label::new(format!(
+                "Learned constraints: {}",
+                app.constraints.constraints.borrow().len()
+            ))
+            .wrap(false),
+        );
+        ui.add(
+            Label::new(format!(
+                "Constraints after filtering: {}",
+                app.rendered_constraints.len()
+            ))
+            .wrap(false),
+        );
     });
 
     // Row for filtering functionality
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         let max_length_label = ui.label("Max length: ");
-        ui.text_edit_singleline(&mut app.state.max_length_input)
+
+        ui.add(egui::TextEdit::singleline(&mut app.state.max_length_input).desired_width(50.0))
             .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
             app.state.max_length = apply_max_length(app.state.max_length_input.as_str());
