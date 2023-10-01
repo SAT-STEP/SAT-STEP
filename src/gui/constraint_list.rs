@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2, Label,
+    Color32, FontId, Label, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -35,14 +35,20 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 }
             }
         }
-        ui.add(Label::new(format!(
-            "Learned constraints: {}",
-            app.constraints.constraints.borrow().len()
-        )).wrap(false));
-        ui.add(Label::new(format!(
-            "Constraints after filtering: {}",
-            app.rendered_constraints.len()
-        )).wrap(false));
+        ui.add(
+            Label::new(format!(
+                "Learned constraints: {}",
+                app.constraints.constraints.borrow().len()
+            ))
+            .wrap(false),
+        );
+        ui.add(
+            Label::new(format!(
+                "Constraints after filtering: {}",
+                app.rendered_constraints.len()
+            ))
+            .wrap(false),
+        );
     });
 
     // Row for filtering functionality
