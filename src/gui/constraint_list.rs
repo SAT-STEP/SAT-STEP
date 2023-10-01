@@ -1,14 +1,11 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2, Label,
 };
 use std::ops::Add;
 
-use crate::{
-    apply_max_length, cnf_converter::identifier_to_tuple, filter_by_max_length, get_sudoku,
-    solve_sudoku,
-};
+use crate::{apply_max_length, cnf_converter::identifier_to_tuple, get_sudoku, solve_sudoku};
 
 use super::SATApp;
 
@@ -30,35 +27,42 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 Ok(solved) => {
                     app.sudoku = solved;
                     app.rendered_constraints = app.constraints.constraints.borrow().clone();
+                    // Reinitialize filrening for a new sudoku
+                    app.filter.reinit();
                 }
                 Err(err) => {
                     println!("{}", err);
                 }
             }
         }
-        ui.label(format!(
+        ui.add(Label::new(format!(
             "Learned constraints: {}",
             app.constraints.constraints.borrow().len()
-        ));
+        )).wrap(false));
+        ui.add(Label::new(format!(
+            "Constraints after filtering: {}",
+            app.rendered_constraints.len()
+        )).wrap(false));
     });
 
     // Row for filtering functionality
     ui.horizontal_wrapped(|ui| {
         let max_length_label = ui.label("Max length: ");
-        //ui.text_edit_singleline(&mut app.max_length_input)
-        ui.add(egui::TextEdit::singleline(&mut app.max_length_input).desired_width(50.0))
+
+        ui.add(egui::TextEdit::singleline(&mut app.state.max_length_input).desired_width(50.0))
             .labelled_by(max_length_label.id);
         if ui.button("Filter").clicked() {
-            app.max_length = apply_max_length(app.max_length_input.as_str());
-            if let Some(max_length) = app.max_length {
-                app.rendered_constraints =
-                    filter_by_max_length(app.constraints.constraints.borrow(), max_length);
+            app.state.max_length = apply_max_length(app.state.max_length_input.as_str());
+            if let Some(max_length) = app.state.max_length {
+                app.filter.by_max_length(max_length);
+                app.rendered_constraints = app.filter.get_filtered();
             }
         }
         if ui.button("Clear filters").clicked() {
-            app.rendered_constraints = app.constraints.constraints.borrow().clone();
-            app.max_length_input.clear();
-            app.max_length = None;
+            app.filter.clear_all();
+            app.rendered_constraints = app.filter.get_filtered();
+            app.state.max_length = None;
+            app.state.selected_cell = None;
         }
     });
 

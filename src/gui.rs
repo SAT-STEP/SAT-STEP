@@ -1,12 +1,14 @@
 mod constraint_list;
 mod sudoku_grid;
 
+use std::rc::Rc;
+
 use cadical::Solver;
 use constraint_list::constraint_list;
 use eframe::egui;
 use sudoku_grid::sudoku_grid;
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, ListFilter};
 
 /// Main app struct
 pub struct SATApp {
@@ -15,8 +17,8 @@ pub struct SATApp {
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
     rendered_constraints: Vec<Vec<i32>>,
-    max_length: Option<i32>,
-    max_length_input: String,
+    state: GUIState,
+    filter: ListFilter,
 }
 
 impl SATApp {
@@ -26,14 +28,15 @@ impl SATApp {
             CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
+        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
         Self {
             sudoku,
             constraints,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
-            max_length: None,
-            max_length_input: String::new(),
+            state: GUIState::new(),
+            filter,
         }
     }
 }
@@ -46,14 +49,15 @@ impl Default for SATApp {
             CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
+        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
         Self {
             sudoku: Vec::new(),
             constraints,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
-            max_length: None,
-            max_length_input: String::new(),
+            state: GUIState::new(),
+            filter,
         }
     }
 }
@@ -71,9 +75,25 @@ impl eframe::App for SATApp {
                     constraint_list(self, ui, width);
                 });
                 columns[1].vertical_centered(|ui| {
-                    sudoku_grid(ui, height, width, &self.sudoku);
+                    sudoku_grid(self, ui, height, width);
                 });
             });
         });
+    }
+}
+
+struct GUIState {
+    max_length: Option<i32>,
+    max_length_input: String,
+    selected_cell: Option<(i32, i32)>,
+}
+
+impl GUIState {
+    pub fn new() -> Self {
+        Self {
+            max_length: None,
+            max_length_input: String::new(),
+            selected_cell: None,
+        }
     }
 }
