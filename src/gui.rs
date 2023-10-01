@@ -1,12 +1,9 @@
 mod constraint_list;
 mod sudoku_grid;
 
-use std::rc::Rc;
-
 use cadical::Solver;
-use constraint_list::constraint_list;
 use eframe::egui;
-use sudoku_grid::sudoku_grid;
+//use sudoku_grid::sudoku_grid;
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, ListFilter};
 
@@ -25,10 +22,10 @@ impl SATApp {
     pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
         let constraints = ConstraintList::new();
         let callback_wrapper =
-            CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
+            CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
+        let filter = ListFilter::new(constraints.clone());
         Self {
             sudoku,
             constraints,
@@ -46,10 +43,10 @@ impl Default for SATApp {
     fn default() -> Self {
         let constraints = ConstraintList::new();
         let callback_wrapper =
-            CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
+            CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
+        let filter = ListFilter::new(constraints.clone());
         Self {
             sudoku: Vec::new(),
             constraints,
@@ -72,10 +69,10 @@ impl eframe::App for SATApp {
 
             ui.columns(2, |columns| {
                 columns[0].vertical_centered(|ui| {
-                    constraint_list(self, ui, width);
+                    self.constraint_list(ui, width);
                 });
                 columns[1].vertical_centered(|ui| {
-                    sudoku_grid(self, ui, height, width);
+                    self.sudoku_grid(ui, height, width);
                 });
             });
         });

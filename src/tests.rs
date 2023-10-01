@@ -194,8 +194,12 @@ fn test_apply_max_length_empty() {
 #[test]
 fn test_filter_by_max_length() {
     use super::*;
-    let constraints = Rc::new(RefCell::new(vec![vec![0; 10], vec![0; 3], vec![0; 5]]));
-    let mut filter: ListFilter = ListFilter::new(constraints);
+    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+        vec![0; 10],
+        vec![0; 3],
+        vec![0; 5],
+    ])));
+    let mut filter: ListFilter = ListFilter::new(constraints.clone());
 
     filter.by_max_length(4);
     let filtered = filter.get_filtered();
@@ -213,8 +217,12 @@ fn test_filter_by_max_length() {
 #[test]
 fn test_filter_by_cell() {
     use super::*;
-    let constraints = Rc::new(RefCell::new(vec![vec![1; 10], vec![10; 3], vec![10; 3]]));
-    let mut filter: ListFilter = ListFilter::new(constraints);
+    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+        vec![1; 10],
+        vec![10; 3],
+        vec![10; 3],
+    ])));
+    let mut filter: ListFilter = ListFilter::new(constraints.clone());
     filter.reinit();
 
     filter.by_cell(1, 1);
@@ -233,7 +241,11 @@ fn test_filter_by_cell() {
 #[test]
 fn test_clear_filters_and_multiple_filters() {
     use super::*;
-    let constraints = Rc::new(RefCell::new(vec![vec![1; 10], vec![1; 3], vec![10; 3]]));
+    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+        vec![1; 10],
+        vec![1; 3],
+        vec![10; 3],
+    ])));
     let mut filter: ListFilter = ListFilter::new(constraints);
     filter.reinit();
 
