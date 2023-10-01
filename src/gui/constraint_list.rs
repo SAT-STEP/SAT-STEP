@@ -5,7 +5,9 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{apply_max_length, cnf_converter::identifier_to_tuple, get_sudoku, solve_sudoku};
+use crate::{
+    apply_max_length, cnf_converter::create_tupples_from_constraints, get_sudoku, solve_sudoku,
+};
 
 use super::SATApp;
 
@@ -23,6 +25,7 @@ impl SATApp {
                 if let Some(file_path) = rfd::FileDialog::new().pick_file() {
                     self.sudoku = get_sudoku(file_path.display().to_string());
                     self.constraints.clear();
+                    self.rendered_constraints = Vec::new();
                     self.solver = Solver::with_config("plain").unwrap();
                     self.solver
                         .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -33,7 +36,8 @@ impl SATApp {
                 match solve_result {
                     Ok(solved) => {
                         self.sudoku = solved;
-                        self.rendered_constraints = self.constraints.clone_constraints();
+                        self.rendered_constraints =
+                            create_tupples_from_constraints(self.constraints.clone_constraints());
                         // Reinitialize filrening for a new sudoku
                         self.filter.reinit();
                     }
@@ -65,16 +69,19 @@ impl SATApp {
                 egui::TextEdit::singleline(&mut self.state.max_length_input).desired_width(50.0),
             )
             .labelled_by(max_length_label.id);
+
             if ui.button("Filter").clicked() {
                 self.state.max_length = apply_max_length(self.state.max_length_input.as_str());
                 if let Some(max_length) = self.state.max_length {
                     self.filter.by_max_length(max_length);
-                    self.rendered_constraints = self.filter.get_filtered();
+                    self.rendered_constraints =
+                        create_tupples_from_constraints(self.filter.get_filtered());
                 }
             }
             if ui.button("Clear filters").clicked() {
                 self.filter.clear_all();
-                self.rendered_constraints = self.filter.get_filtered();
+                self.rendered_constraints =
+                    create_tupples_from_constraints(self.filter.get_filtered());
                 self.state.max_length = None;
                 self.state.selected_cell = None;
             }
@@ -108,7 +115,7 @@ impl SATApp {
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                    let clauses_binding: &Vec<Vec<i32>> = &self.rendered_constraints;
+                    let clauses_binding = &self.rendered_constraints;
                     let mut clauses = clauses_binding.iter().skip(first_item);
 
                     // Create element for each constraint
@@ -121,7 +128,7 @@ impl SATApp {
 
                             // Large while block just constructs the LayoutJob
                             while let Some(identifier) = identifiers.next() {
-                                let (row, col, val) = identifier_to_tuple(*identifier);
+                                let (row, col, val) = *identifier;
 
                                 let (lead_char, color) = if val > 0 {
                                     ("", ui.visuals().text_color())
@@ -175,14 +182,34 @@ impl SATApp {
                             // Keep everything from overflowing
                             galley_rect.set_right(width - side_margin);
 
+                            // Background and click-detection
+                            ui.painter().rect_filled(galley_rect, 0.0, bg_color);
+
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                println!("Constraint {i} clicked");
+                                match self.filter.clicked_constraint_index {
+                                    Some(index) => {
+                                        // clicking constraint again clears little numbers
+                                        if index == i {
+                                            self.filter.clear_clicked_constraint_index();
+                                        } else {
+                                            self.filter.by_constraint_index(i);
+                                        }
+                                    }
+                                    None => self.filter.by_constraint_index(i),
+                                }
                             }
 
-                            // Background and click-detection
-                            ui.painter().rect_filled(galley_rect, 0.0, bg_color);
+                            if let Some(clicked_index) = self.filter.clicked_constraint_index {
+                                if clicked_index == i {
+                                    ui.painter().rect_filled(
+                                        rect_action.rect,
+                                        0.0,
+                                        Color32::YELLOW,
+                                    );
+                                }
+                            }
 
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
