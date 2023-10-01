@@ -6,9 +6,15 @@ use std::rc::Rc;
 use cadical::Solver;
 use constraint_list::constraint_list;
 use eframe::egui;
+use egui::containers;
+use egui::Color32;
+use egui::Margin;
+use egui::RichText;
 use sudoku_grid::sudoku_grid;
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, ListFilter};
+use crate::{
+    cadical_wrapper::CadicalCallbackWrapper, error::GenericError, ConstraintList, ListFilter,
+};
 
 /// Main app struct
 pub struct SATApp {
@@ -19,6 +25,7 @@ pub struct SATApp {
     rendered_constraints: Vec<Vec<(i32, i32, i32)>>,
     state: GUIState,
     filter: ListFilter,
+    current_error: Option<GenericError>,
 }
 
 impl SATApp {
@@ -29,6 +36,7 @@ impl SATApp {
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
         let filter = ListFilter::new(Rc::clone(&constraints.constraints));
+        let current_error = None;
         Self {
             sudoku,
             constraints,
@@ -37,6 +45,7 @@ impl SATApp {
             rendered_constraints: Vec::new(),
             state: GUIState::new(),
             filter,
+            current_error,
         }
     }
 }
@@ -50,6 +59,7 @@ impl Default for SATApp {
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
         let filter = ListFilter::new(Rc::clone(&constraints.constraints));
+        let current_error = None;
         Self {
             sudoku: Vec::new(),
             constraints,
@@ -58,6 +68,7 @@ impl Default for SATApp {
             rendered_constraints: Vec::new(),
             state: GUIState::new(),
             filter,
+            current_error,
         }
     }
 }
@@ -70,14 +81,45 @@ impl eframe::App for SATApp {
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
 
-            ui.columns(2, |columns| {
-                columns[0].vertical_centered(|ui| {
-                    constraint_list(self, ui, width);
+            let mut error_open = true;
+            if let Some(e) = &self.current_error {
+                let default_margin = 10.0;
+                let error_window_margin = Margin {
+                    left: default_margin,
+                    right: default_margin,
+                    top: default_margin,
+                    bottom: default_margin,
+                };
+
+                let errorwindow = containers::Frame {
+                    fill: Color32::from_rgb(50, 50, 50),
+                    inner_margin: error_window_margin,
+                    ..Default::default()
+                };
+                let error_window_title = RichText::new("Error").color(Color32::from_rgb(255, 0, 0));
+                egui::Window::new(error_window_title)
+                    .frame(errorwindow)
+                    .open(&mut error_open)
+                    .show(ctx, |ui| {
+                        ui.label(
+                            egui::RichText::new(&e.msg)
+                                .heading()
+                                .color(Color32::from_rgb(255, 0, 0)),
+                        );
+                    });
+                if !error_open {
+                    self.current_error = None;
+                }
+            } else {
+                ui.columns(2, |columns| {
+                    columns[0].vertical_centered(|ui| {
+                        constraint_list(self, ui, width);
+                    });
+                    columns[1].vertical_centered(|ui| {
+                        sudoku_grid(self, ui, height, width);
+                    });
                 });
-                columns[1].vertical_centered(|ui| {
-                    sudoku_grid(self, ui, height, width);
-                });
-            });
+            }
         });
     }
 }

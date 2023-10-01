@@ -2,7 +2,7 @@
 fn test_get_sudoku() {
     use super::*;
 
-    let sudoku = get_sudoku("data/sample_sudoku.txt".to_string());
+    let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let should_be = vec![
         vec![None, None, None, None, None, None, None, Some(1), None],
         vec![Some(4), None, None, None, None, None, None, None, None],
@@ -41,7 +41,7 @@ fn test_get_sudoku() {
 fn test_solve_sudoku() {
     use super::*;
 
-    let sudoku = get_sudoku("data/sample_sudoku.txt".to_string());
+    let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let mut solver = cadical::Solver::with_config("plain").unwrap();
     let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
     solver.set_callbacks(Some(callback_wrapper.clone()));

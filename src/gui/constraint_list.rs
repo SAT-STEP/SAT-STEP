@@ -5,9 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{
-    apply_max_length, cnf_converter::create_tupples_from_constraints, get_sudoku, solve_sudoku,
-};
+use crate::{apply_max_length, cnf_converter::create_tupples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
@@ -16,14 +14,26 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
     // Row for basic functionality buttons
     ui.horizontal_wrapped(|ui| {
         if ui.button("Open file...").clicked() {
-            if let Some(file_path) = rfd::FileDialog::new().pick_file() {
-                app.sudoku = get_sudoku(file_path.display().to_string());
-                app.constraints.constraints.borrow_mut().clear();
-                app.rendered_constraints = Vec::new();
-                app.solver = Solver::with_config("plain").unwrap();
-                app.solver.set_callbacks(Some(app.callback_wrapper.clone()));
+            if let Some(file_path) = rfd::FileDialog::new()
+                .add_filter("text", &["txt"])
+                .pick_file()
+            {
+                let sudoku_result = crate::get_sudoku(file_path.display().to_string());
+                match sudoku_result {
+                    Ok(sudoku_vec) => {
+                        app.sudoku = sudoku_vec;
+                        app.constraints.constraints.borrow_mut().clear();
+                        app.rendered_constraints = Vec::new();
+                        app.solver = Solver::with_config("plain").unwrap();
+                        app.solver.set_callbacks(Some(app.callback_wrapper.clone()));
+                    }
+                    Err(e) => {
+                        app.current_error = Some(e);
+                    }
+                }
             }
         }
+
         if ui.button("Solve sudoku").clicked() {
             let solve_result = solve_sudoku(&app.sudoku, &mut app.solver);
             match solve_result {
@@ -40,6 +50,7 @@ pub fn constraint_list(app: &mut SATApp, ui: &mut Ui, width: f32) -> Response {
                 }
             }
         }
+
         ui.add(
             Label::new(format!(
                 "Learned constraints: {}",

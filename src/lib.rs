@@ -1,5 +1,6 @@
 mod cadical_wrapper;
 mod cnf_converter;
+mod error;
 pub mod gui;
 mod tests;
 
@@ -10,6 +11,7 @@ use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf_converter::{clues_from_string, cnf_identifier, identifier_to_tuple, sudoku_to_cnf};
+use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
@@ -169,9 +171,14 @@ pub fn solve_sudoku(
     Err(String::from("Solving sudoku failed!"))
 }
 
-pub fn get_sudoku(filename: String) -> Vec<Vec<Option<i32>>> {
-    let sudoku = fs::read_to_string(filename).unwrap();
-    clues_from_string(sudoku, ".")
+pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
+    let sudoku_result = fs::read_to_string(filename);
+    match sudoku_result {
+        Ok(sudoku) => clues_from_string(sudoku, "."),
+        Err(_) => Err(GenericError {
+            msg: "Invalid filetype!".to_string(),
+        }),
+    }
 }
 
 /// Parses the max_length filter input for applying the filter.
