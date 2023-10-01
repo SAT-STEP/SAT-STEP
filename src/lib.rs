@@ -172,8 +172,13 @@ pub fn solve_sudoku(
 }
 
 pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
-    let sudoku = fs::read_to_string(filename).unwrap();
-    clues_from_string(sudoku, ".")
+    let sudoku_result = fs::read_to_string(filename);
+    match sudoku_result {
+        Ok(sudoku) => clues_from_string(sudoku, "."),
+        Err(_) => Err(GenericError {
+            msg: "Invalid filetype!".to_string(),
+        }),
+    }
 }
 
 /// Parses the max_length filter input for applying the filter.
