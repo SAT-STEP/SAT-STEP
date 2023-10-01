@@ -3,7 +3,6 @@ mod sudoku_grid;
 
 use cadical::Solver;
 use eframe::egui;
-//use sudoku_grid::sudoku_grid;
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, ConstraintList, ListFilter};
 
