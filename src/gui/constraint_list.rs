@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Label, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -18,8 +18,7 @@ impl SATApp {
     }
 
     fn buttons(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
-        // Row for basic functionality buttons
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui.button("Open file...").clicked() {
                 if let Some(file_path) = rfd::FileDialog::new().pick_file() {
                     self.sudoku = get_sudoku(file_path.display().to_string());
@@ -43,20 +42,29 @@ impl SATApp {
                     }
                 }
             }
-            ui.label(format!("Learned constraints: {}", self.constraints.len()));
-            ui.label(format!(
-                "Constraints after filtering: {}",
-                self.rendered_constraints.len()
-            ));
+            ui.add(
+                Label::new(format!("Learned constraints: {}", self.constraints.len())).wrap(false),
+            );
+            ui.add(
+                Label::new(format!(
+                    "Constraints after filtering: {}",
+                    self.rendered_constraints.len()
+                ))
+                .wrap(false),
+            );
         })
     }
 
     // Row for filtering functionality
     fn filters(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
+        // Row for filtering functionality
+        ui.horizontal_wrapped(|ui| {
             let max_length_label = ui.label("Max length: ");
-            ui.text_edit_singleline(&mut self.state.max_length_input)
-                .labelled_by(max_length_label.id);
+
+            ui.add(
+                egui::TextEdit::singleline(&mut self.state.max_length_input).desired_width(50.0),
+            )
+            .labelled_by(max_length_label.id);
             if ui.button("Filter").clicked() {
                 self.state.max_length = apply_max_length(self.state.max_length_input.as_str());
                 if let Some(max_length) = self.state.max_length {

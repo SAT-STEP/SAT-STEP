@@ -5,7 +5,7 @@ use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 use super::SATApp;
 
 impl SATApp {
-    pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, mut width: f32) -> Response {
+    pub fn sudoku_grid(&mut self, ui: &mut Ui, mut height: f32, mut width: f32) -> Response {
         ui.horizontal_wrapped(|ui| {
             let block_spacing = 2.0;
             let square_spacing = 1.0;
@@ -16,7 +16,11 @@ impl SATApp {
 
             let block_size = cell_size * 3.0;
 
-            let mut top_left = Pos2::new(width, 0.0);
+            // using these centers the sudoku in the middle of its column
+            height = (height - block_size * 3.0) / 2.0;
+            width = width + (width - block_size * 3.0) / 2.0;
+
+            let mut top_left = Pos2::new(width, height);
             let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
 
             // row
