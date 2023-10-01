@@ -113,7 +113,7 @@ pub fn sudoku_grid(app: &mut SATApp, ui: &mut Ui, height: f32, mut width: f32) -
                             little_top_left,
                             egui::Align2::LEFT_TOP,
                             constraints[c_index].2.to_string(),
-                            egui::FontId::new(block_size / 15.0, egui::FontFamily::Monospace),
+                            egui::FontId::new(block_size / 10.0, egui::FontFamily::Monospace),
                             c_value_color,
                         );
                         little_top_left.x += cell_size / 3.0;
