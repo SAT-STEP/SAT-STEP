@@ -25,7 +25,8 @@ impl SATApp {
                     self.sudoku = get_sudoku(file_path.display().to_string());
                     self.constraints.clear();
                     self.solver = Solver::with_config("plain").unwrap();
-                    self.solver.set_callbacks(Some(self.callback_wrapper.clone()));
+                    self.solver
+                        .set_callbacks(Some(self.callback_wrapper.clone()));
                 }
             }
             if ui.button("Solve sudoku").clicked() {
@@ -42,14 +43,11 @@ impl SATApp {
                     }
                 }
             }
+            ui.label(format!("Learned constraints: {}", self.constraints.len()));
             ui.label(format!(
-                    "Learned constraints: {}",
-                    self.constraints.len()
-                    ));
-            ui.label(format!(
-                    "Constraints after filtering: {}",
-                    self.rendered_constraints.len()
-                    ));
+                "Constraints after filtering: {}",
+                self.rendered_constraints.len()
+            ));
         })
     }
 
@@ -131,7 +129,7 @@ impl SATApp {
                                         color,
                                         ..Default::default()
                                     },
-                                    );
+                                );
                                 text_job.append(
                                     &format!("({},{})", row, col),
                                     0.0,
@@ -140,7 +138,7 @@ impl SATApp {
                                         color,
                                         ..Default::default()
                                     },
-                                    );
+                                );
 
                                 if identifiers.peek().is_some() {
                                     text_job.append(
@@ -151,7 +149,7 @@ impl SATApp {
                                             color: Color32::DARK_GRAY,
                                             ..Default::default()
                                         },
-                                        );
+                                    );
                                 }
                             }
 
@@ -164,7 +162,7 @@ impl SATApp {
                             let mut galley_rect = Rect::from_two_pos(
                                 galley.rect.left_top().add(Vec2 { x, y }),
                                 galley.rect.right_bottom().add(Vec2 { x, y }),
-                                );
+                            );
 
                             // Keep everything from overflowing
                             galley_rect.set_right(width - side_margin);
@@ -185,6 +183,4 @@ impl SATApp {
                 });
         })
     }
-
 }
-

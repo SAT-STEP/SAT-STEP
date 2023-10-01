@@ -70,7 +70,7 @@ impl SATApp {
                             num.to_string(),
                             egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
                             Color32::BLACK,
-                            );
+                        );
                     }
 
                     top_left.x += cell_size;

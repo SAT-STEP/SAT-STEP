@@ -15,19 +15,14 @@ use cnf_converter::{clues_from_string, cnf_identifier, identifier_to_tuple, sudo
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
-
 impl ConstraintList {
     pub fn new() -> Self {
-        Self (
-            Rc::new(RefCell::new(Vec::new())),
-        )
+        Self(Rc::new(RefCell::new(Vec::new())))
     }
 
     // for testing
     pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
-        Self (
-            constraints,
-         )
+        Self(constraints)
     }
 
     pub fn clone_constraints(&self) -> Vec<Vec<i32>> {
@@ -44,6 +39,10 @@ impl ConstraintList {
 
     pub fn len(&self) -> usize {
         self.0.borrow().len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.borrow().is_empty()
     }
 
     pub fn borrow(&self) -> std::cell::Ref<'_, Vec<Vec<i32>>> {
