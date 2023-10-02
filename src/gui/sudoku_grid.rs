@@ -47,9 +47,9 @@ impl SATApp {
             let mut c_index = 0;
 
             // row
-            for (i, row) in self.sudoku.iter().enumerate().take(9) {
+            for (row_num, row) in self.sudoku.iter().enumerate().take(9) {
                 // block divider
-                if i % 3 == 0 && i != 0 {
+                if row_num % 3 == 0 && row_num != 0 {
                     top_left.y += block_spacing;
                     bottom_right = top_left + Vec2::new(cell_size, cell_size);
                 }
@@ -58,9 +58,9 @@ impl SATApp {
                 bottom_right.y += square_spacing;
 
                 // column
-                for (ii, val) in row.iter().enumerate().take(9) {
+                for (col_num, val) in row.iter().enumerate().take(9) {
                     // block divider
-                    if ii % 3 == 0 && ii != 0 {
+                    if col_num % 3 == 0 && col_num != 0 {
                         top_left.x += block_spacing;
                         bottom_right.x = top_left.x + cell_size;
                     }
@@ -74,18 +74,21 @@ impl SATApp {
 
                     // Filter constraint list by cell
                     if rect_action.clicked() {
-                        if self.state.selected_cell == Some((i as i32 + 1, ii as i32 + 1)) {
+                        if self.state.selected_cell
+                            == Some((row_num as i32 + 1, col_num as i32 + 1))
+                        {
                             self.state.selected_cell = None;
                             self.filter.clear_cell();
                         } else {
-                            self.state.selected_cell = Some((i as i32 + 1, ii as i32 + 1));
-                            self.filter.by_cell(i as i32 + 1, ii as i32 + 1);
+                            self.state.selected_cell =
+                                Some((row_num as i32 + 1, col_num as i32 + 1));
+                            self.filter.by_cell(row_num as i32 + 1, col_num as i32 + 1);
                         }
                         self.rendered_constraints =
                             create_tupples_from_constraints(self.filter.get_filtered());
                     }
 
-                    if self.state.selected_cell == Some((i as i32 + 1, ii as i32 + 1)) {
+                    if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
                         ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
                     } else {
                         ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
@@ -94,15 +97,15 @@ impl SATApp {
                     let mut drew_constraint = false;
                     if draw_constraints {
                         let mut little_top_left = top_left;
-                        let mut j = 0;
+                        let mut little_num_pos = 0;
 
                         // while on little numbers reference this row and block
                         while c_index < constraints.len()
-                            && constraints[c_index].0 == (i as i32 + 1)
-                            && constraints[c_index].1 == (ii as i32 + 1)
+                            && constraints[c_index].0 == (row_num as i32 + 1)
+                            && constraints[c_index].1 == (col_num as i32 + 1)
                         {
                             // new row for little numbers
-                            if j % 3 == 0 && j != 0 {
+                            if little_num_pos % 3 == 0 && little_num_pos != 0 {
                                 little_top_left.y += cell_size / 3.0;
                                 little_top_left.x = top_left.x;
                             }
@@ -124,7 +127,7 @@ impl SATApp {
                             );
                             little_top_left.x += cell_size / 3.0;
                             c_index += 1;
-                            j += 1;
+                            little_num_pos += 1;
 
                             drew_constraint = true;
                         }
