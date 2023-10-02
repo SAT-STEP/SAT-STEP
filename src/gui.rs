@@ -1,16 +1,12 @@
 mod constraint_list;
 mod sudoku_grid;
 
-use std::rc::Rc;
-
 use cadical::Solver;
-use constraint_list::constraint_list;
 use eframe::egui;
 use egui::containers;
 use egui::Color32;
 use egui::Margin;
 use egui::RichText;
-use sudoku_grid::sudoku_grid;
 
 use crate::{
     cadical_wrapper::CadicalCallbackWrapper, error::GenericError, ConstraintList, ListFilter,
@@ -31,11 +27,10 @@ pub struct SATApp {
 impl SATApp {
     pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
         let constraints = ConstraintList::new();
-        let callback_wrapper =
-            CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
+        let filter = ListFilter::new(constraints.clone());
         let current_error = None;
         Self {
             sudoku,
@@ -54,11 +49,10 @@ impl SATApp {
 impl Default for SATApp {
     fn default() -> Self {
         let constraints = ConstraintList::new();
-        let callback_wrapper =
-            CadicalCallbackWrapper::new(ConstraintList::clone(&constraints.constraints));
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let filter = ListFilter::new(Rc::clone(&constraints.constraints));
+        let filter = ListFilter::new(constraints.clone());
         let current_error = None;
         Self {
             sudoku: Vec::new(),
@@ -113,10 +107,10 @@ impl eframe::App for SATApp {
             } else {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
-                        constraint_list(self, ui, width);
+                        self.constraint_list(ui, width);
                     });
                     columns[1].vertical_centered(|ui| {
-                        sudoku_grid(self, ui, height, width);
+                        self.sudoku_grid(ui, height, width);
                     });
                 });
             }

@@ -15,25 +15,40 @@ use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
-pub struct ConstraintList {
-    pub constraints: Rc<RefCell<Vec<Vec<i32>>>>,
-}
+pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
 impl ConstraintList {
     pub fn new() -> Self {
-        Self {
-            constraints: Rc::new(RefCell::new(Vec::new())),
-        }
+        Self(Rc::new(RefCell::new(Vec::new())))
     }
 
-    pub fn clone(constraints: &Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
-        Self {
-            constraints: Rc::clone(constraints),
-        }
+    // for testing
+    pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
+        Self(constraints)
+    }
+
+    pub fn clone_constraints(&self) -> Vec<Vec<i32>> {
+        self.0.borrow().clone()
     }
 
     pub fn push(&mut self, constraint: Vec<i32>) {
-        self.constraints.borrow_mut().push(constraint);
+        self.0.borrow_mut().push(constraint);
+    }
+
+    pub fn clear(&mut self) {
+        self.0.borrow_mut().clear();
+    }
+
+    pub fn len(&self) -> usize {
+        self.0.borrow().len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.borrow().is_empty()
+    }
+
+    pub fn borrow(&self) -> std::cell::Ref<'_, Vec<Vec<i32>>> {
+        self.0.borrow()
     }
 }
 
@@ -44,7 +59,7 @@ impl Default for ConstraintList {
 }
 
 struct ListFilter {
-    constraints: Rc<RefCell<Vec<Vec<i32>>>>,
+    constraints: ConstraintList,
     length_filter: HashSet<usize>,
     cell_filter: HashSet<usize>,
     cell_constraints: HashMap<(i32, i32), HashSet<usize>>,
@@ -52,11 +67,13 @@ struct ListFilter {
 }
 
 impl ListFilter {
-    pub fn new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
+    pub fn new(constraints: ConstraintList) -> Self {
+        let length_filter = (0..constraints.len()).collect();
+        let cell_filter = (0..constraints.len()).collect();
         Self {
-            constraints: Rc::clone(&constraints),
-            length_filter: (0..constraints.borrow().len()).collect(),
-            cell_filter: (0..constraints.borrow().len()).collect(),
+            constraints,
+            length_filter,
+            cell_filter,
             cell_constraints: HashMap::new(),
             clicked_constraint_index: None,
         }

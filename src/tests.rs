@@ -194,8 +194,12 @@ fn test_apply_max_length_empty() {
 #[test]
 fn test_filter_by_max_length() {
     use super::*;
-    let constraints = Rc::new(RefCell::new(vec![vec![0; 10], vec![0; 3], vec![0; 5]]));
-    let mut filter: ListFilter = ListFilter::new(constraints);
+    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+        vec![0; 10],
+        vec![0; 3],
+        vec![0; 5],
+    ])));
+    let mut filter: ListFilter = ListFilter::new(constraints.clone());
 
     filter.by_max_length(4);
     let filtered = filter.get_filtered();
@@ -213,8 +217,12 @@ fn test_filter_by_max_length() {
 #[test]
 fn test_filter_by_cell() {
     use super::*;
-    let constraints = Rc::new(RefCell::new(vec![vec![1; 10], vec![10; 3], vec![10; 3]]));
-    let mut filter: ListFilter = ListFilter::new(constraints);
+    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+        vec![1; 10],
+        vec![10; 3],
+        vec![10; 3],
+    ])));
+    let mut filter: ListFilter = ListFilter::new(constraints.clone());
     filter.reinit();
 
     filter.by_cell(1, 1);
@@ -233,7 +241,11 @@ fn test_filter_by_cell() {
 #[test]
 fn test_clear_filters_and_multiple_filters() {
     use super::*;
-    let constraints = Rc::new(RefCell::new(vec![vec![1; 10], vec![1; 3], vec![10; 3]]));
+    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+        vec![1; 10],
+        vec![1; 3],
+        vec![10; 3],
+    ])));
     let mut filter: ListFilter = ListFilter::new(constraints);
     filter.reinit();
 
@@ -257,4 +269,21 @@ fn test_clear_filters_and_multiple_filters() {
     filter.clear_all();
     let cleared3 = filter.get_filtered();
     assert_eq!(cleared3.len(), 3);
+}
+
+#[test]
+fn test_constraint_list() {
+    use super::*;
+
+    let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
+    let mut c_list = ConstraintList::_new(Rc::new(RefCell::new(constraints)));
+
+    assert_eq!(c_list.len(), 2);
+
+    c_list.push(vec![5, 6, 7]);
+    assert_eq!(c_list.len(), 3);
+
+    c_list.clear();
+    assert_eq!(c_list.len(), 0);
+    assert_eq!(c_list.is_empty(), true);
 }
