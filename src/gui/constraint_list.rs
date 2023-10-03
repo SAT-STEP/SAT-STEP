@@ -16,7 +16,7 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale);
         self.filters(ui, text_scale);
-        self.list_of_constraints(ui, width, text_scale).response
+        self.list_of_constraints(ui, text_scale).response
     }
 
     fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
@@ -104,11 +104,12 @@ impl SATApp {
         })
     }
 
-    fn list_of_constraints(&mut self, ui: &mut Ui, width: f32, text_scale: f32) -> egui::InnerResponse<()> {
+    fn list_of_constraints(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
-            ScrollArea::vertical()
+            ScrollArea::both()
                 .auto_shrink([false; 2])
                 .stick_to_bottom(false)
+                .stick_to_right(false)
                 .show_viewport(ui, |ui, viewport| {
                     let font_id = TextStyle::Body.resolve(ui.style());
 
@@ -118,7 +119,6 @@ impl SATApp {
                     let small_font_size = large_font_size * 0.65;
                     let spacing = 2.0;
                     let top_margin = 5.0;
-                    let side_margin = 10.0;
                     let bg_color = Color32::from_rgb(15, 15, 15);
 
                     let large_font = FontId::new(large_font_size, font_id.family.clone());
@@ -191,13 +191,10 @@ impl SATApp {
                             // Create the actual rect we want to use for the elements
                             let x = ui.min_rect().left();
                             let y = ui.min_rect().top() + top_margin + i as f32 * row_height;
-                            let mut galley_rect = Rect::from_two_pos(
+                            let galley_rect = Rect::from_two_pos(
                                 galley.rect.left_top().add(Vec2 { x, y }),
                                 galley.rect.right_bottom().add(Vec2 { x, y }),
                             );
-
-                            // Keep everything from overflowing
-                            galley_rect.set_right(width - side_margin);
 
                             // Background and click-detection
                             ui.painter().rect_filled(galley_rect, 0.0, bg_color);
