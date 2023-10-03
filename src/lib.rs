@@ -85,8 +85,14 @@ impl ListFilter {
         // Add additional filters with && in the same closure
         final_set.retain(|index| self.cell_filter.contains(index));
 
-        let mut final_list = Vec::new();
+        let mut index_list = Vec::new();
         for index in final_set {
+            index_list.push(index);
+        }
+        index_list.sort();
+
+        let mut final_list = Vec::new();
+        for index in index_list {
             final_list.push(self.constraints.borrow()[index].clone());
         }
 
