@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Label, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2, RichText,
 };
 use std::ops::Add;
 
@@ -12,14 +12,17 @@ use super::SATApp;
 impl SATApp {
     /// Constraint list GUI element
     pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
-        self.buttons(ui);
-        self.filters(ui);
-        self.list_of_constraints(ui, width).response
+        //
+        let text_scale = (width / 35.0).max(10.0);
+        self.buttons(ui, text_scale);
+        self.filters(ui, text_scale);
+        self.list_of_constraints(ui, width, text_scale).response
     }
 
-    fn buttons(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
+    fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        
         ui.horizontal_wrapped(|ui| {
-            if ui.button("Open file...").clicked() {
+            if ui.button(RichText::new("Open file...").size(text_scale)).clicked() {
                 if let Some(file_path) = rfd::FileDialog::new()
                     .add_filter("text", &["txt"])
                     .pick_file()
@@ -40,7 +43,7 @@ impl SATApp {
                     }
                 }
             }
-            if ui.button("Solve sudoku").clicked() {
+            if ui.button(RichText::new("Solve sudoku").size(text_scale)).clicked() {
                 let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
@@ -56,30 +59,33 @@ impl SATApp {
                 }
             }
             ui.add(
-                Label::new(format!("Learned constraints: {}", self.constraints.len())).wrap(false),
+                Label::new(RichText::new(format!("Learned constraints: {}", self.constraints.len())).size(text_scale)).wrap(false),
             );
             ui.add(
-                Label::new(format!(
+                Label::new(RichText::new(format!(
                     "Constraints after filtering: {}",
                     self.rendered_constraints.len()
-                ))
+                )).size(text_scale))
                 .wrap(false),
             );
         })
     }
 
     // Row for filtering functionality
-    fn filters(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
+    fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Row for filtering functionality
         ui.horizontal_wrapped(|ui| {
-            let max_length_label = ui.label("Max length: ");
+            let max_length_label = ui.label(RichText::new("Max length: ").size(text_scale));
+
+            let font_id = TextStyle::Body.resolve(ui.style());
+            let font = FontId::new(text_scale, font_id.family.clone());
 
             ui.add(
-                egui::TextEdit::singleline(&mut self.state.max_length_input).desired_width(50.0),
+                egui::TextEdit::singleline(&mut self.state.max_length_input).desired_width(2.0*text_scale).font(font),
             )
             .labelled_by(max_length_label.id);
 
-            if ui.button("Filter").clicked() {
+            if ui.button(RichText::new("Filter").size(text_scale)).clicked() {
                 self.state.max_length = apply_max_length(self.state.max_length_input.as_str());
                 if let Some(max_length) = self.state.max_length {
                     self.filter.by_max_length(max_length);
@@ -87,7 +93,7 @@ impl SATApp {
                         create_tupples_from_constraints(self.filter.get_filtered());
                 }
             }
-            if ui.button("Clear filters").clicked() {
+            if ui.button(RichText::new("Clear filters").size(text_scale)).clicked() {
                 self.filter.clear_all();
                 self.rendered_constraints =
                     create_tupples_from_constraints(self.filter.get_filtered());
@@ -97,7 +103,7 @@ impl SATApp {
         })
     }
 
-    fn list_of_constraints(&mut self, ui: &mut Ui, width: f32) -> egui::InnerResponse<()> {
+    fn list_of_constraints(&mut self, ui: &mut Ui, width: f32, text_scale: f32) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
             ScrollArea::vertical()
                 .auto_shrink([false; 2])
@@ -106,7 +112,7 @@ impl SATApp {
                     let font_id = TextStyle::Body.resolve(ui.style());
 
                     // Parameters we might want to adjust or get from elsewhere later
-                    let large_font_size = font_id.size * width / 300.0;
+                    let large_font_size = text_scale * 2.0; //font_id.size * width / 300.0;
                     let small_font_size = large_font_size * 0.65;
                     let spacing = 2.0;
                     let top_margin = 5.0;
