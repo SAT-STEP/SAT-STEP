@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, ScrollArea, TextStyle, Ui, Vec2, RichText,
+    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -20,9 +20,11 @@ impl SATApp {
     }
 
     fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        
         ui.horizontal_wrapped(|ui| {
-            if ui.button(RichText::new("Open file...").size(text_scale)).clicked() {
+            if ui
+                .button(RichText::new("Open file...").size(text_scale))
+                .clicked()
+            {
                 if let Some(file_path) = rfd::FileDialog::new()
                     .add_filter("text", &["txt"])
                     .pick_file()
@@ -43,7 +45,10 @@ impl SATApp {
                     }
                 }
             }
-            if ui.button(RichText::new("Solve sudoku").size(text_scale)).clicked() {
+            if ui
+                .button(RichText::new("Solve sudoku").size(text_scale))
+                .clicked()
+            {
                 let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
@@ -59,13 +64,20 @@ impl SATApp {
                 }
             }
             ui.add(
-                Label::new(RichText::new(format!("Learned constraints: {}", self.constraints.len())).size(text_scale)).wrap(false),
+                Label::new(
+                    RichText::new(format!("Learned constraints: {}", self.constraints.len()))
+                        .size(text_scale),
+                )
+                .wrap(false),
             );
             ui.add(
-                Label::new(RichText::new(format!(
-                    "Constraints after filtering: {}",
-                    self.rendered_constraints.len()
-                )).size(text_scale))
+                Label::new(
+                    RichText::new(format!(
+                        "Constraints after filtering: {}",
+                        self.rendered_constraints.len()
+                    ))
+                    .size(text_scale),
+                )
                 .wrap(false),
             );
         })
@@ -82,11 +94,16 @@ impl SATApp {
 
             // Text input field is set as 2x text_scale, this allows it to hold 2 digits
             ui.add(
-                egui::TextEdit::singleline(&mut self.state.max_length_input).desired_width(2.0*text_scale).font(font),
+                egui::TextEdit::singleline(&mut self.state.max_length_input)
+                    .desired_width(2.0 * text_scale)
+                    .font(font),
             )
             .labelled_by(max_length_label.id);
 
-            if ui.button(RichText::new("Filter").size(text_scale)).clicked() {
+            if ui
+                .button(RichText::new("Filter").size(text_scale))
+                .clicked()
+            {
                 self.state.max_length = apply_max_length(self.state.max_length_input.as_str());
                 if let Some(max_length) = self.state.max_length {
                     self.filter.by_max_length(max_length);
@@ -94,7 +111,10 @@ impl SATApp {
                         create_tupples_from_constraints(self.filter.get_filtered());
                 }
             }
-            if ui.button(RichText::new("Clear filters").size(text_scale)).clicked() {
+            if ui
+                .button(RichText::new("Clear filters").size(text_scale))
+                .clicked()
+            {
                 self.filter.clear_all();
                 self.rendered_constraints =
                     create_tupples_from_constraints(self.filter.get_filtered());
