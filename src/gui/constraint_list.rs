@@ -12,7 +12,7 @@ use super::SATApp;
 impl SATApp {
     /// Constraint list GUI element
     pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
-        //
+        // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale);
         self.filters(ui, text_scale);
@@ -80,6 +80,7 @@ impl SATApp {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
 
+            // Text input field is set as 2x text_scale, this allows it to hold 2 digits
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.max_length_input).desired_width(2.0*text_scale).font(font),
             )
@@ -112,7 +113,8 @@ impl SATApp {
                     let font_id = TextStyle::Body.resolve(ui.style());
 
                     // Parameters we might want to adjust or get from elsewhere later
-                    let large_font_size = text_scale * 2.0; //font_id.size * width / 300.0;
+                    // All values chosen by ui testing
+                    let large_font_size = text_scale * 2.0;
                     let small_font_size = large_font_size * 0.65;
                     let spacing = 2.0;
                     let top_margin = 5.0;
