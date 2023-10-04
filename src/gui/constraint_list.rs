@@ -35,6 +35,7 @@ impl SATApp {
                             self.sudoku = sudoku_vec;
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
+                            self.filter.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
