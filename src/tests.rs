@@ -299,5 +299,4 @@ fn test_clues() {
     let _solved = solve_sudoku(&sudoku, &mut solver).unwrap();
 
     assert_eq!(clues, vec![vec![None; 9]; 9]);
-
 }
