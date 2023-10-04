@@ -53,10 +53,12 @@ impl SATApp {
                 match solve_result {
                     Ok(solved) => {
                         self.sudoku = solved;
-                        self.rendered_constraints =
-                            create_tupples_from_constraints(self.constraints.clone_constraints());
+/*                         self.rendered_constraints =
+                            create_tupples_from_constraints(self.constraints.clone_constraints()); */
                         // Reinitialize filrening for a new sudoku
                         self.filter.reinit();
+                        self.rendered_constraints =
+                        create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -108,7 +110,7 @@ impl SATApp {
                 if let Some(max_length) = self.state.max_length {
                     self.filter.by_max_length(max_length);
                     self.rendered_constraints =
-                        create_tupples_from_constraints(self.filter.get_filtered());
+                        create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
                 }
             }
             if ui
@@ -117,7 +119,7 @@ impl SATApp {
             {
                 self.filter.clear_all();
                 self.rendered_constraints =
-                    create_tupples_from_constraints(self.filter.get_filtered());
+                    create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
                 self.state.max_length = None;
                 self.state.selected_cell = None;
             }

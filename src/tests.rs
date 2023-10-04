@@ -202,15 +202,15 @@ fn test_filter_by_max_length() {
     let mut filter: ListFilter = ListFilter::new(constraints.clone());
 
     filter.by_max_length(4);
-    let filtered = filter.get_filtered();
+    let filtered = filter.get_filtered(0, 50);
     assert_eq!(filtered.len(), 1);
 
     filter.by_max_length(5);
-    let filtered2 = filter.get_filtered();
+    let filtered2 = filter.get_filtered(0, 50);
     assert_eq!(filtered2.len(), 2);
 
     filter.by_max_length(1);
-    let filtered3 = filter.get_filtered();
+    let filtered3 = filter.get_filtered(0, 50);
     assert_eq!(filtered3.len(), 0)
 }
 
@@ -226,15 +226,15 @@ fn test_filter_by_cell() {
     filter.reinit();
 
     filter.by_cell(1, 1);
-    let filtered = filter.get_filtered();
+    let filtered = filter.get_filtered(0, 50);
     assert_eq!(filtered.len(), 1);
 
     filter.by_cell(1, 2);
-    let filtered2 = filter.get_filtered();
+    let filtered2 = filter.get_filtered(0, 50);
     assert_eq!(filtered2.len(), 2);
 
     filter.by_cell(2, 2);
-    let filtered3 = filter.get_filtered();
+    let filtered3 = filter.get_filtered(0, 50);
     assert_eq!(filtered3.len(), 0);
 }
 
@@ -250,24 +250,24 @@ fn test_clear_filters_and_multiple_filters() {
     filter.reinit();
 
     filter.by_cell(1, 1);
-    let filtered = filter.get_filtered();
+    let filtered = filter.get_filtered(0, 50);
     assert_eq!(filtered.len(), 2);
     filter.by_max_length(3);
-    let filtered2 = filter.get_filtered();
+    let filtered2 = filter.get_filtered(0, 50);
     assert_eq!(filtered2.len(), 1);
     filter.clear_cell();
-    let cleared = filter.get_filtered();
+    let cleared = filter.get_filtered(0, 50);
     assert_eq!(cleared.len(), 2);
     filter.clear_length();
-    let cleared2 = filter.get_filtered();
+    let cleared2 = filter.get_filtered(0, 50);
     assert_eq!(cleared2.len(), 3);
 
     let _ = filter.by_cell(1, 1);
     filter.by_max_length(3);
-    let filtered4 = filter.get_filtered();
+    let filtered4 = filter.get_filtered(0, 50);
     assert_eq!(filtered4.len(), 1);
     filter.clear_all();
-    let cleared3 = filter.get_filtered();
+    let cleared3 = filter.get_filtered(0, 50);
     assert_eq!(cleared3.len(), 3);
 }
 

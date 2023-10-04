@@ -122,6 +122,8 @@ struct GUIState {
     max_length: Option<i32>,
     max_length_input: String,
     selected_cell: Option<(i32, i32)>,
+    page_number: usize,
+    page_length: usize,
 }
 
 impl GUIState {
@@ -130,6 +132,8 @@ impl GUIState {
             max_length: None,
             max_length_input: String::new(),
             selected_cell: None,
+            page_number: 0,
+            page_length: 50,
         }
     }
 }

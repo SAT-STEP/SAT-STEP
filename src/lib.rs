@@ -79,7 +79,7 @@ impl ListFilter {
         }
     }
 
-    fn get_filtered(&self) -> Vec<Vec<i32>> {
+    fn get_filtered(&self, page_number: usize, page_length: usize) -> Vec<Vec<i32>> {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
@@ -96,7 +96,9 @@ impl ListFilter {
             final_list.push(self.constraints.borrow()[index].clone());
         }
 
-        final_list
+        let begin: usize = std::cmp::min(final_list.len(), page_number * page_length);
+        let stop: usize = std::cmp::min(final_list.len(), (page_number+1) * page_length);
+        final_list[begin..stop].to_vec()
     }
 
     pub fn reinit(&mut self) {

@@ -85,7 +85,7 @@ impl SATApp {
                             self.filter.by_cell(row_num as i32 + 1, col_num as i32 + 1);
                         }
                         self.rendered_constraints =
-                            create_tupples_from_constraints(self.filter.get_filtered());
+                            create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
                     }
 
                     if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
