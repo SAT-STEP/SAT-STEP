@@ -28,6 +28,7 @@ impl SATApp {
                     match sudoku_result {
                         Ok(sudoku_vec) => {
                             self.sudoku = sudoku_vec;
+                            self.clues = self.sudoku.clone();
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
                             self.solver = Solver::with_config("plain").unwrap();
