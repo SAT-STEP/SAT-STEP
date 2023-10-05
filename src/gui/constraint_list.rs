@@ -16,6 +16,7 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale);
         self.filters(ui, text_scale);
+        self.page_buttons(ui, text_scale);
         self.list_of_constraints(ui, text_scale).response
     }
 
@@ -53,9 +54,7 @@ impl SATApp {
                 match solve_result {
                     Ok(solved) => {
                         self.sudoku = solved;
-/*                         self.rendered_constraints =
-                            create_tupples_from_constraints(self.constraints.clone_constraints()); */
-                        // Reinitialize filrening for a new sudoku
+                        // Reinitialize filtering for a new sudoku
                         self.filter.reinit();
                         self.rendered_constraints =
                         create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
@@ -84,7 +83,7 @@ impl SATApp {
             );
         })
     }
-
+    
     // Row for filtering functionality
     fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Row for filtering functionality
@@ -126,6 +125,54 @@ impl SATApp {
         })
     }
 
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal_wrapped(|ui| {
+            if ui
+                .button(RichText::new("<").size(text_scale))
+                .clicked()
+            {
+                if (self.state.page_number>0) {
+                    self.state.page_number-=1;
+                    self.rendered_constraints =
+                    create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                }
+            }
+
+            let mut page_count = self.rendered_constraints.len()/(self.state.page_length);
+            page_count += if self.rendered_constraints.len() % self.state.page_length == 0 {0} else {1};
+
+            ui.add(
+                Label::new(
+                    RichText::new(format!("Page {}/{}", self.state.page_number+1, page_count))
+                        .size(text_scale),
+                )
+                .wrap(false),
+            );
+
+            if ui
+                .button(RichText::new(">").size(text_scale))
+                .clicked()
+            {
+                if (page_count>0 && self.state.page_number<page_count-1) {
+                    self.state.page_number+=1;
+                    self.rendered_constraints =
+                        create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                }
+            }
+
+            ui.add(
+                Label::new(
+                    RichText::new(format!(
+                        "Constraints after filtering: {}",
+                        self.rendered_constraints.len()
+                    ))
+                    .size(text_scale),
+                )
+                .wrap(false),
+            );
+        })
+    }
+    
     fn list_of_constraints(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
             ScrollArea::both()

@@ -98,6 +98,8 @@ impl ListFilter {
 
         let begin: usize = std::cmp::min(final_list.len(), page_number * page_length);
         let stop: usize = std::cmp::min(final_list.len(), (page_number+1) * page_length);
+        println!("{}",begin);
+        println!("{}",stop);
         final_list[begin..stop].to_vec()
     }
 
