@@ -75,7 +75,7 @@ impl SATApp {
                 Label::new(
                     RichText::new(format!(
                         "Constraints after filtering: {}",
-                        self.rendered_constraints.len()
+                        self.filter.filtered_length
                     ))
                     .size(text_scale),
                 )
@@ -138,8 +138,8 @@ impl SATApp {
                 }
             }
 
-            let mut page_count = self.rendered_constraints.len()/(self.state.page_length);
-            page_count += if self.rendered_constraints.len() % self.state.page_length == 0 {0} else {1};
+            let mut page_count = self.filter.filtered_length/(self.state.page_length);
+            page_count += if self.filter.filtered_length % self.state.page_length == 0 {0} else {1};
 
             ui.add(
                 Label::new(
@@ -164,7 +164,7 @@ impl SATApp {
                 Label::new(
                     RichText::new(format!(
                         "Constraints after filtering: {}",
-                        self.rendered_constraints.len()
+                        self.filter.filtered_length
                     ))
                     .size(text_scale),
                 )

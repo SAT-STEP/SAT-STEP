@@ -64,6 +64,7 @@ struct ListFilter {
     cell_filter: HashSet<usize>,
     cell_constraints: HashMap<(i32, i32), HashSet<usize>>,
     clicked_constraint_index: Option<usize>,
+    filtered_length: usize,
 }
 
 impl ListFilter {
@@ -76,14 +77,16 @@ impl ListFilter {
             cell_filter,
             cell_constraints: HashMap::new(),
             clicked_constraint_index: None,
+            filtered_length: 0,
         }
     }
 
-    fn get_filtered(&self, page_number: usize, page_length: usize) -> Vec<Vec<i32>> {
+    fn get_filtered(&mut self, page_number: usize, page_length: usize) -> Vec<Vec<i32>> {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
         final_set.retain(|index| self.cell_filter.contains(index));
+        self.filtered_length = final_set.len();
 
         let mut index_list = Vec::new();
         for index in final_set {
@@ -98,8 +101,6 @@ impl ListFilter {
 
         let begin: usize = std::cmp::min(final_list.len(), page_number * page_length);
         let stop: usize = std::cmp::min(final_list.len(), (page_number+1) * page_length);
-        println!("{}",begin);
-        println!("{}",stop);
         final_list[begin..stop].to_vec()
     }
 
