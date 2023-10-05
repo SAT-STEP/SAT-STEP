@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{apply_max_length, cnf_converter::create_tupples_from_constraints, solve_sudoku};
+use crate::{parse_numeric_input, cnf_converter::create_tupples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
@@ -105,7 +105,7 @@ impl SATApp {
                 .button(RichText::new("Filter").size(text_scale))
                 .clicked()
             {
-                self.state.max_length = apply_max_length(self.state.max_length_input.as_str());
+                self.state.max_length = parse_numeric_input(self.state.max_length_input.as_str());
                 if let Some(max_length) = self.state.max_length {
                     self.filter.by_max_length(max_length);
                     self.rendered_constraints =
@@ -125,8 +125,32 @@ impl SATApp {
         })
     }
 
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
+
+            let font_id = TextStyle::Body.resolve(ui.style());
+            let font = FontId::new(text_scale, font_id.family.clone());
+
+            let row_number_label = ui.label(RichText::new("Number of rows per page: ").size(text_scale));
+            ui.add(
+                egui::TextEdit::singleline(&mut self.state.page_length_input)
+                    .desired_width(5.0 * text_scale)
+                    .font(font),
+            ).labelled_by(row_number_label.id);
+
+            if ui
+            .button(RichText::new("Select").size(text_scale))
+            .clicked()
+        
+        {  
+            let page_input = parse_numeric_input(&self.state.page_length_input);
+            if let Some(input) = page_input {
+                self.state.page_length = input as usize;
+                self.rendered_constraints =
+                    create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+            }
+        }
             if ui
                 .button(RichText::new("<").size(text_scale))
                 .clicked()
@@ -153,7 +177,7 @@ impl SATApp {
                 .button(RichText::new(">").size(text_scale))
                 .clicked()
             {
-                if (page_count>0 && self.state.page_number<page_count-1) {
+                if page_count>0 && self.state.page_number<page_count-1 {
                     self.state.page_number+=1;
                     self.rendered_constraints =
                         create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));

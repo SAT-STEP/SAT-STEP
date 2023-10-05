@@ -152,42 +152,42 @@ fn test_solve_sudoku() {
 }
 
 #[test]
-fn test_apply_max_length_valid_input() {
+fn test_parse_numeric_input_valid_input() {
     use super::*;
 
     let max_length = String::from("10");
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, Some(10));
 }
 
 #[test]
-fn test_apply_max_length_negative() {
+fn test_parse_numeric_input_negative() {
     use super::*;
 
     let max_length = String::from("-10");
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, None);
 }
 
 #[test]
-fn test_apply_max_length_not_numeric() {
+fn test_parse_numeric_input_not_numeric() {
     use super::*;
 
     let max_length = String::from("test");
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, None);
 }
 
 #[test]
-fn test_apply_max_length_empty() {
+fn test_parse_numeric_input_empty() {
     use super::*;
 
     let max_length = String::new();
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, None);
 }
 

@@ -210,7 +210,7 @@ pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericErro
 }
 
 /// Parses the max_length filter input for applying the filter.
-pub fn apply_max_length(input: &str) -> Option<i32> {
+pub fn parse_numeric_input(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {
         Ok(parsed) => {

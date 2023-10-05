@@ -124,6 +124,7 @@ struct GUIState {
     selected_cell: Option<(i32, i32)>,
     page_number: usize,
     page_length: usize,
+    page_length_input: String,
 }
 
 impl GUIState {
@@ -134,6 +135,7 @@ impl GUIState {
             selected_cell: None,
             page_number: 0,
             page_length: 50,
+            page_length_input: String::new(),
         }
     }
 }
