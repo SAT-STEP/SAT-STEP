@@ -194,6 +194,8 @@ fn test_parse_numeric_input_empty() {
 #[test]
 fn test_filter_by_max_length() {
     use super::*;
+    use crate::filtering::ListFilter;
+
     let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
         vec![0; 10],
         vec![0; 3],
@@ -217,6 +219,8 @@ fn test_filter_by_max_length() {
 #[test]
 fn test_filter_by_cell() {
     use super::*;
+    use crate::filtering::ListFilter;
+
     let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
         vec![1; 10],
         vec![10; 3],
@@ -241,6 +245,8 @@ fn test_filter_by_cell() {
 #[test]
 fn test_clear_filters_and_multiple_filters() {
     use super::*;
+    use crate::filtering::ListFilter;
+
     let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
         vec![1; 10],
         vec![1; 3],
