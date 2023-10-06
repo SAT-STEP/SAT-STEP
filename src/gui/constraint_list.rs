@@ -16,6 +16,7 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale);
         self.filters(ui, text_scale);
+        self.page_length(ui, text_scale);
         self.page_buttons(ui, text_scale);
         self.list_of_constraints(ui, text_scale).response
     }
@@ -120,13 +121,13 @@ impl SATApp {
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                 self.state.max_length = None;
+                self.state.max_length_input = "".to_string();
                 self.state.selected_cell = None;
             }
         })
     }
 
-    
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ) -> egui::InnerResponse<()> {
+    fn page_length(&mut self, ui: &mut Ui, text_scale: f32, ) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
 
             let font_id = TextStyle::Body.resolve(ui.style());
@@ -151,6 +152,11 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
             }
         }
+        })
+    }
+    
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("<").size(text_scale))
                 .clicked()
@@ -183,17 +189,6 @@ impl SATApp {
                         create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                 }
             }
-
-            ui.add(
-                Label::new(
-                    RichText::new(format!(
-                        "Constraints after filtering: {}",
-                        self.state.filter.filtered_length
-                    ))
-                    .size(text_scale),
-                )
-                .wrap(false),
-            );
         })
     }
     
