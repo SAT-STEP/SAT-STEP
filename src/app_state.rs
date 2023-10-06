@@ -45,12 +45,12 @@ impl AppState {
     }
 
     pub fn filter_by_max_length(&mut self) {
-        self.clicked_constraint_index = None;
-        self.page_number = 0;
-
         self.max_length = parse_numeric_input(self.max_length_input.as_str());
 
         if let Some(max_length) = self.max_length {
+            self.clicked_constraint_index = None;
+            self.page_number = 0;
+
             self.filter.by_max_length(max_length);
         }
     }
