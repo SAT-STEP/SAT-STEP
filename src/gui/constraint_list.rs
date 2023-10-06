@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{parse_numeric_input, cnf_converter::create_tuples_from_constraints, solve_sudoku};
+use crate::{cnf_converter::create_tuples_from_constraints, parse_numeric_input, solve_sudoku};
 
 use super::SATApp;
 
@@ -37,6 +37,7 @@ impl SATApp {
                             self.sudoku = sudoku_vec;
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
+                            self.state.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -56,9 +57,9 @@ impl SATApp {
                     Ok(solved) => {
                         self.sudoku = solved;
                         // Reinitialize filtering for a new sudoku
-                        self.state.filter.reinit();
+                        self.state.reinit();
                         self.rendered_constraints =
-                        create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
+                            create_tuples_from_constraints(self.state.get_filtered());
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -76,7 +77,7 @@ impl SATApp {
                 Label::new(
                     RichText::new(format!(
                         "Constraints after filtering: {}",
-                        self.state.filter.filtered_length
+                        self.state.filtered_length
                     ))
                     .size(text_scale),
                 )
@@ -84,7 +85,7 @@ impl SATApp {
             );
         })
     }
-    
+
     // Row for filtering functionality
     fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Row for filtering functionality
@@ -106,92 +107,90 @@ impl SATApp {
                 .button(RichText::new("Filter").size(text_scale))
                 .clicked()
             {
-                self.state.max_length = parse_numeric_input(self.state.max_length_input.as_str());
-                if let Some(max_length) = self.state.max_length {
-                    self.state.filter.by_max_length(max_length);
-                    self.rendered_constraints =
-                        create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
-                }
+                self.state.filter_by_max_length();
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
             }
             if ui
                 .button(RichText::new("Clear filters").size(text_scale))
                 .clicked()
             {
-                self.state.filter.clear_all();
+                self.state.clear_filters();
                 self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
-                self.state.max_length = None;
-                self.state.max_length_input = "".to_string();
-                self.state.selected_cell = None;
+                    create_tuples_from_constraints(self.state.get_filtered());
             }
         })
     }
 
-    fn page_length(&mut self, ui: &mut Ui, text_scale: f32, ) -> egui::InnerResponse<()> {
+    fn page_length(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
-
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
 
-            let row_number_label = ui.label(RichText::new("Number of rows per page: ").size(text_scale));
+            let row_number_label =
+                ui.label(RichText::new("Number of rows per page: ").size(text_scale));
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
                     .desired_width(5.0 * text_scale)
                     .font(font),
-            ).labelled_by(row_number_label.id);
+            )
+            .labelled_by(row_number_label.id);
 
             if ui
-            .button(RichText::new("Select").size(text_scale))
-            .clicked()
-        
-        {  
-            let page_input = parse_numeric_input(&self.state.page_length_input);
-            if let Some(input) = page_input {
-                self.state.page_length = input as usize;
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
-            }
-        }
-        })
-    }
-    
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            if ui
-                .button(RichText::new("<").size(text_scale))
+                .button(RichText::new("Select").size(text_scale))
                 .clicked()
             {
-                if self.state.page_number>0 {
-                    self.state.page_number-=1;
+                let page_input = parse_numeric_input(&self.state.page_length_input);
+                if let Some(input) = page_input {
+                    self.state.page_length = input as usize;
+                    self.state.page_number = 0;
                     self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
+                        create_tuples_from_constraints(self.state.get_filtered());
                 }
             }
+        })
+    }
 
-            let mut page_count = self.state.filter.filtered_length/(self.state.page_length);
-            page_count += if self.state.filter.filtered_length % self.state.page_length == 0 {0} else {1};
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
+            if ui.button(RichText::new("<").size(text_scale)).clicked()
+                && self.state.page_number > 0
+            {
+                self.state.page_number -= 1;
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
+            }
+
+            let mut page_count = self.state.filtered_length / (self.state.page_length);
+            page_count += if self.state.filtered_length % self.state.page_length == 0 {
+                0
+            } else {
+                1
+            };
 
             ui.add(
                 Label::new(
-                    RichText::new(format!("Page {}/{}", self.state.page_number+1, page_count))
-                        .size(text_scale),
+                    RichText::new(format!(
+                        "Page {}/{}",
+                        self.state.page_number + 1,
+                        page_count
+                    ))
+                    .size(text_scale),
                 )
                 .wrap(false),
             );
 
-            if ui
-                .button(RichText::new(">").size(text_scale))
-                .clicked()
+            if ui.button(RichText::new(">").size(text_scale)).clicked()
+                && page_count > 0
+                && self.state.page_number < page_count - 1
             {
-                if page_count>0 && self.state.page_number<page_count-1 {
-                    self.state.page_number+=1;
-                    self.rendered_constraints =
-                        create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
-                }
+                self.state.page_number += 1;
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
             }
         })
     }
-    
+
     fn list_of_constraints(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
             ScrollArea::both()
@@ -290,20 +289,20 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                match self.state.filter.clicked_constraint_index {
+                                match self.state.clicked_constraint_index {
                                     Some(index) => {
                                         // clicking constraint again clears little numbers
                                         if index == i {
-                                            self.state.filter.clear_clicked_constraint_index();
+                                            self.state.clear_selected_constraint();
                                         } else {
-                                            self.state.filter.by_constraint_index(i);
+                                            self.state.select_constraint(i);
                                         }
                                     }
-                                    None => self.state.filter.by_constraint_index(i),
+                                    None => self.state.select_constraint(i),
                                 }
                             }
 
-                            if let Some(clicked_index) = self.state.filter.clicked_constraint_index {
+                            if let Some(clicked_index) = self.state.clicked_constraint_index {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
                                         rect_action.rect,

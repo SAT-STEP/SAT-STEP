@@ -9,7 +9,8 @@ use egui::Margin;
 use egui::RichText;
 
 use crate::{
-    cadical_wrapper::CadicalCallbackWrapper, error::GenericError, app_state::AppState, ConstraintList, 
+    app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, error::GenericError,
+    ConstraintList,
 };
 
 /// Main app struct

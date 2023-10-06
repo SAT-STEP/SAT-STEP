@@ -1,7 +1,7 @@
+mod app_state;
 mod cadical_wrapper;
 mod cnf_converter;
 mod error;
-mod app_state;
 mod filtering;
 pub mod gui;
 mod tests;
