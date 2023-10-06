@@ -1,5 +1,3 @@
-use crate::gui::SATApp;
-
 #[test]
 fn test_get_sudoku() {
     use super::*;
