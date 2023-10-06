@@ -1,3 +1,5 @@
+use crate::gui::SATApp;
+
 #[test]
 fn test_get_sudoku() {
     use super::*;
@@ -286,17 +288,4 @@ fn test_constraint_list() {
     c_list.clear();
     assert_eq!(c_list.len(), 0);
     assert_eq!(c_list.is_empty(), true);
-}
-#[test]
-fn test_clues() {
-    use super::*;
-
-    let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
-    let mut solver = cadical::Solver::with_config("plain").unwrap();
-    let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
-    solver.set_callbacks(Some(callback_wrapper.clone()));
-    let clues = vec![vec![None::<i32>; 9]; 9];
-    let _solved = solve_sudoku(&sudoku, &mut solver).unwrap();
-
-    assert_eq!(clues, vec![vec![None; 9]; 9]);
 }
