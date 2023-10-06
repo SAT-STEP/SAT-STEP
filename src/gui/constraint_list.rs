@@ -155,7 +155,7 @@ impl SATApp {
                 .button(RichText::new("<").size(text_scale))
                 .clicked()
             {
-                if (self.state.page_number>0) {
+                if self.state.page_number>0 {
                     self.state.page_number-=1;
                     self.rendered_constraints =
                     create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
