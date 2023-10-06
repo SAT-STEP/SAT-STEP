@@ -36,6 +36,7 @@ impl SATApp {
                             self.clues = self.sudoku.clone();
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
+                            self.filter.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
