@@ -2,7 +2,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-use crate::cnf_converter::create_tupples_from_constraints;
+use crate::cnf_converter::create_tuples_from_constraints;
 
 use super::SATApp;
 
@@ -28,7 +28,7 @@ impl SATApp {
             let mut draw_constraints = false;
             let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
-            if let Some(num) = self.filter.clicked_constraint_index {
+            if let Some(num) = self.state.filter.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
                 draw_constraints = true;
 
@@ -78,14 +78,14 @@ impl SATApp {
                             == Some((row_num as i32 + 1, col_num as i32 + 1))
                         {
                             self.state.selected_cell = None;
-                            self.filter.clear_cell();
+                            self.state.filter.clear_cell();
                         } else {
                             self.state.selected_cell =
                                 Some((row_num as i32 + 1, col_num as i32 + 1));
-                            self.filter.by_cell(row_num as i32 + 1, col_num as i32 + 1);
+                            self.state.filter.by_cell(row_num as i32 + 1, col_num as i32 + 1);
                         }
                         self.rendered_constraints =
-                            create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                            create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                     }
 
                     if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {

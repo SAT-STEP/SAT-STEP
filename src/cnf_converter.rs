@@ -104,16 +104,16 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     )
 }
 
-pub fn create_tupples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
-    let mut tupples = Vec::new();
+pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
+    let mut tuples = Vec::new();
     for constraint in constraints.iter() {
         let mut temp = Vec::with_capacity(constraint.len());
         for value in constraint {
             temp.push(identifier_to_tuple(*value));
         }
-        tupples.push(temp);
+        tuples.push(temp);
     }
-    tupples
+    tuples
 }
 
 pub fn clues_from_string(
@@ -202,18 +202,18 @@ mod tests {
     }
 
     #[test]
-    fn test_create_tupples_from_constraints() {
+    fn test_create_tuples_from_constraints() {
         use super::*;
 
         let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
-        let tupples = create_tupples_from_constraints(constraints);
+        let tuples = create_tuples_from_constraints(constraints);
 
-        assert_eq!((1, 1, 1), tupples[0][0]);
-        assert_eq!((1, 1, 2), tupples[0][1]);
-        assert_eq!((1, 1, 3), tupples[0][2]);
+        assert_eq!((1, 1, 1), tuples[0][0]);
+        assert_eq!((1, 1, 2), tuples[0][1]);
+        assert_eq!((1, 1, 3), tuples[0][2]);
 
-        assert_eq!((1, 2, 1), tupples[1][0]);
-        assert_eq!((1, 2, 2), tupples[1][1]);
-        assert_eq!((1, 2, 3), tupples[1][2]);
+        assert_eq!((1, 2, 1), tuples[1][0]);
+        assert_eq!((1, 2, 2), tuples[1][1]);
+        assert_eq!((1, 2, 3), tuples[1][2]);
     }
 }

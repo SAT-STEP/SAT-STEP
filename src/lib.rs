@@ -1,6 +1,7 @@
 mod cadical_wrapper;
 mod cnf_converter;
 mod error;
+mod app_state;
 mod filtering;
 pub mod gui;
 mod tests;
@@ -12,8 +13,6 @@ use cadical::Solver;
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
 use error::GenericError;
-
-use filtering::ListFilter;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]

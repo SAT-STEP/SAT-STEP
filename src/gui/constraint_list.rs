@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{parse_numeric_input, cnf_converter::create_tupples_from_constraints, solve_sudoku};
+use crate::{parse_numeric_input, cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
@@ -55,9 +55,9 @@ impl SATApp {
                     Ok(solved) => {
                         self.sudoku = solved;
                         // Reinitialize filtering for a new sudoku
-                        self.filter.reinit();
+                        self.state.filter.reinit();
                         self.rendered_constraints =
-                        create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                        create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -75,7 +75,7 @@ impl SATApp {
                 Label::new(
                     RichText::new(format!(
                         "Constraints after filtering: {}",
-                        self.filter.filtered_length
+                        self.state.filter.filtered_length
                     ))
                     .size(text_scale),
                 )
@@ -107,18 +107,18 @@ impl SATApp {
             {
                 self.state.max_length = parse_numeric_input(self.state.max_length_input.as_str());
                 if let Some(max_length) = self.state.max_length {
-                    self.filter.by_max_length(max_length);
+                    self.state.filter.by_max_length(max_length);
                     self.rendered_constraints =
-                        create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                        create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                 }
             }
             if ui
                 .button(RichText::new("Clear filters").size(text_scale))
                 .clicked()
             {
-                self.filter.clear_all();
+                self.state.filter.clear_all();
                 self.rendered_constraints =
-                    create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                    create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                 self.state.max_length = None;
                 self.state.selected_cell = None;
             }
@@ -148,7 +148,7 @@ impl SATApp {
             if let Some(input) = page_input {
                 self.state.page_length = input as usize;
                 self.rendered_constraints =
-                    create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                    create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
             }
         }
             if ui
@@ -158,12 +158,12 @@ impl SATApp {
                 if self.state.page_number>0 {
                     self.state.page_number-=1;
                     self.rendered_constraints =
-                    create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                    create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                 }
             }
 
-            let mut page_count = self.filter.filtered_length/(self.state.page_length);
-            page_count += if self.filter.filtered_length % self.state.page_length == 0 {0} else {1};
+            let mut page_count = self.state.filter.filtered_length/(self.state.page_length);
+            page_count += if self.state.filter.filtered_length % self.state.page_length == 0 {0} else {1};
 
             ui.add(
                 Label::new(
@@ -180,7 +180,7 @@ impl SATApp {
                 if page_count>0 && self.state.page_number<page_count-1 {
                     self.state.page_number+=1;
                     self.rendered_constraints =
-                        create_tupples_from_constraints(self.filter.get_filtered(self.state.page_number, self.state.page_length));
+                        create_tuples_from_constraints(self.state.filter.get_filtered(self.state.page_number, self.state.page_length));
                 }
             }
 
@@ -188,7 +188,7 @@ impl SATApp {
                 Label::new(
                     RichText::new(format!(
                         "Constraints after filtering: {}",
-                        self.filter.filtered_length
+                        self.state.filter.filtered_length
                     ))
                     .size(text_scale),
                 )
@@ -295,20 +295,20 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                match self.filter.clicked_constraint_index {
+                                match self.state.filter.clicked_constraint_index {
                                     Some(index) => {
                                         // clicking constraint again clears little numbers
                                         if index == i {
-                                            self.filter.clear_clicked_constraint_index();
+                                            self.state.filter.clear_clicked_constraint_index();
                                         } else {
-                                            self.filter.by_constraint_index(i);
+                                            self.state.filter.by_constraint_index(i);
                                         }
                                     }
-                                    None => self.filter.by_constraint_index(i),
+                                    None => self.state.filter.by_constraint_index(i),
                                 }
                             }
 
-                            if let Some(clicked_index) = self.filter.clicked_constraint_index {
+                            if let Some(clicked_index) = self.state.filter.clicked_constraint_index {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
                                         rect_action.rect,
