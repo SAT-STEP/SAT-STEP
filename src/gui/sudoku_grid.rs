@@ -46,6 +46,41 @@ impl SATApp {
 
             let mut c_index = 0;
 
+            let mut col_pos = Pos2::new(top_left.x,top_left.y-cell_size);
+            let mut row_pos = Pos2::new(top_left.x-cell_size,top_left.y);
+
+            for col in 1..=9 {
+                col_pos.x += square_spacing;
+                let center = col_pos + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    col.to_string(),
+                    egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
+                    Color32::WHITE,
+                    );
+                col_pos.x += cell_size;
+                if col % 3 == 0 {
+                    col_pos.x += block_spacing;
+                }
+            }
+            
+            for row in 1..=9 {
+                row_pos.y += square_spacing;
+                let center = row_pos + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    row.to_string(),
+                    egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
+                    Color32::WHITE,
+                    );
+                row_pos.y += cell_size;
+                if row % 3 == 0 {
+                    row_pos.y += block_spacing;
+                }
+            }
+
             // row
             for (row_num, row) in self.sudoku.iter().enumerate().take(9) {
                 // block divider
