@@ -25,7 +25,7 @@ impl ListFilter {
         &mut self,
         page_number: usize,
         page_length: usize,
-    ) -> (Vec<Vec<i32>>, usize) {
+        ) -> (Vec<Vec<i32>>, usize) {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
@@ -92,5 +92,106 @@ impl ListFilter {
 
     pub fn clear_cell(&mut self) {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::filtering::ListFilter;
+    use std::{cell::RefCell, rc::Rc,};
+
+#[test]
+    fn test_filter_by_max_length() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![0; 10],
+                                                                    vec![0; 3],
+                                                                    vec![0; 5],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        filter.by_max_length(4);
+        let (filtered, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered_length, 1);
+
+        filter.by_max_length(5);
+        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
+        assert_eq!(filtered2.len(), 2);
+        assert_eq!(filtered_length2, 2);
+
+        filter.by_max_length(1);
+        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
+        assert_eq!(filtered3.len(), 0);
+        assert_eq!(filtered_length3, 0);
+    }
+
+#[test]
+    fn test_filter_by_cell() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1; 10],
+                                                                    vec![10; 3],
+                                                                    vec![10; 3],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+        filter.reinit();
+
+        filter.by_cell(1, 1);
+        let (filtered, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered_length, 1);
+
+        filter.by_cell(1, 2);
+        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
+        assert_eq!(filtered2.len(), 2);
+        assert_eq!(filtered_length2, 2);
+
+        filter.by_cell(2, 2);
+        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
+        assert_eq!(filtered3.len(), 0);
+        assert_eq!(filtered_length3, 0);
+    }
+
+#[test]
+    fn test_clear_filters_and_multiple_filters() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1; 10],
+                                                                    vec![1; 3],
+                                                                    vec![10; 3],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints);
+        filter.reinit();
+
+        filter.by_cell(1, 1);
+        let (filtered, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered.len(), 2);
+        assert_eq!(filtered_length, 2);
+
+        filter.by_max_length(3);
+        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
+        assert_eq!(filtered2.len(), 1);
+        assert_eq!(filtered_length2, 1);
+
+        filter.clear_cell();
+        let (cleared, cleared_length) = filter.get_filtered(0, 50);
+        assert_eq!(cleared.len(), 2);
+        assert_eq!(cleared_length, 2);
+
+        filter.clear_length();
+        let (cleared2, cleared_length2) = filter.get_filtered(0, 50);
+        assert_eq!(cleared2.len(), 3);
+        assert_eq!(cleared_length2, 3);
+
+        let _ = filter.by_cell(1, 1);
+        filter.by_max_length(3);
+        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
+        assert_eq!(filtered3.len(), 1);
+        assert_eq!(filtered_length3, 1);
+
+        filter.clear_length();
+        filter.clear_cell();
+        let (cleared3, cleared_length3) = filter.get_filtered(0, 50);
+        assert_eq!(cleared3.len(), 3);
+        assert_eq!(cleared_length3, 3);
     }
 }

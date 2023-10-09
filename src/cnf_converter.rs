@@ -148,6 +148,7 @@ pub fn clues_from_string(
     Ok(clues)
 }
 
+#[cfg(test)]
 mod tests {
     #[test]
     fn test_string_to_clues() {
