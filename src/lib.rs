@@ -4,6 +4,8 @@ mod cnf_converter;
 mod error;
 mod filtering;
 pub mod gui;
+
+#[cfg(test)]
 mod tests;
 
 use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc};

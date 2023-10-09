@@ -150,10 +150,10 @@ pub fn clues_from_string(
 
 #[cfg(test)]
 mod tests {
+    use super::{clues_from_string, *};
+
     #[test]
     fn test_string_to_clues() {
-        use super::clues_from_string;
-
         let test_sudoku = "..3......\n\
                  1........\n\
                  .........\n\
@@ -172,8 +172,6 @@ mod tests {
 
     #[test]
     fn test_cnf_converter_respects_clues() {
-        use super::*;
-
         let test_sudoku = "..3......\n\
                  1........\n\
                  .........\n\
@@ -192,7 +190,6 @@ mod tests {
 
     #[test]
     fn test_to_id_and_back() {
-        use super::*;
         assert_eq!((1, 1, 1), identifier_to_tuple(cnf_identifier(1, 1, 1)));
         assert_eq!((1, 2, 3), identifier_to_tuple(cnf_identifier(1, 2, 3)));
         assert_eq!((9, 9, 9), identifier_to_tuple(cnf_identifier(9, 9, 9)));
@@ -204,8 +201,6 @@ mod tests {
 
     #[test]
     fn test_create_tuples_from_constraints() {
-        use super::*;
-
         let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
         let tuples = create_tuples_from_constraints(constraints);
 

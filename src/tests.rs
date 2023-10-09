@@ -1,7 +1,7 @@
+use super::*;
+
 #[test]
 fn test_get_sudoku() {
-    use super::*;
-
     let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let should_be = vec![
         vec![None, None, None, None, None, None, None, Some(1), None],
@@ -39,8 +39,6 @@ fn test_get_sudoku() {
 
 #[test]
 fn test_solve_sudoku() {
-    use super::*;
-
     let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let mut solver = cadical::Solver::with_config("plain").unwrap();
     let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
@@ -153,8 +151,6 @@ fn test_solve_sudoku() {
 
 #[test]
 fn test_parse_numeric_input_valid_input() {
-    use super::*;
-
     let max_length = String::from("10");
 
     let applied = parse_numeric_input(&max_length);
@@ -163,8 +159,6 @@ fn test_parse_numeric_input_valid_input() {
 
 #[test]
 fn test_parse_numeric_input_negative() {
-    use super::*;
-
     let max_length = String::from("-10");
 
     let applied = parse_numeric_input(&max_length);
@@ -173,8 +167,6 @@ fn test_parse_numeric_input_negative() {
 
 #[test]
 fn test_parse_numeric_input_not_numeric() {
-    use super::*;
-
     let max_length = String::from("test");
 
     let applied = parse_numeric_input(&max_length);
@@ -183,8 +175,6 @@ fn test_parse_numeric_input_not_numeric() {
 
 #[test]
 fn test_parse_numeric_input_empty() {
-    use super::*;
-
     let max_length = String::new();
 
     let applied = parse_numeric_input(&max_length);
@@ -193,8 +183,6 @@ fn test_parse_numeric_input_empty() {
 
 #[test]
 fn test_constraint_list() {
-    use super::*;
-
     let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
     let mut c_list = ConstraintList::_new(Rc::new(RefCell::new(constraints)));
 
