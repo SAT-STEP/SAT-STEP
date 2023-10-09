@@ -194,4 +194,24 @@ mod tests {
         assert_eq!(cleared3.len(), 3);
         assert_eq!(cleared_length3, 3);
     }
+
+#[test]
+    fn test_paging_system() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![0];10
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let (filtered, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered.len(), 10);
+        assert_eq!(filtered_length, 10);
+
+        let (filtered2, filtered_length2) = filter.get_filtered(0, 6);
+        assert_eq!(filtered2.len(), 6);
+        assert_eq!(filtered_length2, 10);
+
+        let (filtered3, filtered_length3) = filter.get_filtered(1, 6);
+        assert_eq!(filtered3.len(), 4);
+        assert_eq!(filtered_length3, 10);
+    }
 }
