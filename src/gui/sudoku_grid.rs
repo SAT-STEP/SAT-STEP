@@ -14,13 +14,13 @@ impl SATApp {
 
             width += block_spacing;
             let mut cell_size = cmp::min(height as i32, width as i32) as f32;
-            cell_size /= 9.0;
+            cell_size /= 10.0;
 
             let block_size = cell_size * 3.0;
 
             // using these centers the sudoku in the middle of its column
-            height = (height - block_size * 3.0) / 2.0;
-            width = width + (width - block_size * 3.0) / 2.0;
+            height = (height - block_size * 3.0 + cell_size) / 2.0;
+            width = width + (width - block_size * 3.0 - cell_size) / 2.0;
 
             let mut top_left = Pos2::new(width, height);
             let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
@@ -53,6 +53,21 @@ impl SATApp {
                     top_left.y += block_spacing;
                     bottom_right = top_left + Vec2::new(cell_size, cell_size);
                 }
+
+                let center = Pos2::new(
+                    top_left.x + (2.0 * block_spacing),
+                    top_left.y + square_spacing,
+                ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    (row_num + 1).to_string(),
+                    egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+                    Color32::WHITE,
+                );
+                top_left.x += cell_size;
+                bottom_right.x += cell_size;
+
                 // square divider
                 top_left.y += square_spacing;
                 bottom_right.y += square_spacing;
@@ -63,6 +78,20 @@ impl SATApp {
                     if col_num % 3 == 0 && col_num != 0 {
                         top_left.x += block_spacing;
                         bottom_right.x = top_left.x + cell_size;
+                    }
+
+                    if row_num == 0 {
+                        let center = Pos2::new(
+                            top_left.x + square_spacing,
+                            top_left.y - cell_size + (2.0 * block_spacing),
+                        ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                        ui.painter().text(
+                            center,
+                            egui::Align2::CENTER_CENTER,
+                            (col_num + 1).to_string(),
+                            egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+                            Color32::WHITE,
+                        );
                     }
 
                     // square divider
