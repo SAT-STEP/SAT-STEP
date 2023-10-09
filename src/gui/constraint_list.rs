@@ -153,6 +153,7 @@ impl SATApp {
 
                 let page_input = parse_numeric_input(&self.state.page_length_input);
                 if let Some(input) = page_input {
+                    self.state.clicked_constraint_index = None;
                     self.state.page_length = input as usize;
                     self.state.page_number = 0;
                     self.rendered_constraints =
@@ -167,6 +168,7 @@ impl SATApp {
             if ui.button(RichText::new("<").size(text_scale)).clicked()
                 && self.state.page_number > 0
             {
+                self.state.clicked_constraint_index = None;
                 self.state.page_number -= 1;
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
@@ -195,6 +197,7 @@ impl SATApp {
                 && page_count > 0
                 && self.state.page_number < page_count - 1
             {
+                self.state.clicked_constraint_index = None;
                 self.state.page_number += 1;
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
