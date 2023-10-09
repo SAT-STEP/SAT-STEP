@@ -16,7 +16,7 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale);
         self.filters(ui, text_scale);
-        self.page_length(ui, text_scale);
+        self.page_length_input(ui, text_scale);
         self.page_buttons(ui, text_scale);
         self.list_of_constraints(ui, text_scale).response
     }
@@ -123,7 +123,7 @@ impl SATApp {
         })
     }
 
-    fn page_length(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
