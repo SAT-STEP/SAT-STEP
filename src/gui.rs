@@ -16,6 +16,7 @@ use crate::{
 /// Main app struct
 pub struct SATApp {
     sudoku: Vec<Vec<Option<i32>>>,
+    clues: Vec<Vec<Option<i32>>>,
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
@@ -26,6 +27,7 @@ pub struct SATApp {
 
 impl SATApp {
     pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
+        let clues = sudoku.clone();
         let constraints = ConstraintList::new();
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
@@ -34,6 +36,7 @@ impl SATApp {
         let current_error = None;
         Self {
             sudoku,
+            clues,
             constraints,
             callback_wrapper,
             solver,
@@ -55,6 +58,7 @@ impl Default for SATApp {
         let current_error = None;
         Self {
             sudoku: Vec::new(),
+            clues: Vec::new(),
             constraints,
             callback_wrapper,
             solver,

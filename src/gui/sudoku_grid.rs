@@ -88,6 +88,8 @@ impl SATApp {
 
                     if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
                         ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
+                    } else if self.clues[row_num][col_num].is_some() {
+                        ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
                     } else {
                         ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
                     }
