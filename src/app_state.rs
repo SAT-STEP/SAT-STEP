@@ -64,14 +64,6 @@ impl AppState {
         self.filter.by_cell(row, col);
     }
 
-    pub fn select_constraint(&mut self, index: usize) {
-        self.clicked_constraint_index = Some(index);
-    }
-
-    pub fn clear_selected_constraint(&mut self) {
-        self.clicked_constraint_index = None;
-    }
-
     pub fn clear_filters(&mut self) {
         self.clicked_constraint_index = None;
         self.page_number = 0;
@@ -190,24 +182,6 @@ mod tests {
         assert_eq!(state.selected_cell, Some((1, 2)));
         assert_eq!(state.clicked_constraint_index, None);
         assert_eq!(state.page_number, 0);
-    }
-
-    #[test]
-    fn test_constraint_selection() {
-        let constraints =
-            ConstraintList::_new(Rc::new(RefCell::new(vec![vec![1], vec![10], vec![10]])));
-        let mut state = AppState::new(constraints.clone());
-
-        assert_eq!(state.clicked_constraint_index, None);
-
-        state.select_constraint(1);
-        assert_eq!(state.clicked_constraint_index, Some(1));
-
-        state.select_constraint(2);
-        assert_eq!(state.clicked_constraint_index, Some(2));
-
-        state.clear_selected_constraint();
-        assert_eq!(state.clicked_constraint_index, None);
     }
 
     #[test]

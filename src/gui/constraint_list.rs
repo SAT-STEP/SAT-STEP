@@ -304,12 +304,12 @@ impl SATApp {
                                     Some(index) => {
                                         // clicking constraint again clears little numbers
                                         if index == i {
-                                            self.state.clear_selected_constraint();
+                                            self.state.clicked_constraint_index = None;
                                         } else {
-                                            self.state.select_constraint(i);
+                                            self.state.clicked_constraint_index = Some(i);
                                         }
                                     }
-                                    None => self.state.select_constraint(i),
+                                    None => self.state.clicked_constraint_index = Some(i),
                                 }
                             }
 
