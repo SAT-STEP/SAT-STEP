@@ -46,56 +46,52 @@ impl SATApp {
 
             let mut c_index = 0;
 
-            let mut col_pos = Pos2::new(top_left.x,top_left.y-cell_size);
-
-            for col in 1..=9 {
-                col_pos.x += square_spacing;
-                col_pos.x += cell_size;
-                if col % 3 == 0 {
-                    col_pos.x += block_spacing;
-                }
-            }
-            
             // row
             for (row_num, row) in self.sudoku.iter().enumerate().take(9) {
-
-                let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-                ui.painter().text(
-                    center,
-                    egui::Align2::CENTER_CENTER,
-                    (row_num + 1).to_string(),
-                    egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
-                    Color32::WHITE,
-                    );
-                    top_left.x += cell_size;
-                    bottom_right.x += cell_size;
-                
-
                 // block divider
                 if row_num % 3 == 0 && row_num != 0 {
                     top_left.y += block_spacing;
                     bottom_right = top_left + Vec2::new(cell_size, cell_size);
                 }
+
+                let center = Pos2::new(
+                    top_left.x + (2.0 * block_spacing),
+                    top_left.y + square_spacing,
+                ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    (row_num + 1).to_string(),
+                    egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+                    Color32::WHITE,
+                );
+                top_left.x += cell_size;
+                bottom_right.x += cell_size;
+
                 // square divider
                 top_left.y += square_spacing;
                 bottom_right.y += square_spacing;
 
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
-                    if row_num == 0 {
-                        let center = Pos2::new(top_left.x, top_left.y-cell_size) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-                        ui.painter().text(
-                            center,
-                            egui::Align2::CENTER_CENTER,
-                            (col_num+1).to_string(),
-                            egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
-                            Color32::WHITE,
-                            );
-                    }
                     // block divider
                     if col_num % 3 == 0 && col_num != 0 {
                         top_left.x += block_spacing;
                         bottom_right.x = top_left.x + cell_size;
+                    }
+
+                    if row_num == 0 {
+                        let center = Pos2::new(
+                            top_left.x + square_spacing,
+                            top_left.y - cell_size + (2.0 * block_spacing),
+                        ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                        ui.painter().text(
+                            center,
+                            egui::Align2::CENTER_CENTER,
+                            (col_num + 1).to_string(),
+                            egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+                            Color32::WHITE,
+                        );
                     }
 
                     // square divider
