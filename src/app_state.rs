@@ -14,7 +14,8 @@ pub struct AppState {
 
 impl AppState {
     pub fn new(constraints: ConstraintList) -> Self {
-        let filter = ListFilter::new(constraints.clone());
+        let mut filter = ListFilter::new(constraints.clone());
+        filter.reinit();
         Self {
             filter,
             max_length: None,
@@ -94,5 +95,219 @@ impl AppState {
 
         self.selected_cell = None;
         self.filter.clear_cell();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::app_state::AppState;
+    use std::{cell::RefCell, rc::Rc,};
+#[test]
+    fn test_reinit() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![0; 10],
+                                                                    vec![0; 3],
+                                                                    vec![0; 5],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 3);
+        assert_eq!(state.filtered_length, 3);
+
+        state.page_number = 1;
+        state.page_length_input = "2".to_string();
+        state.max_length_input = "6".to_string();
+        state.filter_by_max_length();
+        state.select_cell(2, 3);
+        state.filtered_length = 4;
+
+        state.reinit();
+
+        assert_eq!(state.max_length, None);
+        assert_eq!(state.max_length_input, String::new());
+        assert_eq!(state.selected_cell, None);
+        assert_eq!(state.clicked_constraint_index, None);
+        assert_eq!(state.page_number, 0);
+        assert_eq!(state.page_length, 100);
+        assert_eq!(state.page_length_input, "100".to_string());
+        assert_eq!(state.filtered_length, 0);
+
+        let filtered2 = state.get_filtered();
+        assert_eq!(filtered2.len(), 3);
+        assert_eq!(state.filtered_length, 3);
+    }
+
+#[test]
+    fn test_filter_by_max_length() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![0; 10],
+                                                                    vec![0; 3],
+                                                                    vec![0; 5],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 3);
+        assert_eq!(state.filtered_length, 3);
+
+
+        state.clicked_constraint_index = Some(1);
+        state.page_number = 1;
+
+        state.max_length_input = "4".to_string();
+        state.filter_by_max_length();
+        assert_eq!(state.max_length, Some(4));
+
+        let filtered2 = state.get_filtered();
+        assert_eq!(filtered2.len(), 1);
+        assert_eq!(state.filtered_length, 1);
+
+        assert_eq!(state.clicked_constraint_index, None);
+        assert_eq!(state.page_number, 0);
+
+
+        // Invalid input should not change the situation at all
+        state.max_length_input = "-1".to_string();
+        state.filter_by_max_length();
+        let filtered3 = state.get_filtered();
+        assert_eq!(filtered3, filtered2);
+        assert_eq!(state.filtered_length, 1);
+    }
+
+#[test]
+    fn test_select_cell() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1],
+                                                                    vec![10],
+                                                                    vec![10],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.clicked_constraint_index = Some(1);
+        state.page_number = 1;
+
+        state.select_cell(1, 2);
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 2);
+        assert_eq!(state.filtered_length, 2);
+        assert_eq!(state.selected_cell, Some((1, 2)));
+        assert_eq!(state.clicked_constraint_index, None);
+        assert_eq!(state.page_number, 0);
+    }
+
+#[test]
+    fn test_constraint_selection() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1],
+                                                                    vec![10],
+                                                                    vec![10],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        assert_eq!(state.clicked_constraint_index, None);
+
+        state.select_constraint(1);
+        assert_eq!(state.clicked_constraint_index, Some(1));
+
+        state.select_constraint(2);
+        assert_eq!(state.clicked_constraint_index, Some(2));
+
+        state.clear_selected_constraint();
+        assert_eq!(state.clicked_constraint_index, None);
+    }
+
+#[test]
+    fn test_cell_clearing() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1],
+                                                                    vec![10],
+                                                                    vec![10],
+        ])));
+        let mut state: AppState = AppState::new(constraints);
+
+        state.select_cell(1, 1);
+        state.clicked_constraint_index = Some(1);
+        state.page_number = 1;
+        state.clear_cell();
+
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 3);
+        assert_eq!(state.filtered_length, 3);
+        assert_eq!(state.selected_cell, None);
+        assert_eq!(state.clicked_constraint_index, None);
+        assert_eq!(state.page_number, 0);
+    }
+
+#[test]
+    fn test_length_clearing() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1; 10],
+                                                                    vec![10; 3],
+                                                                    vec![10; 3],
+        ])));
+        let mut state: AppState = AppState::new(constraints);
+
+        state.max_length_input = "4".to_string();
+        state.filter_by_max_length();
+        state.clicked_constraint_index = Some(1);
+        state.page_number = 1;
+
+        state.clear_length();
+
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 3);
+        assert_eq!(state.filtered_length, 3);
+        assert_eq!(state.max_length, None);
+        assert_eq!(state.max_length_input, "".to_string());
+        assert_eq!(state.clicked_constraint_index, None);
+        assert_eq!(state.page_number, 0);
+    }
+
+#[test]
+    fn test_filter_clearing() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![1; 10],
+                                                                    vec![10; 3],
+                                                                    vec![10; 3],
+        ])));
+
+        let mut state: AppState = AppState::new(constraints);
+
+        state.max_length_input = "4".to_string();
+        state.filter_by_max_length();
+        state.select_cell(1, 1);
+        state.clicked_constraint_index = Some(1);
+        state.page_number = 1;
+        state.clear_filters();
+
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 3);
+        assert_eq!(state.filtered_length, 3);
+        assert_eq!(state.selected_cell, None);
+        assert_eq!(state.max_length, None);
+        assert_eq!(state.max_length_input, "".to_string());
+        assert_eq!(state.clicked_constraint_index, None);
+        assert_eq!(state.page_number, 0);
+    }
+
+
+#[test]
+    fn test_paging_system() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+                                                                    vec![0];10
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_length = 6;
+        let filtered = state.get_filtered();
+        assert_eq!(filtered.len(), 6);
+        assert_eq!(state.filtered_length, 10);
+
+        state.page_number = 1;
+        let filtered2 = state.get_filtered();
+        assert_eq!(filtered2.len(), 4);
+        assert_eq!(state.filtered_length, 10);
     }
 }
