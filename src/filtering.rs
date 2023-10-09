@@ -25,7 +25,7 @@ impl ListFilter {
         &mut self,
         page_number: usize,
         page_length: usize,
-        ) -> (Vec<Vec<i32>>, usize) {
+    ) -> (Vec<Vec<i32>>, usize) {
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure
@@ -99,14 +99,14 @@ impl ListFilter {
 mod tests {
     use super::*;
     use crate::filtering::ListFilter;
-    use std::{cell::RefCell, rc::Rc,};
+    use std::{cell::RefCell, rc::Rc};
 
-#[test]
+    #[test]
     fn test_filter_by_max_length() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-                                                                    vec![0; 10],
-                                                                    vec![0; 3],
-                                                                    vec![0; 5],
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
 
@@ -126,12 +126,12 @@ mod tests {
         assert_eq!(filtered_length3, 0);
     }
 
-#[test]
+    #[test]
     fn test_filter_by_cell() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-                                                                    vec![1; 10],
-                                                                    vec![10; 3],
-                                                                    vec![10; 3],
+            vec![1; 10],
+            vec![10; 3],
+            vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
         filter.reinit();
@@ -152,12 +152,12 @@ mod tests {
         assert_eq!(filtered_length3, 0);
     }
 
-#[test]
+    #[test]
     fn test_clear_filters_and_multiple_filters() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-                                                                    vec![1; 10],
-                                                                    vec![1; 3],
-                                                                    vec![10; 3],
+            vec![1; 10],
+            vec![1; 3],
+            vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints);
         filter.reinit();
@@ -195,11 +195,9 @@ mod tests {
         assert_eq!(cleared_length3, 3);
     }
 
-#[test]
+    #[test]
     fn test_paging_system() {
-        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-                                                                    vec![0];10
-        ])));
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
 
         let (filtered, filtered_length) = filter.get_filtered(0, 50);

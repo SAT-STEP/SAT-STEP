@@ -140,9 +140,13 @@ impl SATApp {
                 .button(RichText::new("Select").size(text_scale))
                 .clicked()
             {
-
-                if self.state.page_length_input.is_empty() || self.state.page_length_input.eq_ignore_ascii_case("*") {
-                    println!("Constraints after filtering: {}", self.state.filtered_length);
+                if self.state.page_length_input.is_empty()
+                    || self.state.page_length_input.eq_ignore_ascii_case("*")
+                {
+                    println!(
+                        "Constraints after filtering: {}",
+                        self.state.filtered_length
+                    );
                     self.state.page_length_input = self.state.filtered_length.to_string();
                 }
 
