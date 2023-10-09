@@ -14,13 +14,13 @@ impl SATApp {
 
             width += block_spacing;
             let mut cell_size = cmp::min(height as i32, width as i32) as f32;
-            cell_size /= 9.0;
+            cell_size /= 10.0;
 
             let block_size = cell_size * 3.0;
 
             // using these centers the sudoku in the middle of its column
-            height = (height - block_size * 3.0) / 2.0;
-            width = width + (width - block_size * 3.0) / 2.0;
+            height = (height - block_size * 3.0 + cell_size) / 2.0;
+            width = width + (width - block_size * 3.0 - cell_size) / 2.0;
 
             let mut top_left = Pos2::new(width, height);
             let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
@@ -47,42 +47,30 @@ impl SATApp {
             let mut c_index = 0;
 
             let mut col_pos = Pos2::new(top_left.x,top_left.y-cell_size);
-            let mut row_pos = Pos2::new(top_left.x-cell_size,top_left.y);
 
             for col in 1..=9 {
                 col_pos.x += square_spacing;
-                let center = col_pos + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-                ui.painter().text(
-                    center,
-                    egui::Align2::CENTER_CENTER,
-                    col.to_string(),
-                    egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
-                    Color32::WHITE,
-                    );
                 col_pos.x += cell_size;
                 if col % 3 == 0 {
                     col_pos.x += block_spacing;
                 }
             }
             
-            for row in 1..=9 {
-                row_pos.y += square_spacing;
-                let center = row_pos + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+            // row
+            for (row_num, row) in self.sudoku.iter().enumerate().take(9) {
+
+                let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
                 ui.painter().text(
                     center,
                     egui::Align2::CENTER_CENTER,
-                    row.to_string(),
+                    (row_num + 1).to_string(),
                     egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
                     Color32::WHITE,
                     );
-                row_pos.y += cell_size;
-                if row % 3 == 0 {
-                    row_pos.y += block_spacing;
-                }
-            }
+                    top_left.x += cell_size;
+                    bottom_right.x += cell_size;
+                
 
-            // row
-            for (row_num, row) in self.sudoku.iter().enumerate().take(9) {
                 // block divider
                 if row_num % 3 == 0 && row_num != 0 {
                     top_left.y += block_spacing;
@@ -94,6 +82,16 @@ impl SATApp {
 
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
+                    if row_num == 0 {
+                        let center = Pos2::new(top_left.x, top_left.y-cell_size) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                        ui.painter().text(
+                            center,
+                            egui::Align2::CENTER_CENTER,
+                            (col_num+1).to_string(),
+                            egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
+                            Color32::WHITE,
+                            );
+                    }
                     // block divider
                     if col_num % 3 == 0 && col_num != 0 {
                         top_left.x += block_spacing;
