@@ -104,16 +104,16 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     )
 }
 
-pub fn create_tupples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
-    let mut tupples = Vec::new();
+pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
+    let mut tuples = Vec::new();
     for constraint in constraints.iter() {
         let mut temp = Vec::with_capacity(constraint.len());
         for value in constraint {
             temp.push(identifier_to_tuple(*value));
         }
-        tupples.push(temp);
+        tuples.push(temp);
     }
-    tupples
+    tuples
 }
 
 pub fn clues_from_string(
@@ -148,11 +148,12 @@ pub fn clues_from_string(
     Ok(clues)
 }
 
+#[cfg(test)]
 mod tests {
+    use super::{clues_from_string, *};
+
     #[test]
     fn test_string_to_clues() {
-        use super::clues_from_string;
-
         let test_sudoku = "..3......\n\
                  1........\n\
                  .........\n\
@@ -171,8 +172,6 @@ mod tests {
 
     #[test]
     fn test_cnf_converter_respects_clues() {
-        use super::*;
-
         let test_sudoku = "..3......\n\
                  1........\n\
                  .........\n\
@@ -191,7 +190,6 @@ mod tests {
 
     #[test]
     fn test_to_id_and_back() {
-        use super::*;
         assert_eq!((1, 1, 1), identifier_to_tuple(cnf_identifier(1, 1, 1)));
         assert_eq!((1, 2, 3), identifier_to_tuple(cnf_identifier(1, 2, 3)));
         assert_eq!((9, 9, 9), identifier_to_tuple(cnf_identifier(9, 9, 9)));
@@ -202,18 +200,16 @@ mod tests {
     }
 
     #[test]
-    fn test_create_tupples_from_constraints() {
-        use super::*;
-
+    fn test_create_tuples_from_constraints() {
         let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
-        let tupples = create_tupples_from_constraints(constraints);
+        let tuples = create_tuples_from_constraints(constraints);
 
-        assert_eq!((1, 1, 1), tupples[0][0]);
-        assert_eq!((1, 1, 2), tupples[0][1]);
-        assert_eq!((1, 1, 3), tupples[0][2]);
+        assert_eq!((1, 1, 1), tuples[0][0]);
+        assert_eq!((1, 1, 2), tuples[0][1]);
+        assert_eq!((1, 1, 3), tuples[0][2]);
 
-        assert_eq!((1, 2, 1), tupples[1][0]);
-        assert_eq!((1, 2, 2), tupples[1][1]);
-        assert_eq!((1, 2, 3), tupples[1][2]);
+        assert_eq!((1, 2, 1), tuples[1][0]);
+        assert_eq!((1, 2, 2), tuples[1][1]);
+        assert_eq!((1, 2, 3), tuples[1][2]);
     }
 }

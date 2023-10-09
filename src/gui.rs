@@ -9,7 +9,8 @@ use egui::Margin;
 use egui::RichText;
 
 use crate::{
-    cadical_wrapper::CadicalCallbackWrapper, error::GenericError, ConstraintList, ListFilter,
+    app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, error::GenericError,
+    ConstraintList,
 };
 
 /// Main app struct
@@ -20,8 +21,7 @@ pub struct SATApp {
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
     rendered_constraints: Vec<Vec<(i32, i32, i32)>>,
-    state: GUIState,
-    filter: ListFilter,
+    state: AppState,
     current_error: Option<GenericError>,
 }
 
@@ -32,7 +32,7 @@ impl SATApp {
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let filter = ListFilter::new(constraints.clone());
+        let state = AppState::new(constraints.clone());
         let current_error = None;
         Self {
             sudoku,
@@ -41,8 +41,7 @@ impl SATApp {
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
-            state: GUIState::new(),
-            filter,
+            state,
             current_error,
         }
     }
@@ -55,7 +54,7 @@ impl Default for SATApp {
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let filter = ListFilter::new(constraints.clone());
+        let state = AppState::new(constraints.clone());
         let current_error = None;
         Self {
             sudoku: Vec::new(),
@@ -64,8 +63,7 @@ impl Default for SATApp {
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
-            state: GUIState::new(),
-            filter,
+            state,
             current_error,
         }
     }
@@ -119,21 +117,5 @@ impl eframe::App for SATApp {
                 });
             }
         });
-    }
-}
-
-struct GUIState {
-    max_length: Option<i32>,
-    max_length_input: String,
-    selected_cell: Option<(i32, i32)>,
-}
-
-impl GUIState {
-    pub fn new() -> Self {
-        Self {
-            max_length: None,
-            max_length_input: String::new(),
-            selected_cell: None,
-        }
     }
 }

@@ -1,7 +1,7 @@
+use super::*;
+
 #[test]
 fn test_get_sudoku() {
-    use super::*;
-
     let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let should_be = vec![
         vec![None, None, None, None, None, None, None, Some(1), None],
@@ -39,8 +39,6 @@ fn test_get_sudoku() {
 
 #[test]
 fn test_solve_sudoku() {
-    use super::*;
-
     let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let mut solver = cadical::Solver::with_config("plain").unwrap();
     let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
@@ -152,129 +150,39 @@ fn test_solve_sudoku() {
 }
 
 #[test]
-fn test_apply_max_length_valid_input() {
-    use super::*;
-
+fn test_parse_numeric_input_valid_input() {
     let max_length = String::from("10");
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, Some(10));
 }
 
 #[test]
-fn test_apply_max_length_negative() {
-    use super::*;
-
+fn test_parse_numeric_input_negative() {
     let max_length = String::from("-10");
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, None);
 }
 
 #[test]
-fn test_apply_max_length_not_numeric() {
-    use super::*;
-
+fn test_parse_numeric_input_not_numeric() {
     let max_length = String::from("test");
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, None);
 }
 
 #[test]
-fn test_apply_max_length_empty() {
-    use super::*;
-
+fn test_parse_numeric_input_empty() {
     let max_length = String::new();
 
-    let applied = apply_max_length(&max_length);
+    let applied = parse_numeric_input(&max_length);
     assert_eq!(applied, None);
-}
-
-#[test]
-fn test_filter_by_max_length() {
-    use super::*;
-    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-        vec![0; 10],
-        vec![0; 3],
-        vec![0; 5],
-    ])));
-    let mut filter: ListFilter = ListFilter::new(constraints.clone());
-
-    filter.by_max_length(4);
-    let filtered = filter.get_filtered();
-    assert_eq!(filtered.len(), 1);
-
-    filter.by_max_length(5);
-    let filtered2 = filter.get_filtered();
-    assert_eq!(filtered2.len(), 2);
-
-    filter.by_max_length(1);
-    let filtered3 = filter.get_filtered();
-    assert_eq!(filtered3.len(), 0)
-}
-
-#[test]
-fn test_filter_by_cell() {
-    use super::*;
-    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-        vec![1; 10],
-        vec![10; 3],
-        vec![10; 3],
-    ])));
-    let mut filter: ListFilter = ListFilter::new(constraints.clone());
-    filter.reinit();
-
-    filter.by_cell(1, 1);
-    let filtered = filter.get_filtered();
-    assert_eq!(filtered.len(), 1);
-
-    filter.by_cell(1, 2);
-    let filtered2 = filter.get_filtered();
-    assert_eq!(filtered2.len(), 2);
-
-    filter.by_cell(2, 2);
-    let filtered3 = filter.get_filtered();
-    assert_eq!(filtered3.len(), 0);
-}
-
-#[test]
-fn test_clear_filters_and_multiple_filters() {
-    use super::*;
-    let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
-        vec![1; 10],
-        vec![1; 3],
-        vec![10; 3],
-    ])));
-    let mut filter: ListFilter = ListFilter::new(constraints);
-    filter.reinit();
-
-    filter.by_cell(1, 1);
-    let filtered = filter.get_filtered();
-    assert_eq!(filtered.len(), 2);
-    filter.by_max_length(3);
-    let filtered2 = filter.get_filtered();
-    assert_eq!(filtered2.len(), 1);
-    filter.clear_cell();
-    let cleared = filter.get_filtered();
-    assert_eq!(cleared.len(), 2);
-    filter.clear_length();
-    let cleared2 = filter.get_filtered();
-    assert_eq!(cleared2.len(), 3);
-
-    let _ = filter.by_cell(1, 1);
-    filter.by_max_length(3);
-    let filtered4 = filter.get_filtered();
-    assert_eq!(filtered4.len(), 1);
-    filter.clear_all();
-    let cleared3 = filter.get_filtered();
-    assert_eq!(cleared3.len(), 3);
 }
 
 #[test]
 fn test_constraint_list() {
-    use super::*;
-
     let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
     let mut c_list = ConstraintList::_new(Rc::new(RefCell::new(constraints)));
 

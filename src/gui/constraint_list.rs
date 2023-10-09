@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{apply_max_length, cnf_converter::create_tupples_from_constraints, solve_sudoku};
+use crate::{cnf_converter::create_tuples_from_constraints, parse_numeric_input, solve_sudoku};
 
 use super::SATApp;
 
@@ -16,6 +16,8 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale);
         self.filters(ui, text_scale);
+        self.page_length_input(ui, text_scale);
+        self.page_buttons(ui, text_scale);
         self.list_of_constraints(ui, text_scale).response
     }
 
@@ -36,7 +38,7 @@ impl SATApp {
                             self.clues = self.sudoku.clone();
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
-                            self.filter.reinit();
+                            self.state.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -55,10 +57,10 @@ impl SATApp {
                 match solve_result {
                     Ok(solved) => {
                         self.sudoku = solved;
+                        // Reinitialize filtering for a new sudoku
+                        self.state.reinit();
                         self.rendered_constraints =
-                            create_tupples_from_constraints(self.constraints.clone_constraints());
-                        // Reinitialize filrening for a new sudoku
-                        self.filter.reinit();
+                            create_tuples_from_constraints(self.state.get_filtered());
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -76,7 +78,7 @@ impl SATApp {
                 Label::new(
                     RichText::new(format!(
                         "Constraints after filtering: {}",
-                        self.rendered_constraints.len()
+                        self.state.filtered_length
                     ))
                     .size(text_scale),
                 )
@@ -106,22 +108,96 @@ impl SATApp {
                 .button(RichText::new("Filter").size(text_scale))
                 .clicked()
             {
-                self.state.max_length = apply_max_length(self.state.max_length_input.as_str());
-                if let Some(max_length) = self.state.max_length {
-                    self.filter.by_max_length(max_length);
-                    self.rendered_constraints =
-                        create_tupples_from_constraints(self.filter.get_filtered());
-                }
+                self.state.filter_by_max_length();
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
             }
             if ui
                 .button(RichText::new("Clear filters").size(text_scale))
                 .clicked()
             {
-                self.filter.clear_all();
+                self.state.clear_filters();
                 self.rendered_constraints =
-                    create_tupples_from_constraints(self.filter.get_filtered());
-                self.state.max_length = None;
-                self.state.selected_cell = None;
+                    create_tuples_from_constraints(self.state.get_filtered());
+            }
+        })
+    }
+
+    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal_wrapped(|ui| {
+            let font_id = TextStyle::Body.resolve(ui.style());
+            let font = FontId::new(text_scale, font_id.family.clone());
+
+            let row_number_label =
+                ui.label(RichText::new("Number of rows per page: ").size(text_scale));
+            ui.add(
+                egui::TextEdit::singleline(&mut self.state.page_length_input)
+                    .desired_width(5.0 * text_scale)
+                    .font(font),
+            )
+            .labelled_by(row_number_label.id);
+
+            if ui
+                .button(RichText::new("Select").size(text_scale))
+                .clicked()
+            {
+                if self.state.page_length_input.is_empty()
+                    || self.state.page_length_input.eq_ignore_ascii_case("*")
+                {
+                    println!(
+                        "Constraints after filtering: {}",
+                        self.state.filtered_length
+                    );
+                    self.state.page_length_input = self.state.filtered_length.to_string();
+                }
+
+                let page_input = parse_numeric_input(&self.state.page_length_input);
+                if let Some(input) = page_input {
+                    self.state.page_length = input as usize;
+                    self.state.page_number = 0;
+                    self.rendered_constraints =
+                        create_tuples_from_constraints(self.state.get_filtered());
+                }
+            }
+        })
+    }
+
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
+            if ui.button(RichText::new("<").size(text_scale)).clicked()
+                && self.state.page_number > 0
+            {
+                self.state.page_number -= 1;
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
+            }
+
+            let mut page_count = self.state.filtered_length / (self.state.page_length);
+            page_count += if self.state.filtered_length % self.state.page_length == 0 {
+                0
+            } else {
+                1
+            };
+
+            ui.add(
+                Label::new(
+                    RichText::new(format!(
+                        "Page {}/{}",
+                        self.state.page_number + 1,
+                        page_count
+                    ))
+                    .size(text_scale),
+                )
+                .wrap(false),
+            );
+
+            if ui.button(RichText::new(">").size(text_scale)).clicked()
+                && page_count > 0
+                && self.state.page_number < page_count - 1
+            {
+                self.state.page_number += 1;
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
             }
         })
     }
@@ -224,20 +300,20 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                match self.filter.clicked_constraint_index {
+                                match self.state.clicked_constraint_index {
                                     Some(index) => {
                                         // clicking constraint again clears little numbers
                                         if index == i {
-                                            self.filter.clear_clicked_constraint_index();
+                                            self.state.clicked_constraint_index = None;
                                         } else {
-                                            self.filter.by_constraint_index(i);
+                                            self.state.clicked_constraint_index = Some(i);
                                         }
                                     }
-                                    None => self.filter.by_constraint_index(i),
+                                    None => self.state.clicked_constraint_index = Some(i),
                                 }
                             }
 
-                            if let Some(clicked_index) = self.filter.clicked_constraint_index {
+                            if let Some(clicked_index) = self.state.clicked_constraint_index {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
                                         rect_action.rect,
