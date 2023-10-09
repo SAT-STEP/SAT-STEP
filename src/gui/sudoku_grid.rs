@@ -29,7 +29,7 @@ impl SATApp {
             let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
             if let Some(num) = self.state.clicked_constraint_index {
-                constraints = self.rendered_constraints[num].clone();
+                constraints = self.rendered_constraints[num-1].clone();
                 draw_constraints = true;
 
                 // sort them so don't have to search in loop
