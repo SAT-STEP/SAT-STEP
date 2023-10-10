@@ -6,7 +6,8 @@ pub struct AppState {
     pub max_length_input: String,
     pub selected_cell: Option<(i32, i32)>,
     pub clicked_constraint_index: Option<usize>,
-    pub page_number: usize,
+    pub page_number: i32,
+    pub page_count: i32,
     pub page_length: usize,
     pub page_length_input: String,
     pub filtered_length: usize,
@@ -23,6 +24,7 @@ impl AppState {
             selected_cell: None,
             clicked_constraint_index: None,
             page_number: 0,
+            page_count: 0,
             page_length: 100,
             page_length_input: "100".to_string(),
             filtered_length: 0,
@@ -30,8 +32,12 @@ impl AppState {
     }
 
     pub fn get_filtered(&mut self) -> Vec<Vec<i32>> {
-        let (list, length) = self.filter.get_filtered(self.page_number, self.page_length);
+        let (list, length) = self
+            .filter
+            .get_filtered(self.page_number as usize, self.page_length);
         self.filtered_length = length;
+        self.count_pages();
+
         list
     }
 
@@ -40,6 +46,7 @@ impl AppState {
         self.filter.reinit();
 
         self.page_number = 0;
+        self.page_count = 0;
         self.page_length = 100;
         self.page_length_input = "100".to_string();
         self.filtered_length = 0;
@@ -49,32 +56,54 @@ impl AppState {
         self.max_length = parse_numeric_input(self.max_length_input.as_str());
 
         if let Some(max_length) = self.max_length {
-            self.clicked_constraint_index = None;
-            self.page_number = 0;
-
+            self.set_page_number(0);
             self.filter.by_max_length(max_length);
         }
     }
 
     pub fn select_cell(&mut self, row: i32, col: i32) {
-        self.clicked_constraint_index = None;
-        self.page_number = 0;
+        self.set_page_number(0);
 
         self.selected_cell = Some((row, col));
         self.filter.by_cell(row, col);
     }
 
-    pub fn clear_filters(&mut self) {
+    fn count_pages(&mut self) {
+        self.page_count = (self.filtered_length / (self.page_length)) as i32;
+        self.page_count += if self.filtered_length % self.page_length == 0 {
+            0
+        } else {
+            1
+        };
+    }
+
+    pub fn set_page_length(&mut self) {
+        let page_input = parse_numeric_input(&self.page_length_input);
+
+        if let Some(input) = page_input {
+            self.page_length = input as usize;
+            self.count_pages();
+
+            self.set_page_number(0);
+        }
+    }
+
+    pub fn set_page_number(&mut self, page_number: i32) {
         self.clicked_constraint_index = None;
-        self.page_number = 0;
+
+        self.page_number = std::cmp::min(page_number, self.page_count - 1);
+        self.page_number = std::cmp::max(self.page_number, 0);
+    }
+
+    pub fn clear_filters(&mut self) {
+        self.set_page_number(0);
 
         self.clear_length();
         self.clear_cell();
     }
 
     pub fn clear_length(&mut self) {
-        self.clicked_constraint_index = None;
-        self.page_number = 0;
+        self.set_page_number(0);
 
         self.max_length = None;
         self.max_length_input = "".to_string();
@@ -82,8 +111,7 @@ impl AppState {
     }
 
     pub fn clear_cell(&mut self) {
-        self.clicked_constraint_index = None;
-        self.page_number = 0;
+        self.set_page_number(0);
 
         self.selected_cell = None;
         self.filter.clear_cell();
@@ -122,6 +150,7 @@ mod tests {
         assert_eq!(state.selected_cell, None);
         assert_eq!(state.clicked_constraint_index, None);
         assert_eq!(state.page_number, 0);
+        assert_eq!(state.page_count, 0);
         assert_eq!(state.page_length, 100);
         assert_eq!(state.page_length_input, "100".to_string());
         assert_eq!(state.filtered_length, 0);
@@ -182,6 +211,81 @@ mod tests {
         assert_eq!(state.selected_cell, Some((1, 2)));
         assert_eq!(state.clicked_constraint_index, None);
         assert_eq!(state.page_number, 0);
+    }
+
+    #[test]
+    fn test_count_pages() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
+        let mut state: AppState = AppState::new(constraints);
+
+        assert_eq!(state.page_count, 0);
+
+        state.filtered_length = 10;
+        state.count_pages();
+        assert_eq!(state.page_count, 1);
+
+        state.page_length_input = "6".to_string();
+        state.set_page_length();
+        state.count_pages();
+        assert_eq!(state.page_count, 2);
+
+        state.page_length_input = "5".to_string();
+        state.set_page_length();
+        state.count_pages();
+        assert_eq!(state.page_count, 2);
+
+        state.page_length_input = "4".to_string();
+        state.set_page_length();
+        state.count_pages();
+        assert_eq!(state.page_count, 3);
+    }
+
+    #[test]
+    fn test_set_page_length() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
+        let mut state: AppState = AppState::new(constraints);
+        state.get_filtered();
+
+        state.page_length_input = "A".to_string();
+        state.set_page_length();
+        assert_eq!(state.page_length, 100);
+
+        state.page_length_input = "-1".to_string();
+        state.set_page_length();
+        assert_eq!(state.page_length, 100);
+
+        state.clicked_constraint_index = Some(1);
+        state.page_length_input = "3".to_string();
+        state.set_page_length();
+        assert_eq!(state.page_length, 3);
+        assert_eq!(state.page_count, 4);
+        assert_eq!(state.clicked_constraint_index, None);
+    }
+
+    #[test]
+    fn test_set_page_number() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
+        let mut state: AppState = AppState::new(constraints);
+        state.get_filtered();
+
+        state.set_page_number(-1);
+        assert_eq!(state.page_number, 0);
+        state.set_page_number(-5);
+        assert_eq!(state.page_number, 0);
+
+        state.set_page_number(1);
+        assert_eq!(state.page_number, 0);
+
+        state.page_length_input = "5".to_string();
+        state.set_page_length();
+
+        state.clicked_constraint_index = Some(1);
+        state.set_page_number(1);
+        assert_eq!(state.page_number, 1);
+        assert_eq!(state.clicked_constraint_index, None);
+
+        state.set_page_number(2);
+        assert_eq!(state.page_number, 1);
     }
 
     #[test]
@@ -260,12 +364,13 @@ mod tests {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
         let mut state = AppState::new(constraints.clone());
 
-        state.page_length = 6;
+        state.page_length_input = "6".to_string();
+        state.set_page_length();
         let filtered = state.get_filtered();
         assert_eq!(filtered.len(), 6);
         assert_eq!(state.filtered_length, 10);
 
-        state.page_number = 1;
+        state.set_page_number(1);
         let filtered2 = state.get_filtered();
         assert_eq!(filtered2.len(), 4);
         assert_eq!(state.filtered_length, 10);
