@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{cnf_converter::create_tuples_from_constraints, parse_numeric_input, solve_sudoku};
+use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
@@ -144,20 +144,12 @@ impl SATApp {
                 if self.state.page_length_input.is_empty()
                     || self.state.page_length_input.eq_ignore_ascii_case("*")
                 {
-                    println!(
-                        "Constraints after filtering: {}",
-                        self.state.filtered_length
-                    );
                     self.state.page_length_input = self.state.filtered_length.to_string();
                 }
 
-                let page_input = parse_numeric_input(&self.state.page_length_input);
-                if let Some(input) = page_input {
-                    self.state.page_length = input as usize;
-                    self.state.page_number = 0;
-                    self.rendered_constraints =
-                        create_tuples_from_constraints(self.state.get_filtered());
-                }
+                self.state.set_page_length();
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
             }
         })
     }
@@ -167,24 +159,17 @@ impl SATApp {
             if ui.button(RichText::new("<").size(text_scale)).clicked()
                 && self.state.page_number > 0
             {
-                self.state.page_number -= 1;
+                self.state.set_page_number(self.state.page_number - 1);
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
-
-            let mut page_count = self.state.filtered_length / (self.state.page_length);
-            page_count += if self.state.filtered_length % self.state.page_length == 0 {
-                0
-            } else {
-                1
-            };
 
             ui.add(
                 Label::new(
                     RichText::new(format!(
                         "Page {}/{}",
                         self.state.page_number + 1,
-                        page_count
+                        self.state.page_count,
                     ))
                     .size(text_scale),
                 )
@@ -192,10 +177,10 @@ impl SATApp {
             );
 
             if ui.button(RichText::new(">").size(text_scale)).clicked()
-                && page_count > 0
-                && self.state.page_number < page_count - 1
+                && self.state.page_count > 0
+                && self.state.page_number < self.state.page_count - 1
             {
-                self.state.page_number += 1;
+                self.state.set_page_number(self.state.page_number + 1);
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
