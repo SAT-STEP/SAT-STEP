@@ -38,4 +38,8 @@ impl Callbacks for CadicalCallbackWrapper {
             self.learned_clauses.push(tmp_vector);
         }
     }
+
+    fn learn_trail(&mut self, trail: &[i32]) {
+        println!("Trail: {:?}", trail);
+    }
 }
