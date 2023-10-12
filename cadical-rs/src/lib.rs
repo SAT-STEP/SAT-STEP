@@ -9,7 +9,7 @@
 
 use std::ffi::{CStr, CString};
 use std::mem::ManuallyDrop;
-use std::os::raw::{c_char, c_int, c_void, c_ulong};
+use std::os::raw::{c_char, c_int, c_ulong, c_void};
 use std::path::Path;
 use std::ptr::null_mut;
 use std::time::Instant;
