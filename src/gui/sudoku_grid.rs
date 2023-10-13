@@ -53,17 +53,8 @@ impl SATApp {
                     bottom_right = top_left + Vec2::new(cell_size, cell_size);
                 }
 
-                let center = Pos2::new(
-                    top_left.x + (2.0 * block_spacing),
-                    top_left.y + square_spacing,
-                ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-                ui.painter().text(
-                    center,
-                    egui::Align2::CENTER_CENTER,
-                    (row_num + 1).to_string(),
-                    egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
-                    Color32::WHITE,
-                );
+                draw_row_number(ui, top_left, cell_size, block_size, row_num, block_spacing, square_spacing);
+
                 top_left.x += cell_size;
                 bottom_right.x += cell_size;
 
@@ -215,6 +206,20 @@ fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, block_size: f32,
         center,
         egui::Align2::CENTER_CENTER,
         (col_num + 1).to_string(),
+        egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+        Color32::WHITE,
+    );
+}
+
+fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, block_size: f32, row_num: usize, block_spacing: f32, square_spacing: f32) {
+    let center = Pos2::new(
+        top_left.x + (2.0 * block_spacing),
+        top_left.y + square_spacing,
+    ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+    ui.painter().text(
+        center,
+        egui::Align2::CENTER_CENTER,
+        (row_num + 1).to_string(),
         egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
         Color32::WHITE,
     );
