@@ -8,11 +8,11 @@ use super::SATApp;
 
 impl SATApp {
     pub fn sudoku_grid(&mut self, ui: &mut Ui, mut height: f32, mut width: f32) -> Response {
-        let block_spacing = 2.0;
-        let square_spacing = 1.0;
+        let block_spacing = 8.0;
+        let cell_spacing = 4.0;
         // width += block_spacing;
-        let cell_size = cmp::min(height as i32, width as i32) as f32 / 10.0;
-        // cell_size /= 10.0;
+        let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
+        let cell_size = (minimum_dimension - 6.0 * cell_spacing - 2.0 * block_spacing) / 10.0;
 
         let block_size = cell_size * 3.0;
 
@@ -46,94 +46,45 @@ impl SATApp {
             let mut c_index = 0;
 
             // row
-            for (row_num, row) in self.sudoku.iter().enumerate().take(9) {
-                // block divider
-                if row_num % 3 == 0 && row_num != 0 {
-                    top_left.y += block_spacing;
-                    bottom_right = top_left + Vec2::new(cell_size, cell_size);
-                }
-
-                draw_row_number(ui, top_left, cell_size, block_size, row_num, block_spacing, square_spacing);
-
+            for (row_num, row) in self.sudoku.clone().iter().enumerate().take(9) {
+                draw_row_number(
+                    ui,
+                    top_left,
+                    cell_size,
+                    block_size,
+                    row_num,
+                    block_spacing,
+                    cell_spacing,
+                );
                 top_left.x += cell_size;
                 bottom_right.x += cell_size;
 
-                // square divider
-                top_left.y += square_spacing;
-                bottom_right.y += square_spacing;
-
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
-                    // block divider
-                    if col_num % 3 == 0 && col_num != 0 {
-                        top_left.x += block_spacing;
-                        bottom_right.x = top_left.x + cell_size;
-                    }
+                    c_index = self.draw_sudoku_column(
+                        ui,
+                        top_left,
+                        cell_size,
+                        block_size,
+                        block_spacing,
+                        cell_spacing,
+                        row_num,
+                        col_num,
+                        *val,
+                        draw_constraints,
+                        &constraints,
+                        c_index,
+                        bottom_right,
+                    );
 
-                    if row_num == 0 {
-                        draw_col_number(ui, top_left, cell_size, block_size, col_num, block_spacing, square_spacing);
-                    }
-
-                    // square divider
-                    top_left.x += square_spacing;
-                    bottom_right.x += square_spacing;
-
-                    let rect = Rect::from_two_pos(top_left, bottom_right);
-                    let rect_action = ui.allocate_rect(rect, egui::Sense::click());
-
-                    // Filter constraint list by cell
-                    if rect_action.clicked() {
-                        if self.state.selected_cell
-                            == Some((row_num as i32 + 1, col_num as i32 + 1))
-                        {
-                            self.state.clear_cell();
-                        } else {
-                            self.state
-                                .select_cell(row_num as i32 + 1, col_num as i32 + 1);
-                        }
-                        self.rendered_constraints =
-                            create_tuples_from_constraints(self.state.get_filtered());
-                    }
-
-                    if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
-                        ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
-                    } else if self.clues[row_num][col_num].is_some() {
-                        ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
+                    // new column
+                    if col_num % 3 == 2 && col_num != 8 {
+                        top_left.x += cell_size + block_spacing;
+                        bottom_right.x += cell_size + block_spacing;
                     } else {
-                        ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
+                        top_left.x += cell_size + cell_spacing;
+                        bottom_right.x += cell_size + cell_spacing;
                     }
-
-                    let mut drew_constraint = false;
-                    if draw_constraints {
-                        // draw little numbers
-                        (drew_constraint, c_index) = draw_little_numbers(
-                            ui,
-                            top_left,
-                            cell_size,
-                            block_size,
-                            c_index,
-                            &constraints,
-                            row_num,
-                            col_num,
-                        );
-                    }
-
-                    if let Some(num) = val {
-                        // don't draw big number if drew little numbers
-                        if !drew_constraint {
-                            let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-                            ui.painter().text(
-                                center,
-                                egui::Align2::CENTER_CENTER,
-                                num.to_string(),
-                                egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
-                                Color32::BLACK,
-                            );
-                        }
-                    }
-
-                    top_left.x += cell_size;
-                    bottom_right.x += cell_size;
                 }
 
                 // new row
@@ -141,9 +92,97 @@ impl SATApp {
                 top_left.y += cell_size;
                 bottom_right.x = top_left.x + cell_size;
                 bottom_right.y = top_left.y + cell_size;
+                if row_num % 3 == 2 && row_num != 8 {
+                    top_left.y += block_spacing;
+                    bottom_right.y += block_spacing;
+                } else {
+                    top_left.y += cell_spacing;
+                    bottom_right.y += cell_spacing;
+                }
             }
         })
         .response
+    }
+
+    fn draw_sudoku_column(
+        &mut self,
+        ui: &mut Ui,
+        top_left: Pos2,
+        cell_size: f32,
+        block_size: f32,
+        block_spacing: f32,
+        cell_spacing: f32,
+        row_num: usize,
+        col_num: usize,
+        val: Option<i32>,
+        draw_constraints: bool,
+        constraints: &Vec<(i32, i32, i32)>,
+        mut c_index: usize,
+        bottom_right: Pos2,
+    ) -> usize {
+        if row_num == 0 {
+            draw_col_number(
+                ui,
+                top_left,
+                cell_size,
+                block_size,
+                col_num,
+                block_spacing,
+                cell_spacing,
+            );
+        }
+
+        let rect = Rect::from_two_pos(top_left, bottom_right);
+        let rect_action = ui.allocate_rect(rect, egui::Sense::click());
+
+        // Filter constraint list by cell
+        if rect_action.clicked() {
+            if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
+                self.state.clear_cell();
+            } else {
+                self.state
+                    .select_cell(row_num as i32 + 1, col_num as i32 + 1);
+            }
+            self.rendered_constraints = create_tuples_from_constraints(self.state.get_filtered());
+        }
+
+        if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
+            ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
+        } else if self.clues[row_num][col_num].is_some() {
+            ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
+        } else {
+            ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
+        }
+
+        let mut drew_constraint = false;
+        if draw_constraints {
+            // draw little numbers
+            (drew_constraint, c_index)= draw_little_numbers(
+                ui,
+                top_left,
+                cell_size,
+                block_size,
+                c_index,
+                &constraints,
+                row_num,
+                col_num,
+            );
+        }
+
+        if let Some(num) = val {
+            // don't draw big number if drew little numbers
+            if !drew_constraint {
+                let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    num.to_string(),
+                    egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
+                    Color32::BLACK,
+                );
+            }
+        }
+        c_index
     }
 }
 
@@ -152,7 +191,7 @@ fn draw_little_numbers(
     top_left: Pos2,
     cell_size: f32,
     block_size: f32,
-    constraint_index: usize,
+    mut c_index: usize,
     constraints: &Vec<(i32, i32, i32)>,
     row_num: usize,
     col_num: usize,
@@ -160,7 +199,6 @@ fn draw_little_numbers(
     let mut drew_constraint = false;
     let mut little_top_left = top_left;
     let mut little_num_pos = 0;
-    let mut c_index = constraint_index;
 
     // while on little numbers reference this row and block
     while c_index < constraints.len()
@@ -197,9 +235,17 @@ fn draw_little_numbers(
     (drew_constraint, c_index)
 }
 
-fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, block_size: f32, col_num: usize, block_spacing: f32, square_spacing: f32) {
+fn draw_col_number(
+    ui: &mut Ui,
+    top_left: Pos2,
+    cell_size: f32,
+    block_size: f32,
+    col_num: usize,
+    block_spacing: f32,
+    cell_spacing: f32,
+) {
     let center = Pos2::new(
-        top_left.x + square_spacing,
+        top_left.x + cell_spacing,
         top_left.y - cell_size + (2.0 * block_spacing),
     ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
     ui.painter().text(
@@ -211,10 +257,18 @@ fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, block_size: f32,
     );
 }
 
-fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, block_size: f32, row_num: usize, block_spacing: f32, square_spacing: f32) {
+fn draw_row_number(
+    ui: &mut Ui,
+    top_left: Pos2,
+    cell_size: f32,
+    block_size: f32,
+    row_num: usize,
+    block_spacing: f32,
+    cell_spacing: f32,
+) {
     let center = Pos2::new(
         top_left.x + (2.0 * block_spacing),
-        top_left.y + square_spacing,
+        top_left.y + cell_spacing,
     ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
     ui.painter().text(
         center,
