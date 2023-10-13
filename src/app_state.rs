@@ -11,6 +11,7 @@ pub struct AppState {
     pub page_length: usize,
     pub page_length_input: String,
     pub filtered_length: usize,
+    pub show_solved_sudoku: bool,
 }
 
 impl AppState {
@@ -28,6 +29,7 @@ impl AppState {
             page_length: 100,
             page_length_input: "100".to_string(),
             filtered_length: 0,
+            show_solved_sudoku: false,
         }
     }
 

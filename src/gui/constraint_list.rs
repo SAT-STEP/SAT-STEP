@@ -203,6 +203,7 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
 
+            ui.checkbox(&mut self.state.show_solved_sudoku, RichText::new("Show solved sudoku").size(text_scale));
         })
     }
 

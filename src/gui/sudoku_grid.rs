@@ -169,6 +169,10 @@ impl SATApp {
             );
         }
 
+        if !self.state.show_solved_sudoku && !self.clues[row_num][col_num].is_some() {
+            return c_index;
+        }
+
         if let Some(num) = val {
             // don't draw big number if drew little numbers
             if !drew_constraint {
