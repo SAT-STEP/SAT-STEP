@@ -307,7 +307,12 @@ impl<C: Callbacks> Solver<C> {
     }
 
     // PAAVO:
-    extern "C" fn learn_trail_cb(data: *mut c_void, conflict_literals: *const c_int, size: c_ulong, trail: *const c_int) {
+    extern "C" fn learn_trail_cb(
+        data: *mut c_void,
+        conflict_literals: *const c_int,
+        size: c_ulong,
+        trail: *const c_int,
+    ) {
         let conflict_literals = unsafe { slice::from_raw_parts(conflict_literals, 2) };
         let conflict_literals = ManuallyDrop::new(conflict_literals);
 
