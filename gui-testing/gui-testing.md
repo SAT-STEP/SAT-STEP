@@ -56,7 +56,7 @@ Would be run as:
 
 ## Test cases
 
-### Test basic funtions
+### Basic funtions
 - Start program with `cargo run`
 - Open file `data/sudoku1.txt` with the "Open file..." dialog
 - **Check initial state**
@@ -117,3 +117,49 @@ Would be run as:
     - Clear the "Number of rows per page:" field
     - Press "Select"
     - **Require:** All constraints should be on one page
+- **Check Solve another sudoku**
+    - Open file `data/sample_sudoku.txt.txt` with the "Open file..." dialog
+    - Solve sudoku with the "Solve sudoku" button
+    - **Require:** The start of the list should be as follows (barring style changes)  
+    ![Screenshot of start of list](list_start_2.png "First three constraints")  
+
+### Possible edge cases
+
+#### Constraint selection causing crashes
+
+- Start program with `cargo run`
+- Open file `data/sudoku1.txt` with the "Open file..." dialog
+- Solve sudoku with the "Solve sudoku" button
+- Click on the constraint at the top of the list
+- **Require:** The constraint should be highlighted
+- **Require:** The constraint should be visualized in the sudoku grid  
+![Screenshot of visualized constraint](constraint_viz.png "Constraint visualized")  
+- **Check length filtering**
+    - Enter `3` into the "Max length:" field
+    - Press "Filter"
+    - **Require:** The constraint should **NOT** be highlighted
+    - **Require:** The constraint should **NOT** be visualized
+- **Check filtering by cell**
+    - Click on the constraint at the top of the list
+    - Click the cell in row 9, col 6
+    - **Require:** The constraint should **NOT** be highlighted
+    - **Require:** The constraint should **NOT** be visualized
+- **Check filter clearing**
+    - Click on the constraint at the top of the list
+    - Press "Clear filters"
+    - **Require:** The constraint should **NOT** be highlighted
+    - **Require:** The constraint should **NOT** be visualized
+- **Check constraint paging**
+    - Click on the constraint at the top of the list
+    - **Require:** Changing the page should deselect the constraint 
+    - Click on the constraint at the top of the list
+    - Enter `3` into the "Number of rows per page:" field
+    - Press "Select"
+    - **Require:** The constraint should **NOT** be highlighted
+    - **Require:** The constraint should **NOT** be visualized
+- **Check Solve another sudoku**
+    - Click on the constraint at the top of the list
+    - Open file `data/sudoku1.txt` with the "Open file..." dialog
+    - Solve sudoku with the "Solve sudoku" button
+    - **Require:** The constraint should **NOT** be highlighted
+    - **Require:** The constraint should **NOT** be visualized
