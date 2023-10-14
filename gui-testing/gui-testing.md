@@ -18,7 +18,7 @@ Tests are run in order.
 Requirements are checked at the lowest level. For example the structure:
 
 
-- Tests 1
+### Tests 1
     - Action 1
     - Action 2
     - **Sub-Tests 1:**
@@ -27,7 +27,7 @@ Requirements are checked at the lowest level. For example the structure:
     - **Sub-Tests 2:**
         - Action 4
         - **Require:** Check 2
-- Tests 2
+### Tests 2
     - Action 1
     - **Sub-Tests 3:**
         - Action 5
@@ -44,7 +44,9 @@ Would be run as:
 - **Check 1**
 - Action 4
 - **Check 2**
-- QUIT PROGAM
+
+**QUIT PROGAM**
+
 - Action 1
 - Action 5
 - **Check 3**
@@ -54,7 +56,7 @@ Would be run as:
 
 ## Test cases
 
-- Test basic funtions
+### Test basic funtions
     - Start program with `cargo run`
     - Open file `data/sudoku1.txt` with the "Open file..." dialog
     - **Check initial state**
