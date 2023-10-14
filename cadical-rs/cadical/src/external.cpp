@@ -243,8 +243,6 @@ int External::solve (bool preprocess_only) {
   check_solve_result (res);
   reset_limits ();
 
-  // PAAVO:
-  learner->learn_trail(internal->trail.size(), internal->trail.data());
 
   return res;
 }
@@ -492,6 +490,10 @@ void External::export_learned_large_clause (const vector<int> & clause) {
       learner->learn (elit);
     }
     learner->learn (0);
+
+    // PAAVO:
+    learner->learn_trail(internal->conflict->literals, internal->trail.size(), internal->trail.data());
+
   } else
     LOG ("not exporting learned clause of size %zu", size);
 }

@@ -39,7 +39,9 @@ impl Callbacks for CadicalCallbackWrapper {
         }
     }
 
-    fn learn_trail(&mut self, trail: &[i32]) {
-        println!("Trail: {:?}", trail);
+    // called when a new derived clause is learnt
+    fn learn_trail(&mut self, _conflict_literals: &[i32], _trail: &[i32]) {
+        //println!("Conflict literals: {:?}", conflict_literals);
+        //println!("Trail: {:?}", trail);
     }
 }

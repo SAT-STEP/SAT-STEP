@@ -39,7 +39,7 @@ extern "C" {
     fn ccadical_set_learn_trail(
         ptr: *mut c_void,
         data: *mut c_void,
-        cbs: Option<extern "C" fn(*mut c_void, c_ulong, *const c_int)>,
+        cbs: Option<extern "C" fn(*mut c_void, *const c_int, c_ulong, *const c_int)>,
     );
     fn ccadical_status(ptr: *mut c_void) -> c_int;
     fn ccadical_vars(ptr: *mut c_void) -> c_int;
@@ -307,12 +307,15 @@ impl<C: Callbacks> Solver<C> {
     }
 
     // PAAVO:
-    extern "C" fn learn_trail_cb(data: *mut c_void, size: c_ulong, trail: *const c_int) {
+    extern "C" fn learn_trail_cb(data: *mut c_void, conflict_literals: *const c_int, size: c_ulong, trail: *const c_int) {
+        let conflict_literals = unsafe { slice::from_raw_parts(conflict_literals, 2) };
+        let conflict_literals = ManuallyDrop::new(conflict_literals);
+
         let trail = unsafe { slice::from_raw_parts(trail, size as usize) };
         let trail = ManuallyDrop::new(trail);
 
         let cbs = unsafe { &mut *(data as *mut C) };
-        cbs.learn_trail(&trail);
+        cbs.learn_trail(&conflict_literals, &trail);
     }
 
     /// Returns a mutable reference to the callbacks.
@@ -403,7 +406,7 @@ pub trait Callbacks {
     fn learn(&mut self, clause: &[i32]) {}
 
     #[allow(unused_variables)]
-    fn learn_trail(&mut self, trail: &[i32]) {}
+    fn learn_trail(&mut self, conflict_literals: &[i32], trail: &[i32]) {}
 }
 
 /// Callbacks implementing a simple timeout.

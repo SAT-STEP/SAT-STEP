@@ -834,7 +834,7 @@ public:
   virtual void learn (int lit) = 0;
 
   // PAAVO:
-  virtual void learn_trail (unsigned long size, int* trail) = 0;
+  virtual void learn_trail (int* conflict_literals, unsigned long size, int* trail) = 0;
 };
 
 /*------------------------------------------------------------------------*/
