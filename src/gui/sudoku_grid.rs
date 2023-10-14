@@ -30,7 +30,6 @@ impl SATApp {
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
                 draw_constraints = true;
-
             } else {
                 constraints = self.state.little_number_constraints.clone();
                 if !self.state.show_solved_sudoku {
@@ -162,19 +161,19 @@ impl SATApp {
         let mut drew_constraint = false;
         if draw_constraints {
             // draw little numbers
-            (drew_constraint, c_index)= draw_little_numbers(
+            (drew_constraint, c_index) = draw_little_numbers(
                 ui,
                 top_left,
                 cell_size,
                 block_size,
                 c_index,
-                &constraints,
+                constraints,
                 row_num,
                 col_num,
             );
         }
 
-        if !self.state.show_solved_sudoku && !self.clues[row_num][col_num].is_some() {
+        if !self.state.show_solved_sudoku && self.clues[row_num][col_num].is_none() {
             return c_index;
         }
 

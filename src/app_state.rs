@@ -42,6 +42,8 @@ impl AppState {
         self.filtered_length = length;
         self.count_pages();
 
+        self.update_little_number_constraints();
+
         list
     }
 

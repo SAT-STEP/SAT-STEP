@@ -100,7 +100,7 @@ impl ListFilter {
         for index in index_list {
             if all_constraints[index].len() == 1 {
                 little_number_constraints
-                    .push(identifier_to_tuple(all_constraints[index][0].clone()));
+                    .push(identifier_to_tuple(all_constraints[index][0]));
             }
         }
         little_number_constraints
