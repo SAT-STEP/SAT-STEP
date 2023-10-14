@@ -7,20 +7,18 @@ use crate::cnf_converter::create_tuples_from_constraints;
 use super::SATApp;
 
 impl SATApp {
-    pub fn sudoku_grid(&mut self, ui: &mut Ui, mut height: f32, mut width: f32) -> Response {
+    pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
         let block_spacing = 8.0;
         let cell_spacing = 4.0;
         // width += block_spacing;
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
-        let cell_size = (minimum_dimension - 6.0 * cell_spacing - 2.0 * block_spacing) / 10.0;
-
-        let block_size = cell_size * 3.0;
+        let cell_size = (minimum_dimension - 6.0 * cell_spacing - 4.0 * block_spacing) / 10.0;
 
         // using these centers the sudoku in the middle of its column
-        height = (height - block_size * 3.0 + cell_size) / 2.0;
-        width = width + (width - block_size * 3.0 - cell_size) / 2.0;
+        let top_left_y = (height - minimum_dimension) / 2.0 + cell_size;
+        let top_left_x = width + (width - minimum_dimension) / 2.0;
 
-        let mut top_left = Pos2::new(width, height);
+        let mut top_left = Pos2::new(top_left_x, top_left_y);
         let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
 
         let mut draw_constraints = false;
@@ -55,7 +53,6 @@ impl SATApp {
                     ui,
                     top_left,
                     cell_size,
-                    block_size,
                     row_num,
                     block_spacing,
                     cell_spacing,
@@ -65,11 +62,10 @@ impl SATApp {
 
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
-                    c_index = self.draw_sudoku_column(
+                    c_index = self.draw_sudoku_cell(
                         ui,
                         top_left,
                         cell_size,
-                        block_size,
                         block_spacing,
                         cell_spacing,
                         row_num,
@@ -92,7 +88,7 @@ impl SATApp {
                 }
 
                 // new row
-                top_left.x = width;
+                top_left.x = top_left_x;
                 top_left.y += cell_size;
                 bottom_right.x = top_left.x + cell_size;
                 bottom_right.y = top_left.y + cell_size;
@@ -108,12 +104,11 @@ impl SATApp {
         .response
     }
 
-    fn draw_sudoku_column(
+    fn draw_sudoku_cell(
         &mut self,
         ui: &mut Ui,
         top_left: Pos2,
         cell_size: f32,
-        block_size: f32,
         block_spacing: f32,
         cell_spacing: f32,
         row_num: usize,
@@ -129,7 +124,6 @@ impl SATApp {
                 ui,
                 top_left,
                 cell_size,
-                block_size,
                 col_num,
                 block_spacing,
                 cell_spacing,
@@ -165,7 +159,6 @@ impl SATApp {
                 ui,
                 top_left,
                 cell_size,
-                block_size,
                 c_index,
                 constraints,
                 row_num,
@@ -185,7 +178,7 @@ impl SATApp {
                     center,
                     egui::Align2::CENTER_CENTER,
                     num.to_string(),
-                    egui::FontId::new(block_size / 5.0, egui::FontFamily::Monospace),
+                    egui::FontId::new(cell_size * 0.6, egui::FontFamily::Monospace),
                     Color32::BLACK,
                 );
             }
@@ -198,7 +191,6 @@ fn draw_little_numbers(
     ui: &mut Ui,
     top_left: Pos2,
     cell_size: f32,
-    block_size: f32,
     mut c_index: usize,
     constraints: &Vec<(i32, i32, i32)>,
     row_num: usize,
@@ -231,7 +223,7 @@ fn draw_little_numbers(
             little_top_left,
             egui::Align2::LEFT_TOP,
             constraints[c_index].2.to_string(),
-            egui::FontId::new(block_size / 10.0, egui::FontFamily::Monospace),
+            egui::FontId::new(cell_size * 0.3, egui::FontFamily::Monospace),
             c_value_color,
         );
         little_top_left.x += cell_size / 3.0;
@@ -247,7 +239,6 @@ fn draw_col_number(
     ui: &mut Ui,
     top_left: Pos2,
     cell_size: f32,
-    block_size: f32,
     col_num: usize,
     block_spacing: f32,
     cell_spacing: f32,
@@ -260,7 +251,7 @@ fn draw_col_number(
         center,
         egui::Align2::CENTER_CENTER,
         (col_num + 1).to_string(),
-        egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+        egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
         Color32::WHITE,
     );
 }
@@ -269,7 +260,6 @@ fn draw_row_number(
     ui: &mut Ui,
     top_left: Pos2,
     cell_size: f32,
-    block_size: f32,
     row_num: usize,
     block_spacing: f32,
     cell_spacing: f32,
@@ -282,7 +272,7 @@ fn draw_row_number(
         center,
         egui::Align2::CENTER_CENTER,
         (row_num + 1).to_string(),
-        egui::FontId::new(block_size / 8.0, egui::FontFamily::Monospace),
+        egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
         Color32::WHITE,
     );
 }
