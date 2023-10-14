@@ -19,23 +19,23 @@ Requirements are checked at the lowest level. For example the structure:
 
 
 ### Tests 1
-    - Action 1
-    - Action 2
-    - **Sub-Tests 1:**
-        - Action 3
-        - **Require:** Check 1
-    - **Sub-Tests 2:**
-        - Action 4
-        - **Require:** Check 2
+- Action 1
+- Action 2
+- **Sub-Tests 1:**
+    - Action 3
+    - **Require:** Check 1
+- **Sub-Tests 2:**
+    - Action 4
+    - **Require:** Check 2
 ### Tests 2
-    - Action 1
-    - **Sub-Tests 3:**
-        - Action 5
-        - **Require:** Check 3
-    - Action 6
-    - **Sub-Tests 4:**
-        - Action 7
-        - **Require:** Check 4
+- Action 1
+- **Sub-Tests 3:**
+    - Action 5
+    - **Require:** Check 3
+- Action 6
+- **Sub-Tests 4:**
+    - Action 7
+    - **Require:** Check 4
 
 Would be run as:
 - Action 1
@@ -57,63 +57,63 @@ Would be run as:
 ## Test cases
 
 ### Test basic funtions
-    - Start program with `cargo run`
-    - Open file `data/sudoku1.txt` with the "Open file..." dialog
-    - **Check initial state**
-        - **Require:** There should be a sudoku grid with clues marked in a different style
-        - **Require:** There should be row and col numbers shown beside the grid
-        - **Require:** The sudoku grid should be as follows (barring style changes)  
-        ![Screenshot of initial state](initial.png "Initial sudoku state")  
-    - Solve sudoku with the "Solve sudoku" button
-    - **Check solved state**
-        - **Require:** The sudoku grid should be as follows (barring style changes)  
-        ![Screenshot of solved state](solved.png "Solved sudoku state")  
-        - **Require:** There should be a list of constraints
-        - **Require:** There should be 482 constraints
-        - **Require:** The start of the list should be as follows (barring style changes)  
-        ![Screenshot of start of list](list_start.png "First three constraints")  
-    - **Check length filtering**
-        - Enter `3` into the "Max length:" field
-        - Press "Filter"
-        - **Require:** All constraints should be of length 3 or less
-        - **Require:** There should be 30 constraints visible after filtering
-        - **Require:** The start of the list should **NOT** have changed  
-        ![Screenshot of start of list](list_start.png "First three constraints")  
-    - **Check filtering by cell**
-        - Click the cell in row 9, col 6
-        - **Require:** The cell should be highlighted
-        - **Require:** All constraints should have a value referring to that cell
-        - **Require:** There should be 9 constraints visible after filtering
-        - **Require:** The start of the list should **NOT** have changed  
-        ![Screenshot of start of list](list_start.png "First three constraints")  
-        - Click the cell in row 9, col 6
-        - **Require:** The cell should **NOT** be highlighted
-        - **Require:** There should be 30 constraints visible after filtering
-        - Click the cell in row 9, col 6
-    - **Check filter clearing**
-        - Press "Clear filters"
-        - **Require:** The "Max length:" field should be empty
-        - **Require:** No cell should be selected
-        - **Require:** There should be 482 constraints
-        - **Require:** The start of the list should be as follows (barring style changes)  
-        ![Screenshot of start of list](list_start.png "First three constraints")
-    - **Check constraint visualization**
-        - Click on the constraint at the top of the list
-        - **Require:** The constraint should be highlighted
-        - **Require:** The constraint should be visualized in the sudoku grid  
-        ![Screenshot of visualized constraint](constraint_viz.png "Constraint visualized")  
-        - Click on the constraint at the top of the list
-        - **Require:** The constraint should **NOT** be highlighted
-        - **Require:** The constraint should **NOT** be visualized
-    - **Check constraint paging**
-        - **Require:** Clicking on the page change buttons should move between pages
-        - **Require:** Moving past the first or last page should not be possible
-        - **Require:** The same page (e.g. page 3) should not change as you change back and forth
-        - Enter `3` into the "Number of rows per page:" field
-        - Press "Select"
-        - **Require:** There should be 3 constraints per page
-        - **Require:** The start of the list should **NOT** have changed  
-        ![Screenshot of start of list](list_start.png "First three constraints")  
-        - Clear the "Number of rows per page:" field
-        - Press "Select"
-        - **Require:** All constraints should be on one page
+- Start program with `cargo run`
+- Open file `data/sudoku1.txt` with the "Open file..." dialog
+- **Check initial state**
+    - **Require:** There should be a sudoku grid with clues marked in a different style
+    - **Require:** There should be row and col numbers shown beside the grid
+    - **Require:** The sudoku grid should be as follows (barring style changes)  
+    ![Screenshot of initial state](initial.png "Initial sudoku state")  
+- Solve sudoku with the "Solve sudoku" button
+- **Check solved state**
+    - **Require:** The sudoku grid should be as follows (barring style changes)  
+    ![Screenshot of solved state](solved.png "Solved sudoku state")  
+    - **Require:** There should be a list of constraints
+    - **Require:** There should be 482 constraints
+    - **Require:** The start of the list should be as follows (barring style changes)  
+    ![Screenshot of start of list](list_start.png "First three constraints")  
+- **Check length filtering**
+    - Enter `3` into the "Max length:" field
+    - Press "Filter"
+    - **Require:** All constraints should be of length 3 or less
+    - **Require:** There should be 30 constraints visible after filtering
+    - **Require:** The start of the list should **NOT** have changed  
+    ![Screenshot of start of list](list_start.png "First three constraints")  
+- **Check filtering by cell**
+    - Click the cell in row 9, col 6
+    - **Require:** The cell should be highlighted
+    - **Require:** All constraints should have a value referring to that cell
+    - **Require:** There should be 9 constraints visible after filtering
+    - **Require:** The start of the list should **NOT** have changed  
+    ![Screenshot of start of list](list_start.png "First three constraints")  
+    - Click the cell in row 9, col 6
+    - **Require:** The cell should **NOT** be highlighted
+    - **Require:** There should be 30 constraints visible after filtering
+    - Click the cell in row 9, col 6
+- **Check filter clearing**
+    - Press "Clear filters"
+    - **Require:** The "Max length:" field should be empty
+    - **Require:** No cell should be selected
+    - **Require:** There should be 482 constraints
+    - **Require:** The start of the list should be as follows (barring style changes)  
+    ![Screenshot of start of list](list_start.png "First three constraints")
+- **Check constraint visualization**
+    - Click on the constraint at the top of the list
+    - **Require:** The constraint should be highlighted
+    - **Require:** The constraint should be visualized in the sudoku grid  
+    ![Screenshot of visualized constraint](constraint_viz.png "Constraint visualized")  
+    - Click on the constraint at the top of the list
+    - **Require:** The constraint should **NOT** be highlighted
+    - **Require:** The constraint should **NOT** be visualized
+- **Check constraint paging**
+    - **Require:** Clicking on the page change buttons should move between pages
+    - **Require:** Moving past the first or last page should not be possible
+    - **Require:** The same page (e.g. page 3) should not change as you change back and forth
+    - Enter `3` into the "Number of rows per page:" field
+    - Press "Select"
+    - **Require:** There should be 3 constraints per page
+    - **Require:** The start of the list should **NOT** have changed  
+    ![Screenshot of start of list](list_start.png "First three constraints")  
+    - Clear the "Number of rows per page:" field
+    - Press "Select"
+    - **Require:** All constraints should be on one page
