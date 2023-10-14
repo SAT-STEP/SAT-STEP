@@ -8,11 +8,11 @@ use super::SATApp;
 
 impl SATApp {
     pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
-        let block_spacing = 8.0;
-        let cell_spacing = 4.0;
-        // width += block_spacing;
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
-        let cell_size = (minimum_dimension - 6.0 * cell_spacing - 4.0 * block_spacing) / 10.0;
+        let cell_size = minimum_dimension / 10.4; // 1 row-col number + 9 sudoku cells + 0.4 cell spacing
+
+        let block_spacing = 0.1 * cell_size;
+        let cell_spacing = 0.05 * cell_size;
 
         // using these centers the sudoku in the middle of its column
         let top_left_y = (height - minimum_dimension) / 2.0 + cell_size;
@@ -49,14 +49,7 @@ impl SATApp {
 
             // row
             for (row_num, row) in self.sudoku.clone().iter().enumerate().take(9) {
-                draw_row_number(
-                    ui,
-                    top_left,
-                    cell_size,
-                    row_num,
-                    block_spacing,
-                    cell_spacing,
-                );
+                draw_row_number(ui, top_left, cell_size, row_num);
                 top_left.x += cell_size;
                 bottom_right.x += cell_size;
 
@@ -66,8 +59,6 @@ impl SATApp {
                         ui,
                         top_left,
                         cell_size,
-                        block_spacing,
-                        cell_spacing,
                         row_num,
                         col_num,
                         *val,
@@ -109,8 +100,6 @@ impl SATApp {
         ui: &mut Ui,
         top_left: Pos2,
         cell_size: f32,
-        block_spacing: f32,
-        cell_spacing: f32,
         row_num: usize,
         col_num: usize,
         val: Option<i32>,
@@ -120,14 +109,7 @@ impl SATApp {
         bottom_right: Pos2,
     ) -> usize {
         if row_num == 0 {
-            draw_col_number(
-                ui,
-                top_left,
-                cell_size,
-                col_num,
-                block_spacing,
-                cell_spacing,
-            );
+            draw_col_number(ui, top_left, cell_size, col_num);
         }
 
         let rect = Rect::from_two_pos(top_left, bottom_right);
@@ -235,44 +217,26 @@ fn draw_little_numbers(
     (drew_constraint, c_index)
 }
 
-fn draw_col_number(
-    ui: &mut Ui,
-    top_left: Pos2,
-    cell_size: f32,
-    col_num: usize,
-    block_spacing: f32,
-    cell_spacing: f32,
-) {
-    let center = Pos2::new(
-        top_left.x + cell_spacing,
-        top_left.y - cell_size + (2.0 * block_spacing),
-    ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, col_num: usize) {
+    let center = Pos2::new(top_left.x, top_left.y - cell_size * 0.8)
+        + Vec2::new(cell_size / 2.0, cell_size / 2.0);
     ui.painter().text(
         center,
         egui::Align2::CENTER_CENTER,
         (col_num + 1).to_string(),
         egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
-        Color32::WHITE,
+        Color32::DARK_GRAY,
     );
 }
 
-fn draw_row_number(
-    ui: &mut Ui,
-    top_left: Pos2,
-    cell_size: f32,
-    row_num: usize,
-    block_spacing: f32,
-    cell_spacing: f32,
-) {
-    let center = Pos2::new(
-        top_left.x + (2.0 * block_spacing),
-        top_left.y + cell_spacing,
-    ) + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, row_num: usize) {
+    let center = Pos2::new(top_left.x + 0.2 * cell_size, top_left.y)
+        + Vec2::new(cell_size / 2.0, cell_size / 2.0);
     ui.painter().text(
         center,
         egui::Align2::CENTER_CENTER,
         (row_num + 1).to_string(),
         egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
-        Color32::WHITE,
+        Color32::DARK_GRAY,
     );
 }
