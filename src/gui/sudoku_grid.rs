@@ -31,17 +31,22 @@ impl SATApp {
                 constraints = self.rendered_constraints[num].clone();
                 draw_constraints = true;
 
-                // sort them so don't have to search in loop
-                constraints.sort_by(
-                    |(r1, c1, _), (r2, c2, _)| {
-                        if r1 != r2 {
-                            r1.cmp(r2)
-                        } else {
-                            c1.cmp(c2)
-                        }
-                    },
-                );
+            } else {
+                constraints = self.state.little_number_constraints.clone();
+                if !self.state.show_solved_sudoku {
+                    draw_constraints = true;
+                }
             }
+            // sort them so don't have to search in loop
+            constraints.sort_by(
+                |(r1, c1, _), (r2, c2, _)| {
+                    if r1 != r2 {
+                        r1.cmp(r2)
+                    } else {
+                        c1.cmp(c2)
+                    }
+                },
+            );
 
             let mut c_index = 0;
 

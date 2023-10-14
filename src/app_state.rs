@@ -12,6 +12,7 @@ pub struct AppState {
     pub page_length_input: String,
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
+    pub little_number_constraints: Vec<(i32, i32, i32)>,
 }
 
 impl AppState {
@@ -29,7 +30,8 @@ impl AppState {
             page_length: 100,
             page_length_input: "100".to_string(),
             filtered_length: 0,
-            show_solved_sudoku: false,
+            show_solved_sudoku: true,
+            little_number_constraints: Vec::new(),
         }
     }
 
@@ -52,6 +54,7 @@ impl AppState {
         self.page_length = 100;
         self.page_length_input = "100".to_string();
         self.filtered_length = 0;
+        self.little_number_constraints.clear();
     }
 
     pub fn filter_by_max_length(&mut self) {
@@ -117,6 +120,10 @@ impl AppState {
 
         self.selected_cell = None;
         self.filter.clear_cell();
+    }
+
+    pub fn update_little_number_constraints(&mut self) {
+        self.little_number_constraints = self.filter.get_little_number_constraints();
     }
 }
 

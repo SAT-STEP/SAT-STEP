@@ -93,6 +93,16 @@ impl ListFilter {
     pub fn clear_cell(&mut self) {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
     }
+
+    pub fn get_little_number_constraints(&self) -> Vec<(i32, i32, i32)> {
+        let mut little_number_constraints = Vec::new();
+        for constraint in self.constraints.borrow().iter() {
+            if constraint.len() == 1 {
+                little_number_constraints.push(identifier_to_tuple(constraint[0].clone()));
+            }
+        }
+        little_number_constraints
+    }
 }
 
 #[cfg(test)]

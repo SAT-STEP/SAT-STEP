@@ -171,6 +171,7 @@ impl SATApp {
                 self.state.set_page_number(self.state.page_number - 1);
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
+                self.state.update_little_number_constraints();
             }
 
             ui.add(
@@ -192,6 +193,7 @@ impl SATApp {
                 self.state.set_page_number(self.state.page_number + 1);
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
+                self.state.update_little_number_constraints();
             }
 
             if ui.button(RichText::new(">>").size(text_scale)).clicked()
