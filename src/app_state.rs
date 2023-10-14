@@ -123,7 +123,9 @@ impl AppState {
     }
 
     pub fn update_little_number_constraints(&mut self) {
-        self.little_number_constraints = self.filter.get_little_number_constraints();
+        self.little_number_constraints = self
+            .filter
+            .get_little_number_constraints(self.page_number as usize, self.page_length);
     }
 }
 

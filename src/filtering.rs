@@ -26,16 +26,7 @@ impl ListFilter {
         page_number: usize,
         page_length: usize,
     ) -> (Vec<Vec<i32>>, usize) {
-        let mut final_set = self.length_filter.clone();
-
-        // Add additional filters with && in the same closure
-        final_set.retain(|index| self.cell_filter.contains(index));
-
-        let mut index_list = Vec::new();
-        for index in final_set {
-            index_list.push(index);
-        }
-        index_list.sort();
+        let index_list = self.get_filtered_index_list();
         let filtered_length = index_list.len();
 
         let mut final_list = Vec::new();
@@ -94,14 +85,39 @@ impl ListFilter {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
     }
 
-    pub fn get_little_number_constraints(&self) -> Vec<(i32, i32, i32)> {
+    pub fn get_little_number_constraints(
+        &self,
+        page_number: usize,
+        page_length: usize,
+    ) -> Vec<(i32, i32, i32)> {
+        let all_filtered_indexes = self.get_filtered_index_list();
+        let stop: usize =
+            std::cmp::min(all_filtered_indexes.len(), (page_number + 1) * page_length);
+        let index_list = all_filtered_indexes[0..stop].to_vec();
         let mut little_number_constraints = Vec::new();
-        for constraint in self.constraints.borrow().iter() {
-            if constraint.len() == 1 {
-                little_number_constraints.push(identifier_to_tuple(constraint[0].clone()));
+        let all_constraints = self.constraints.borrow();
+
+        for index in index_list {
+            if all_constraints[index].len() == 1 {
+                little_number_constraints
+                    .push(identifier_to_tuple(all_constraints[index][0].clone()));
             }
         }
         little_number_constraints
+    }
+
+    fn get_filtered_index_list(&self) -> Vec<usize> {
+        let mut final_set = self.length_filter.clone();
+
+        // Add additional filters with && in the same closure
+        final_set.retain(|index| self.cell_filter.contains(index));
+
+        let mut index_list = Vec::new();
+        for index in final_set {
+            index_list.push(index);
+        }
+        index_list.sort();
+        index_list
     }
 }
 
