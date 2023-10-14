@@ -8,7 +8,7 @@ The eventual goal is of course to find a good system for automatic GUI testing, 
 The purpose of this document is to define test cases for manual testing in a way that should provide a good base for automatic testing later.
 This way little effort is wasted, and testing is improved as soon as possible.
 There should be tests for each user story, and new tests should be added at the same time as new features are merged into `main`.
-New tests should also be added as new edge-cases are added
+New tests should also be added as new edge-cases are discovered.
 
 ## Structure
 
@@ -105,7 +105,7 @@ Would be run as:
         - **Require:** The constraint should **NOT** be visualized
     - **Check constraint paging**
         - **Require:** Clicking on the page change buttons should move between pages
-        - **Require:** Moving past the first of last page should not be possible
+        - **Require:** Moving past the first or last page should not be possible
         - **Require:** The same page (e.g. page 3) should not change as you change back and forth
         - Enter `3` into the "Number of rows per page:" field
         - Press "Select"
