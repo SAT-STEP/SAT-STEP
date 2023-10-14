@@ -60,12 +60,12 @@ Would be run as:
         - **Require:** There should be a sudoku grid with clues marked in a different style
         - **Require:** There should be row and col numbers shown beside the grid
         - **Require:** The sudoku grid should be as follows (barring style changes)
-        ![Screenshot of initial state](initial.png "Initial sudoku state")
+        ![Screenshot of initial state](initial.png "Initial sudoku state")  
     - Solve sudoku with the "Solve sudoku" button
     - **Check solved state**
-        - **Require:** The sudoku grid should be as follows (barring style changes)
-        ![Screenshot of solved state](solved.png "Solved sudoku state")
+        - **Require:** The sudoku grid should be as follows (barring style changes)  
+        ![Screenshot of solved state](solved.png "Solved sudoku state")  
         - **Require:** There should be a list of constraints
         - **Require:** There should be 482 constraints
-        - **Require:** The start of the list should be as follows (barring style changes)
+        - **Require:** The start of the list should be as follows (barring style changes)  
         ![Screenshot of start of list](list_start.png "First three constraints")
