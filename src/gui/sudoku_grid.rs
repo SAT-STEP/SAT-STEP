@@ -6,6 +6,15 @@ use crate::cnf_converter::create_tuples_from_constraints;
 
 use super::SATApp;
 
+#[derive(Copy, Clone)]
+struct CellIterator {
+    top_left: Pos2,
+    row_num: usize,
+    col_num: usize,
+    bottom_right: Pos2,
+    draw_constraints: bool,
+}
+
 impl SATApp {
     pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
@@ -18,20 +27,24 @@ impl SATApp {
         let top_left_y = (height - minimum_dimension) / 2.0 + cell_size;
         let top_left_x = width + (width - minimum_dimension) / 2.0;
 
-        let mut top_left = Pos2::new(top_left_x, top_left_y);
-        let mut bottom_right = top_left + Vec2::new(cell_size, cell_size);
+        let mut cell_itr = CellIterator {
+            top_left: Pos2::new(top_left_x, top_left_y),
+            row_num: 0,
+            col_num: 0,
+            bottom_right: Pos2::new(top_left_x + cell_size, top_left_y + cell_size),
+            draw_constraints: false,
+        };
 
-        let mut draw_constraints = false;
         let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
-                draw_constraints = true;
+                cell_itr.draw_constraints = true;
             } else {
                 constraints = self.state.little_number_constraints.clone();
                 if !self.state.show_solved_sudoku {
-                    draw_constraints = true;
+                    cell_itr.draw_constraints = true;
                 }
             }
             // sort them so don't have to search in loop
@@ -49,46 +62,38 @@ impl SATApp {
 
             // row
             for (row_num, row) in self.sudoku.clone().iter().enumerate().take(9) {
-                draw_row_number(ui, top_left, cell_size, row_num);
-                top_left.x += cell_size;
-                bottom_right.x += cell_size;
+                cell_itr.row_num = row_num;
+                draw_row_number(ui, cell_itr.top_left, cell_size, cell_itr.row_num);
+                cell_itr.top_left.x += cell_size;
+                cell_itr.bottom_right.x += cell_size;
 
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
-                    c_index = self.draw_sudoku_cell(
-                        ui,
-                        top_left,
-                        cell_size,
-                        row_num,
-                        col_num,
-                        *val,
-                        draw_constraints,
-                        &constraints,
-                        c_index,
-                        bottom_right,
-                    );
+                    cell_itr.col_num = col_num;
+                    c_index =
+                        self.draw_sudoku_cell(ui, cell_size, cell_itr, *val, &constraints, c_index);
 
                     // new column
                     if col_num % 3 == 2 && col_num != 8 {
-                        top_left.x += cell_size + block_spacing;
-                        bottom_right.x += cell_size + block_spacing;
+                        cell_itr.top_left.x += cell_size + block_spacing;
+                        cell_itr.bottom_right.x += cell_size + block_spacing;
                     } else {
-                        top_left.x += cell_size + cell_spacing;
-                        bottom_right.x += cell_size + cell_spacing;
+                        cell_itr.top_left.x += cell_size + cell_spacing;
+                        cell_itr.bottom_right.x += cell_size + cell_spacing;
                     }
                 }
 
                 // new row
-                top_left.x = top_left_x;
-                top_left.y += cell_size;
-                bottom_right.x = top_left.x + cell_size;
-                bottom_right.y = top_left.y + cell_size;
+                cell_itr.top_left.x = top_left_x;
+                cell_itr.top_left.y += cell_size;
+                cell_itr.bottom_right.x = cell_itr.top_left.x + cell_size;
+                cell_itr.bottom_right.y = cell_itr.top_left.y + cell_size;
                 if row_num % 3 == 2 && row_num != 8 {
-                    top_left.y += block_spacing;
-                    bottom_right.y += block_spacing;
+                    cell_itr.top_left.y += block_spacing;
+                    cell_itr.bottom_right.y += block_spacing;
                 } else {
-                    top_left.y += cell_spacing;
-                    bottom_right.y += cell_spacing;
+                    cell_itr.top_left.y += cell_spacing;
+                    cell_itr.bottom_right.y += cell_spacing;
                 }
             }
         })
@@ -98,64 +103,66 @@ impl SATApp {
     fn draw_sudoku_cell(
         &mut self,
         ui: &mut Ui,
-        top_left: Pos2,
         cell_size: f32,
-        row_num: usize,
-        col_num: usize,
+        cell_itr: CellIterator,
         val: Option<i32>,
-        draw_constraints: bool,
         constraints: &Vec<(i32, i32, i32)>,
         mut c_index: usize,
-        bottom_right: Pos2,
     ) -> usize {
-        if row_num == 0 {
-            draw_col_number(ui, top_left, cell_size, col_num);
+        if cell_itr.row_num == 0 {
+            draw_col_number(ui, cell_itr.top_left, cell_size, cell_itr.col_num);
         }
 
-        let rect = Rect::from_two_pos(top_left, bottom_right);
+        let rect = Rect::from_two_pos(cell_itr.top_left, cell_itr.bottom_right);
         let rect_action = ui.allocate_rect(rect, egui::Sense::click());
 
         // Filter constraint list by cell
         if rect_action.clicked() {
-            if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
+            if self.state.selected_cell
+                == Some((cell_itr.row_num as i32 + 1, cell_itr.col_num as i32 + 1))
+            {
                 self.state.clear_cell();
             } else {
                 self.state
-                    .select_cell(row_num as i32 + 1, col_num as i32 + 1);
+                    .select_cell(cell_itr.row_num as i32 + 1, cell_itr.col_num as i32 + 1);
             }
             self.rendered_constraints = create_tuples_from_constraints(self.state.get_filtered());
         }
 
-        if self.state.selected_cell == Some((row_num as i32 + 1, col_num as i32 + 1)) {
+        if self.state.selected_cell
+            == Some((cell_itr.row_num as i32 + 1, cell_itr.col_num as i32 + 1))
+        {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
-        } else if self.clues[row_num][col_num].is_some() {
+        } else if self.clues[cell_itr.row_num][cell_itr.col_num].is_some() {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
 
         let mut drew_constraint = false;
-        if draw_constraints {
+        if cell_itr.draw_constraints {
             // draw little numbers
             (drew_constraint, c_index) = draw_little_numbers(
                 ui,
-                top_left,
+                cell_itr.top_left,
                 cell_size,
                 c_index,
                 constraints,
-                row_num,
-                col_num,
+                cell_itr.row_num,
+                cell_itr.col_num,
             );
         }
 
-        if !self.state.show_solved_sudoku && self.clues[row_num][col_num].is_none() {
+        if !self.state.show_solved_sudoku
+            && self.clues[cell_itr.row_num][cell_itr.col_num].is_none()
+        {
             return c_index;
         }
 
         if let Some(num) = val {
             // don't draw big number if drew little numbers
             if !drew_constraint {
-                let center = top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                let center = cell_itr.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
                 ui.painter().text(
                     center,
                     egui::Align2::CENTER_CENTER,
