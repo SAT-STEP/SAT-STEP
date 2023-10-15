@@ -7,7 +7,7 @@ use crate::cnf_converter::create_tuples_from_constraints;
 use super::SATApp;
 
 #[derive(Copy, Clone)]
-struct CellIterator {
+struct CellState {
     top_left: Pos2,
     row_num: usize,
     col_num: usize,
@@ -27,7 +27,7 @@ impl SATApp {
         let top_left_y = (height - minimum_dimension) / 2.0 + cell_size;
         let top_left_x = width + (width - minimum_dimension) / 2.0;
 
-        let mut cell_itr = CellIterator {
+        let mut cell_state = CellState {
             top_left: Pos2::new(top_left_x, top_left_y),
             row_num: 0,
             col_num: 0,
@@ -40,11 +40,11 @@ impl SATApp {
         ui.horizontal_wrapped(|ui| {
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
-                cell_itr.draw_constraints = true;
+                cell_state.draw_constraints = true;
             } else {
                 constraints = self.state.little_number_constraints.clone();
                 if !self.state.show_solved_sudoku {
-                    cell_itr.draw_constraints = true;
+                    cell_state.draw_constraints = true;
                 }
             }
             // sort them so don't have to search in loop
@@ -62,38 +62,38 @@ impl SATApp {
 
             // row
             for (row_num, row) in self.sudoku.clone().iter().enumerate().take(9) {
-                cell_itr.row_num = row_num;
-                draw_row_number(ui, cell_itr.top_left, cell_size, cell_itr.row_num);
-                cell_itr.top_left.x += cell_size;
-                cell_itr.bottom_right.x += cell_size;
+                cell_state.row_num = row_num;
+                draw_row_number(ui, cell_state.top_left, cell_size, cell_state.row_num);
+                cell_state.top_left.x += cell_size;
+                cell_state.bottom_right.x += cell_size;
 
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
-                    cell_itr.col_num = col_num;
+                    cell_state.col_num = col_num;
                     c_index =
-                        self.draw_sudoku_cell(ui, cell_size, cell_itr, *val, &constraints, c_index);
+                        self.draw_sudoku_cell(ui, cell_size, cell_state, *val, &constraints, c_index);
 
                     // new column
                     if col_num % 3 == 2 && col_num != 8 {
-                        cell_itr.top_left.x += cell_size + block_spacing;
-                        cell_itr.bottom_right.x += cell_size + block_spacing;
+                        cell_state.top_left.x += cell_size + block_spacing;
+                        cell_state.bottom_right.x += cell_size + block_spacing;
                     } else {
-                        cell_itr.top_left.x += cell_size + cell_spacing;
-                        cell_itr.bottom_right.x += cell_size + cell_spacing;
+                        cell_state.top_left.x += cell_size + cell_spacing;
+                        cell_state.bottom_right.x += cell_size + cell_spacing;
                     }
                 }
 
                 // new row
-                cell_itr.top_left.x = top_left_x;
-                cell_itr.top_left.y += cell_size;
-                cell_itr.bottom_right.x = cell_itr.top_left.x + cell_size;
-                cell_itr.bottom_right.y = cell_itr.top_left.y + cell_size;
+                cell_state.top_left.x = top_left_x;
+                cell_state.top_left.y += cell_size;
+                cell_state.bottom_right.x = cell_state.top_left.x + cell_size;
+                cell_state.bottom_right.y = cell_state.top_left.y + cell_size;
                 if row_num % 3 == 2 && row_num != 8 {
-                    cell_itr.top_left.y += block_spacing;
-                    cell_itr.bottom_right.y += block_spacing;
+                    cell_state.top_left.y += block_spacing;
+                    cell_state.bottom_right.y += block_spacing;
                 } else {
-                    cell_itr.top_left.y += cell_spacing;
-                    cell_itr.bottom_right.y += cell_spacing;
+                    cell_state.top_left.y += cell_spacing;
+                    cell_state.bottom_right.y += cell_spacing;
                 }
             }
         })
@@ -104,57 +104,57 @@ impl SATApp {
         &mut self,
         ui: &mut Ui,
         cell_size: f32,
-        cell_itr: CellIterator,
+        cell_state: CellState, //Passed as clone, should not be increased here
         val: Option<i32>,
         constraints: &Vec<(i32, i32, i32)>,
         mut c_index: usize,
     ) -> usize {
-        if cell_itr.row_num == 0 {
-            draw_col_number(ui, cell_itr.top_left, cell_size, cell_itr.col_num);
+        if cell_state.row_num == 0 {
+            draw_col_number(ui, cell_state.top_left, cell_size, cell_state.col_num);
         }
 
-        let rect = Rect::from_two_pos(cell_itr.top_left, cell_itr.bottom_right);
+        let rect = Rect::from_two_pos(cell_state.top_left, cell_state.bottom_right);
         let rect_action = ui.allocate_rect(rect, egui::Sense::click());
 
         // Filter constraint list by cell
         if rect_action.clicked() {
             if self.state.selected_cell
-                == Some((cell_itr.row_num as i32 + 1, cell_itr.col_num as i32 + 1))
+                == Some((cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1))
             {
                 self.state.clear_cell();
             } else {
                 self.state
-                    .select_cell(cell_itr.row_num as i32 + 1, cell_itr.col_num as i32 + 1);
+                    .select_cell(cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1);
             }
             self.rendered_constraints = create_tuples_from_constraints(self.state.get_filtered());
         }
 
         if self.state.selected_cell
-            == Some((cell_itr.row_num as i32 + 1, cell_itr.col_num as i32 + 1))
+            == Some((cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1))
         {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
-        } else if self.clues[cell_itr.row_num][cell_itr.col_num].is_some() {
+        } else if self.clues[cell_state.row_num][cell_state.col_num].is_some() {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
 
         let mut drew_constraint = false;
-        if cell_itr.draw_constraints {
+        if cell_state.draw_constraints {
             // draw little numbers
             (drew_constraint, c_index) = draw_little_numbers(
                 ui,
-                cell_itr.top_left,
+                cell_state.top_left,
                 cell_size,
                 c_index,
                 constraints,
-                cell_itr.row_num,
-                cell_itr.col_num,
+                cell_state.row_num,
+                cell_state.col_num,
             );
         }
 
         if !self.state.show_solved_sudoku
-            && self.clues[cell_itr.row_num][cell_itr.col_num].is_none()
+            && self.clues[cell_state.row_num][cell_state.col_num].is_none()
         {
             return c_index;
         }
@@ -162,7 +162,7 @@ impl SATApp {
         if let Some(num) = val {
             // don't draw big number if drew little numbers
             if !drew_constraint {
-                let center = cell_itr.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+                let center = cell_state.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
                 ui.painter().text(
                     center,
                     egui::Align2::CENTER_CENTER,
