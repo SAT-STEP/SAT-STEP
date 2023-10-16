@@ -388,4 +388,58 @@ mod tests {
         assert_eq!(filtered2.len(), 4);
         assert_eq!(state.filtered_length, 10);
     }
+
+    #[test]
+    fn test_update_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_number = 0;
+        state.page_length = 50;
+
+        state.update_little_number_constraints();
+
+        assert_eq!(state.little_number_constraints.len(), 1);
+    }
+
+    #[test]
+    fn test_update_little_number_constraints_many_literals() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_number = 0;
+        state.page_length = 50;
+
+        state.update_little_number_constraints();
+
+        assert_eq!(state.little_number_constraints.len(), 2);
+    }
+
+    #[test]
+    fn test_update_little_number_constraints_no_literals() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_number = 0;
+        state.page_length = 50;
+
+        state.update_little_number_constraints();
+
+        assert_eq!(state.little_number_constraints.len(), 0);
+    }
 }
