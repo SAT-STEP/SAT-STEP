@@ -2,9 +2,9 @@ name: Main CI
 
 on:
   push:
-    branches: [ "main", "ci-testing" ]
+    branches: [ "main", "development", "ci-testing" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "development" ]
 
 env:
   LINE_COV_REQ: 0.6
