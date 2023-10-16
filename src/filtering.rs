@@ -283,7 +283,7 @@ mod tests {
         let filter: ListFilter = ListFilter::new(constraints.clone());
 
         let index_list = filter.get_filtered_index_list();
-        assert_eq!(index_list, vec![0,1,2,3,4]);
+        assert_eq!(index_list, vec![0, 1, 2, 3, 4]);
     }
 
     #[test]
@@ -300,7 +300,7 @@ mod tests {
         filter.by_max_length(1);
 
         let index_list = filter.get_filtered_index_list();
-        assert_eq!(index_list, vec![1,4]);
+        assert_eq!(index_list, vec![1, 4]);
     }
 
     #[test]

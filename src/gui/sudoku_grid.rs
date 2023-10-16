@@ -70,8 +70,14 @@ impl SATApp {
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
                     cell_state.col_num = col_num;
-                    c_index =
-                        self.draw_sudoku_cell(ui, cell_size, cell_state, *val, &constraints, c_index);
+                    c_index = self.draw_sudoku_cell(
+                        ui,
+                        cell_size,
+                        cell_state,
+                        *val,
+                        &constraints,
+                        c_index,
+                    );
 
                     // new column
                     if col_num % 3 == 2 && col_num != 8 {
