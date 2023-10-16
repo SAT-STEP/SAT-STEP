@@ -7,7 +7,9 @@
 - Errors are handled appropriately in the whole codebase
 
 # Git branching
-- 'main' branch contains only code meeting the definition of done
+- `main` and `development`branches contain only code meeting the definition of done
+- All code enters `main` through a pull request from `development`
 - All active development happens in separate feature branches
-- Feature branches are merged into main once done
+- Feature branches are merged into `development` once done
   - Aim to have feature branches last a maximum of 8 work hours before being merged into main
+- `development` is merged into `main` only after there are new completed features for users
