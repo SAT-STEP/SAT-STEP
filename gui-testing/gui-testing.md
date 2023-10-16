@@ -72,6 +72,10 @@ Would be run as:
     - **Require:** There should be 482 constraints
     - **Require:** The start of the list should be as follows (barring style changes)  
     ![Screenshot of start of list](list_start.png "First three constraints")  
+    - Uncheck "Show solved sudoku"
+    - **Require:** The sudoku grid should be as follows (barring style changes)  
+    ![Screenshot of solved state](solved_literals.png "Unsolved sudoku with literals")  
+    - Check "Show solved sudoku"
 - **Check length filtering**
     - Enter `3` into the "Max length:" field
     - Press "Filter"
