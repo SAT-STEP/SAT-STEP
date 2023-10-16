@@ -237,4 +237,38 @@ mod tests {
         assert_eq!(filtered3.len(), 4);
         assert_eq!(filtered_length3, 10);
     }
+
+    #[test]
+    fn test_get_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
+        assert_eq!(filtered_little_number_constraints.len(), 10);
+    }
+
+    #[test]
+    fn test_get_no_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0, 0]; 10])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
+        assert_eq!(filtered_little_number_constraints.len(), 0);
+    }
+
+    #[test]
+    fn test_get_two_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
+        assert_eq!(filtered_little_number_constraints.len(), 2);
+    }
+
 }
