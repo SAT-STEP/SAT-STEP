@@ -271,4 +271,50 @@ mod tests {
         assert_eq!(filtered_little_number_constraints.len(), 2);
     }
 
+    #[test]
+    fn test_get_index_index_list() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let index_list = filter.get_filtered_index_list();
+        assert_eq!(index_list, vec![0,1,2,3,4]);
+    }
+
+    #[test]
+    fn test_get_filtered_index_list() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        filter.by_max_length(1);
+
+        let index_list = filter.get_filtered_index_list();
+        assert_eq!(index_list, vec![1,4]);
+    }
+
+    #[test]
+    fn test_get_empty_filtered_index_list() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        filter.by_max_length(1);
+
+        let index_list = filter.get_filtered_index_list();
+        assert_eq!(index_list, Vec::new());
+    }
 }
