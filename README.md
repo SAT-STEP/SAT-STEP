@@ -11,3 +11,4 @@ An app for visualizing how [CaDiCal](https://github.com/arminbiere/cadical) SAT-
 - [User manual](https://github.com/SAT-STEP/SAT-STEP/wiki/User-manual)
 - [Technical documentation](https://github.com/SAT-STEP/SAT-STEP/wiki/Technical-documentation)
 - [Product backlog and workhours](https://docs.google.com/spreadsheets/d/10uVJry0DMARkRh1FE6oqYXzprBYj8cL7fjpnKQULlAQ/edit?usp=sharing)
+- [Agreed upon practices for the group](https://github.com/SAT-STEP/SAT-STEP/blob/main/practices.md)
