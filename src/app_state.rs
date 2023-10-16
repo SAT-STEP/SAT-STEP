@@ -11,6 +11,8 @@ pub struct AppState {
     pub page_length: usize,
     pub page_length_input: String,
     pub filtered_length: usize,
+    pub show_solved_sudoku: bool,
+    pub little_number_constraints: Vec<(i32, i32, i32)>,
 }
 
 impl AppState {
@@ -28,6 +30,8 @@ impl AppState {
             page_length: 100,
             page_length_input: "100".to_string(),
             filtered_length: 0,
+            show_solved_sudoku: true,
+            little_number_constraints: Vec::new(),
         }
     }
 
@@ -37,6 +41,8 @@ impl AppState {
             .get_filtered(self.page_number as usize, self.page_length);
         self.filtered_length = length;
         self.count_pages();
+
+        self.update_little_number_constraints();
 
         list
     }
@@ -50,6 +56,7 @@ impl AppState {
         self.page_length = 100;
         self.page_length_input = "100".to_string();
         self.filtered_length = 0;
+        self.little_number_constraints.clear();
     }
 
     pub fn filter_by_max_length(&mut self) {
@@ -115,6 +122,12 @@ impl AppState {
 
         self.selected_cell = None;
         self.filter.clear_cell();
+    }
+
+    pub fn update_little_number_constraints(&mut self) {
+        self.little_number_constraints = self
+            .filter
+            .get_little_number_constraints(self.page_number as usize, self.page_length);
     }
 }
 
@@ -374,5 +387,59 @@ mod tests {
         let filtered2 = state.get_filtered();
         assert_eq!(filtered2.len(), 4);
         assert_eq!(state.filtered_length, 10);
+    }
+
+    #[test]
+    fn test_update_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_number = 0;
+        state.page_length = 50;
+
+        state.update_little_number_constraints();
+
+        assert_eq!(state.little_number_constraints.len(), 1);
+    }
+
+    #[test]
+    fn test_update_little_number_constraints_many_literals() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_number = 0;
+        state.page_length = 50;
+
+        state.update_little_number_constraints();
+
+        assert_eq!(state.little_number_constraints.len(), 2);
+    }
+
+    #[test]
+    fn test_update_little_number_constraints_no_literals() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
+        ])));
+        let mut state = AppState::new(constraints.clone());
+
+        state.page_number = 0;
+        state.page_length = 50;
+
+        state.update_little_number_constraints();
+
+        assert_eq!(state.little_number_constraints.len(), 0);
     }
 }
