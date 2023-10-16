@@ -1,0 +1,19 @@
+[package]
+name = "cadical"
+description = "Rust bindings for the CaDiCaL SAT solver"
+version = "0.1.14"
+license = "MIT"
+authors = ["Miklos Maroti <mmaroti@gmail.com>"]
+edition = "2018"
+repository = "https://github.com/mmaroti/cadical-rs/"
+keywords = ["SAT", "solver", "logic", "satisfiability", "minisat"]
+categories = ["mathematics", "science"]
+readme = "README.md"
+links = "ccadical"
+exclude = ["cadical/src/makefile", "cadical/scripts", "cadical/test"]
+
+[build-dependencies]
+cc = { version = "1.0", features = ["parallel"] }
+
+[features]
+cpp-debug = []
