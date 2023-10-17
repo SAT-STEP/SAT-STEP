@@ -19,7 +19,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - name: Cache cargo dependencies
+      id: cache-cargo
+      uses: actions/cache@v3
+      env:
+        cache-name: cargo-cache
+        with:
+          # Cargo cache files are stored in `~/.cargo` on Linux
+          # This includes components added with rustup
+          path: ~/.cargo
+          key: ${{ runner.os  }}-${{ env.cache-name  }}-${{ hashFiles("./Cargo.lock")  }}
+          restore-keys: |
+            ${{ runner.os  }}-${{ env.cache-name  }}-
+            ${{ runner.os  }}-
     - name: Build
       run: cargo build --verbose
     - name: Run tests
