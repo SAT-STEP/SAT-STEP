@@ -29,7 +29,7 @@ jobs:
         # Cargo cache files are stored in `~/.cargo` on Linux
         # This includes components added with rustup
         path: ~/.cargo
-        key: ${{ runner.os  }}-${{ env.cache-name  }}-${{ hashFiles("./Cargo.lock")  }}
+        key: ${{ runner.os  }}-${{ env.cache-name  }}-${{ hashFiles('./Cargo.lock')  }}
         restore-keys: |
           ${{ runner.os  }}-${{ env.cache-name  }}-
           ${{ runner.os  }}-
