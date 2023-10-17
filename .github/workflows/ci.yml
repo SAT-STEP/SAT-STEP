@@ -28,6 +28,7 @@ jobs:
       with:
         # Cargo cache files are stored in `~/.cargo` on Linux
         # This includes components added with rustup
+        # Build files are in ./target
         path: |
           ~/.cargo
           ./target
