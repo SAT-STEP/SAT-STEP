@@ -156,6 +156,14 @@ impl SATApp {
 
     fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
+            if ui.button(RichText::new("<<").size(text_scale)).clicked()
+                && self.state.page_number > 0
+            {
+                self.state.set_page_number(0);
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
+            }
+
             if ui.button(RichText::new("<").size(text_scale)).clicked()
                 && self.state.page_number > 0
             {
@@ -184,6 +192,20 @@ impl SATApp {
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
+
+            if ui.button(RichText::new(">>").size(text_scale)).clicked()
+                && self.state.page_count > 0
+                && self.state.page_number < self.state.page_count - 1
+            {
+                self.state.set_page_number(self.state.page_count - 1);
+                self.rendered_constraints =
+                    create_tuples_from_constraints(self.state.get_filtered());
+            }
+
+            ui.checkbox(
+                &mut self.state.show_solved_sudoku,
+                RichText::new("Show solved sudoku").size(text_scale),
+            );
         })
     }
 

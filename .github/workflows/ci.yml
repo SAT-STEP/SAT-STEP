@@ -19,7 +19,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+    - name: Cache cargo dependencies
+      id: cache-cargo
+      uses: actions/cache@v3
+      env:
+        cache-name: cargo-cache
+      with:
+        # Cargo cache files are stored in `~/.cargo` on Linux
+        # This includes components added with rustup
+        # Build files are in ./target
+        path: |
+          ~/.cargo
+          ./target
+        key: ${{ runner.os  }}-${{ env.cache-name  }}-${{ hashFiles('./Cargo.lock')  }}
+        restore-keys: |
+          ${{ runner.os  }}-${{ env.cache-name  }}-
+          ${{ runner.os  }}-
     - name: Build
       run: cargo build --verbose
     - name: Run tests
@@ -33,7 +49,7 @@ jobs:
     - name: Install coverage report generator
       run: rustup component add llvm-tools-preview; cargo install grcov
     - name: Generate coverage report
-      run:  mkdir ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" --ignore "src/gui*" -o ./target/coverage/
+      run:  mkdir -p ./target/coverage/; grcov . --binary-path ./target/debug/ -s . -t lcov,cobertura --branch --ignore-not-existing --keep-only "src/*" --ignore "src/gui*" -o ./target/coverage/
     - name: Install xmllint
       run: sudo apt-get install -y libxml2-utils
     - name: Check line coverage

@@ -26,16 +26,7 @@ impl ListFilter {
         page_number: usize,
         page_length: usize,
     ) -> (Vec<Vec<i32>>, usize) {
-        let mut final_set = self.length_filter.clone();
-
-        // Add additional filters with && in the same closure
-        final_set.retain(|index| self.cell_filter.contains(index));
-
-        let mut index_list = Vec::new();
-        for index in final_set {
-            index_list.push(index);
-        }
-        index_list.sort();
+        let index_list = self.get_filtered_index_list();
         let filtered_length = index_list.len();
 
         let mut final_list = Vec::new();
@@ -92,6 +83,40 @@ impl ListFilter {
 
     pub fn clear_cell(&mut self) {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
+    }
+
+    pub fn get_little_number_constraints(
+        &self,
+        page_number: usize,
+        page_length: usize,
+    ) -> Vec<(i32, i32, i32)> {
+        let all_filtered_indexes = self.get_filtered_index_list();
+        let stop: usize =
+            std::cmp::min(all_filtered_indexes.len(), (page_number + 1) * page_length);
+        let index_list = all_filtered_indexes[0..stop].to_vec();
+        let mut little_number_constraints = Vec::new();
+        let all_constraints = self.constraints.borrow();
+
+        for index in index_list {
+            if all_constraints[index].len() == 1 {
+                little_number_constraints.push(identifier_to_tuple(all_constraints[index][0]));
+            }
+        }
+        little_number_constraints
+    }
+
+    fn get_filtered_index_list(&self) -> Vec<usize> {
+        let mut final_set = self.length_filter.clone();
+
+        // Add additional filters with && in the same closure
+        final_set.retain(|index| self.cell_filter.contains(index));
+
+        let mut index_list = Vec::new();
+        for index in final_set {
+            index_list.push(index);
+        }
+        index_list.sort();
+        index_list
     }
 }
 
@@ -211,5 +236,85 @@ mod tests {
         let (filtered3, filtered_length3) = filter.get_filtered(1, 6);
         assert_eq!(filtered3.len(), 4);
         assert_eq!(filtered_length3, 10);
+    }
+
+    #[test]
+    fn test_get_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
+        assert_eq!(filtered_little_number_constraints.len(), 10);
+    }
+
+    #[test]
+    fn test_get_no_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0, 0]; 10])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
+        assert_eq!(filtered_little_number_constraints.len(), 0);
+    }
+
+    #[test]
+    fn test_get_two_little_number_constraints() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
+        assert_eq!(filtered_little_number_constraints.len(), 2);
+    }
+
+    #[test]
+    fn test_get_index_index_list() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let index_list = filter.get_filtered_index_list();
+        assert_eq!(index_list, vec![0, 1, 2, 3, 4]);
+    }
+
+    #[test]
+    fn test_get_filtered_index_list() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0],
+            vec![0; 3],
+            vec![0; 5],
+            vec![0],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        filter.by_max_length(1);
+
+        let index_list = filter.get_filtered_index_list();
+        assert_eq!(index_list, vec![1, 4]);
+    }
+
+    #[test]
+    fn test_get_empty_filtered_index_list() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![0; 10],
+            vec![0; 3],
+            vec![0; 5],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        filter.by_max_length(1);
+
+        let index_list = filter.get_filtered_index_list();
+        assert_eq!(index_list, Vec::new());
     }
 }

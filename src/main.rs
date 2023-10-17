@@ -5,8 +5,8 @@ use sat_step::gui::SATApp;
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         min_window_size: Some(Vec2 {
-            x: (480.0),
-            y: (240.0),
+            x: (550.0),
+            y: (275.0),
         }),
         ..Default::default()
     };
