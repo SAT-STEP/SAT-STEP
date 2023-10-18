@@ -17,7 +17,8 @@ impl SATApp {
 
         egui::Grid::new("grid")
         .num_columns(1)
-        .spacing([0.0, 10.0])
+        .striped(true)
+        .spacing([0.0, text_scale*0.5])
         .show(ui, |ui| {
             self.buttons(ui, text_scale);
             ui.end_row();
@@ -98,6 +99,7 @@ impl SATApp {
                 )
                 .wrap(false),
             );
+            ui.separator();
             ui.add(
                 Label::new(
                     RichText::new(format!(
