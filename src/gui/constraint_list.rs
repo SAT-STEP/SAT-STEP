@@ -154,7 +154,8 @@ impl SATApp {
             let font = FontId::new(text_scale, font_id.family.clone());
 
             let row_number_label =
-                ui.label(RichText::new("Number of rows per page: ").size(text_scale));
+                ui.label(RichText::new("Number of rows per page: ").size(text_scale))
+                .on_hover_text(RichText::new("Empty and * put all rows on a single page.").italics());
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
                     .desired_width(5.0 * text_scale)
