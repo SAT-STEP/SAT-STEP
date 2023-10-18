@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, InputState, Key, Modifiers
+    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Key,
 };
 use std::ops::Add;
 
@@ -16,9 +16,9 @@ impl SATApp {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale, ctx);
-        self.filters(ui, text_scale);
-        self.page_length_input(ui, text_scale);
-        self.page_buttons(ui, text_scale);
+        self.filters(ui, text_scale, ctx);
+        self.page_length_input(ui, text_scale, ctx);
+        self.page_buttons(ui, text_scale, ctx);
         self.list_of_constraints(ui, text_scale).response
     }
 
@@ -56,6 +56,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Solve sudoku").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::S))
             {
                 let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
                 match solve_result {
@@ -92,7 +94,7 @@ impl SATApp {
     }
 
     // Row for filtering functionality
-    fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn filters(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         // Row for filtering functionality
         ui.horizontal_wrapped(|ui| {
             let max_length_label = ui.label(RichText::new("Max length: ").size(text_scale));
@@ -111,6 +113,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Filter").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 self.state.filter_by_max_length();
                 self.rendered_constraints =
@@ -119,6 +123,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Clear filters").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::C))
             {
                 self.state.clear_filters();
                 self.rendered_constraints =
@@ -127,7 +133,7 @@ impl SATApp {
         })
     }
 
-    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -144,6 +150,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Select").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 if self.state.page_length_input.is_empty()
                     || self.state.page_length_input.eq_ignore_ascii_case("*")
@@ -158,7 +166,7 @@ impl SATApp {
         })
     }
 
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui.button(RichText::new("<<").size(text_scale)).clicked()
                 && self.state.page_number > 0
@@ -168,7 +176,9 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
 
-            if ui.button(RichText::new("<").size(text_scale)).clicked()
+            if (ui.button(RichText::new("<").size(text_scale)).clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::ArrowLeft)))
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
@@ -188,7 +198,9 @@ impl SATApp {
                 .wrap(false),
             );
 
-            if ui.button(RichText::new(">").size(text_scale)).clicked()
+            if (ui.button(RichText::new(">").size(text_scale)).clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::ArrowRight)))
                 && self.state.page_count > 0
                 && self.state.page_number < self.state.page_count - 1
             {
