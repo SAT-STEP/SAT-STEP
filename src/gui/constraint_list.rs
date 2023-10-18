@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, InputState, Key, Modifiers
 };
 use std::ops::Add;
 
@@ -9,23 +9,27 @@ use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
+
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
+    pub fn constraint_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
-        self.buttons(ui, text_scale);
+        self.buttons(ui, text_scale, ctx);
         self.filters(ui, text_scale);
         self.page_length_input(ui, text_scale);
         self.page_buttons(ui, text_scale);
         self.list_of_constraints(ui, text_scale).response
     }
 
-    fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn buttons(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
+        
         ui.horizontal_wrapped(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
-                .clicked()
+                .clicked() 
+                || 
+                ctx.input(|i| i.key_pressed(Key::O))
             {
                 if let Some(file_path) = rfd::FileDialog::new()
                     .add_filter("text", &["txt"])
