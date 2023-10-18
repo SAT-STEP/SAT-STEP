@@ -14,15 +14,33 @@ impl SATApp {
     pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
-        self.buttons(ui, text_scale);
-        self.filters(ui, text_scale);
-        self.page_length_input(ui, text_scale);
-        self.page_buttons(ui, text_scale);
+
+        egui::Grid::new("grid")
+        .num_columns(1)
+        .spacing([0.0, 10.0])
+        .show(ui, |ui| {
+            self.buttons(ui, text_scale);
+            ui.end_row();
+
+            self.learned_constraints_labels(ui, text_scale);
+            ui.end_row();
+
+            self.filters(ui, text_scale);
+            ui.end_row();
+
+            self.page_length_input(ui, text_scale);
+            ui.end_row();
+
+            self.page_buttons(ui, text_scale);
+            ui.end_row();
+
+        });
         self.list_of_constraints(ui, text_scale).response
+       
     }
 
     fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal_wrapped(|ui| {
+        ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
                 .clicked()
@@ -67,6 +85,12 @@ impl SATApp {
                     }
                 }
             }
+            
+        })
+    }
+
+    fn learned_constraints_labels(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal_wrapped(|ui| {
             ui.add(
                 Label::new(
                     RichText::new(format!("Learned constraints: {}", self.constraints.len()))
@@ -86,12 +110,11 @@ impl SATApp {
             );
         })
     }
-
     // Row for filtering functionality
     fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Row for filtering functionality
-        ui.horizontal_wrapped(|ui| {
-            let max_length_label = ui.label(RichText::new("Max length: ").size(text_scale));
+        ui.horizontal(|ui| {
+            let max_length_label = ui.label(RichText::new("Max. constraint length: ").size(text_scale));
 
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -105,7 +128,7 @@ impl SATApp {
             .labelled_by(max_length_label.id);
 
             if ui
-                .button(RichText::new("Filter").size(text_scale))
+                .button(RichText::new("Select").size(text_scale))
                 .clicked()
             {
                 self.state.filter_by_max_length();
@@ -113,7 +136,7 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
             if ui
-                .button(RichText::new("Clear filters").size(text_scale))
+                .button(RichText::new("Clear").size(text_scale))
                 .clicked()
             {
                 self.state.clear_filters();
@@ -124,7 +147,7 @@ impl SATApp {
     }
 
     fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal_wrapped(|ui| {
+        ui.horizontal(|ui| {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
 
