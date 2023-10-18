@@ -1,5 +1,5 @@
 use cadical::Solver;
-use egui::{FontId, InputState, Modifiers, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku, GenericError};
 
@@ -19,13 +19,13 @@ impl SATApp {
                 self.buttons(ui, text_scale, ctx);
                 ui.end_row();
 
-                self.filters(ui, text_scale);
+                self.filters(ui, text_scale, ctx);
                 ui.end_row();
 
-                self.page_length_input(ui, text_scale);
+                self.page_length_input(ui, text_scale, ctx);
                 ui.end_row();
             });
-        self.page_buttons(ui, text_scale).response
+        self.page_buttons(ui, text_scale, ctx).response
     }
 
     fn buttons(
@@ -68,6 +68,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Solve sudoku").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::S))
             {
                 self.state.editor_active = false;
 
@@ -147,7 +149,7 @@ impl SATApp {
     }
 
     // Row for filtering functionality
-    fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn filters(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         // Row for filtering functionality
         ui.horizontal(|ui| {
             let max_length_label =
@@ -167,12 +169,18 @@ impl SATApp {
             if ui
                 .button(RichText::new("Select").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 self.state.filter_by_max_length();
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
-            if ui.button(RichText::new("Clear").size(text_scale)).clicked() {
+            if ui.button(RichText::new("Clear").size(text_scale))
+                .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::C))
+            {
                 self.state.clear_filters();
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
@@ -180,7 +188,7 @@ impl SATApp {
         })
     }
 
-    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -200,6 +208,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Select").size(text_scale))
                 .clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 if self.state.page_length_input.is_empty()
                     || self.state.page_length_input.eq_ignore_ascii_case("*")
@@ -214,7 +224,7 @@ impl SATApp {
         })
     }
 
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui.button(RichText::new("<<").size(text_scale)).clicked()
                 && self.state.page_number > 0
@@ -244,7 +254,9 @@ impl SATApp {
                 .wrap(false),
             );
 
-            if ui.button(RichText::new(">").size(text_scale)).clicked()
+            if (ui.button(RichText::new("<").size(text_scale)).clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::ArrowLeft)))
                 && self.state.page_count > 0
                 && self.state.page_number < self.state.page_count - 1
             {
@@ -253,7 +265,9 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
 
-            if ui.button(RichText::new(">>").size(text_scale)).clicked()
+            if (ui.button(RichText::new(">").size(text_scale)).clicked()
+                ||
+                ctx.input(|i| i.key_pressed(Key::ArrowRight)))
                 && self.state.page_count > 0
                 && self.state.page_number < self.state.page_count - 1
             {
