@@ -1,5 +1,5 @@
 use cadical::Solver;
-use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{FontId, InputState, Modifiers, Key, Label, Response, RichText, TextStyle, Ui};
 
 use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku, GenericError};
 
@@ -38,6 +38,8 @@ impl SATApp {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
                 .clicked()
+                || 
+                ctx.input(|i| i.key_pressed(Key::O))
             {
                 self.state.editor_active = false;
                 if let Some(file_path) = rfd::FileDialog::new()
