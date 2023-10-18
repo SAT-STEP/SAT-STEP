@@ -16,28 +16,26 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
 
         egui::Grid::new("grid")
-        .num_columns(1)
-        .striped(true)
-        .spacing([0.0, text_scale*0.5])
-        .show(ui, |ui| {
-            self.buttons(ui, text_scale);
-            ui.end_row();
+            .num_columns(1)
+            .striped(true)
+            .spacing([0.0, text_scale * 0.5])
+            .show(ui, |ui| {
+                self.buttons(ui, text_scale);
+                ui.end_row();
 
-            self.learned_constraints_labels(ui, text_scale);
-            ui.end_row();
+                self.learned_constraints_labels(ui, text_scale);
+                ui.end_row();
 
-            self.filters(ui, text_scale);
-            ui.end_row();
+                self.filters(ui, text_scale);
+                ui.end_row();
 
-            self.page_length_input(ui, text_scale);
-            ui.end_row();
+                self.page_length_input(ui, text_scale);
+                ui.end_row();
 
-            self.page_buttons(ui, text_scale);
-            ui.end_row();
-
-        });
+                self.page_buttons(ui, text_scale);
+                ui.end_row();
+            });
         self.list_of_constraints(ui, text_scale).response
-       
     }
 
     fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
@@ -86,11 +84,14 @@ impl SATApp {
                     }
                 }
             }
-            
         })
     }
 
-    fn learned_constraints_labels(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn learned_constraints_labels(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+    ) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
             ui.add(
                 Label::new(
@@ -116,7 +117,8 @@ impl SATApp {
     fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Row for filtering functionality
         ui.horizontal(|ui| {
-            let max_length_label = ui.label(RichText::new("Max. constraint length: ").size(text_scale));
+            let max_length_label =
+                ui.label(RichText::new("Max. constraint length: ").size(text_scale));
 
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -137,10 +139,7 @@ impl SATApp {
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
-            if ui
-                .button(RichText::new("Clear").size(text_scale))
-                .clicked()
-            {
+            if ui.button(RichText::new("Clear").size(text_scale)).clicked() {
                 self.state.clear_filters();
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
@@ -153,9 +152,11 @@ impl SATApp {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
 
-            let row_number_label =
-                ui.label(RichText::new("Number of rows per page: ").size(text_scale))
-                .on_hover_text(RichText::new("Empty and * put all rows on a single page.").italics());
+            let row_number_label = ui
+                .label(RichText::new("Number of rows per page: ").size(text_scale))
+                .on_hover_text(
+                    RichText::new("Empty and * put all rows on a single page.").italics(),
+                );
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
                     .desired_width(5.0 * text_scale)
