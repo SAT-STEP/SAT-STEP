@@ -14,7 +14,8 @@ use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc};
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use cnf_converter::clues_from_string;
+use binary_cnf::{sudoku_to_cnf, cnf_identifier};
 use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
@@ -77,12 +78,13 @@ pub fn solve_sudoku(
         for row in 1..=9 {
             let mut row_values = Vec::with_capacity(9);
             for col in 1..=9 {
-                for val in 1..=9 {
-                    if solver.value(cnf_identifier(row, col, val)).unwrap() {
-                        row_values.push(Some(val));
-                        break;
+                let mut value: i32 = 0;
+                for bit in 0..4 {
+                    if solver.value(cnf_identifier(row, col, bit)).unwrap() {
+                        value += (2 as i32).pow(bit as u32);
                     }
                 }
+                row_values.push(Some(value));
             }
             solved.push(row_values);
         }
