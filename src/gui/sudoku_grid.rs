@@ -7,6 +7,7 @@ use crate::cnf_converter::create_tuples_from_constraints;
 use super::SATApp;
 
 #[derive(Copy, Clone)]
+
 struct CellState {
     top_left: Pos2,
     row_num: usize,
@@ -14,6 +15,7 @@ struct CellState {
     bottom_right: Pos2,
     draw_constraints: bool,
 }
+
 
 impl SATApp {
     pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
@@ -114,6 +116,7 @@ impl SATApp {
         val: Option<i32>,
         constraints: &Vec<(i32, i32, i32)>,
         mut c_index: usize,
+
     ) -> usize {
         if cell_state.row_num == 0 {
             draw_col_number(ui, cell_state.top_left, cell_size, cell_state.col_num);
