@@ -1,4 +1,5 @@
 mod app_state;
+mod binary_cnf;
 mod cadical_wrapper;
 mod cnf_converter;
 mod error;
