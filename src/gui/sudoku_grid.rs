@@ -16,9 +16,10 @@ struct CellState {
     draw_constraints: bool,
 }
 
-struct Cell {
+struct Cell<'a> {
     val: Option<i32>,
-    c_index: usize
+    c_index: usize,
+    constraints: &'a Vec<(i32, i32, i32)>
 }
 
 impl SATApp {
@@ -78,14 +79,15 @@ impl SATApp {
                     cell_state.col_num = col_num;
                     let mut cell = Cell {
                         val: *val,
-                        c_index: c_index
+                        c_index: c_index,
+                        constraints: &constraints
                     };
+
                     c_index = self.draw_sudoku_cell(
                         ui,
                         cell_size,
                         cell_state,
                         &mut cell,
-                        &constraints,
                     );
 
                     // new column
@@ -120,9 +122,7 @@ impl SATApp {
         ui: &mut Ui,
         cell_size: f32,
         cell_state: CellState, //Passed as clone, should not be increased here
-        cell: &mut Cell,
-        constraints: &Vec<(i32, i32, i32)>,
-
+        cell: & mut Cell
     ) -> usize {
         if cell_state.row_num == 0 {
             draw_col_number(ui, cell_state.top_left, cell_size, cell_state.col_num);
@@ -162,7 +162,6 @@ impl SATApp {
                 cell_state.top_left,
                 cell_size,
                 cell,
-                constraints,
                 cell_state.row_num,
                 cell_state.col_num,
             );
@@ -196,7 +195,6 @@ fn draw_little_numbers(
     top_left: Pos2,
     cell_size: f32,
     cell: &mut Cell,
-    constraints: &Vec<(i32, i32, i32)>,
     row_num: usize,
     col_num: usize,
 
@@ -206,9 +204,9 @@ fn draw_little_numbers(
     let mut little_num_pos = 0;
 
     // while on little numbers reference this row and block
-    while cell.c_index < constraints.len()
-        && constraints[cell.c_index].0 == (row_num as i32 + 1)
-        && constraints[cell.c_index].1 == (col_num as i32 + 1)
+    while cell.c_index < cell.constraints.len()
+        && cell.constraints[cell.c_index].0 == (row_num as i32 + 1)
+        && cell.constraints[cell.c_index].1 == (col_num as i32 + 1)
     {
         // new row for little numbers
         if little_num_pos % 3 == 0 && little_num_pos != 0 {
@@ -218,7 +216,7 @@ fn draw_little_numbers(
 
         // if value of the picked cell is negative, it will be shown in red,
         // if not negative, in blue
-        let c_value = constraints[cell.c_index].2;
+        let c_value = cell.constraints[cell.c_index].2;
         let mut c_value_color = Color32::BLUE;
         if c_value < 0 {
             c_value_color = Color32::RED;
@@ -227,7 +225,7 @@ fn draw_little_numbers(
         ui.painter().text(
             little_top_left,
             egui::Align2::LEFT_TOP,
-            constraints[cell.c_index].2.to_string(),
+            cell.constraints[cell.c_index].2.to_string(),
             egui::FontId::new(cell_size * 0.3, egui::FontFamily::Monospace),
             c_value_color,
         );
