@@ -208,17 +208,20 @@ fn draw_little_numbers(
 
         // if value of the picked cell is negative, it will be shown in red,
         // if not negative, in blue
-        let c_value = constraints[c_index].2;
+        let mut c_value = constraints[c_index].2.to_string();
         let mut c_value_color = Color32::BLUE;
-        if c_value < 0 {
+        if constraints[c_index].2 < 0 {
             c_value_color = Color32::RED;
+        } else {
+            // Adding a whitespace makes the positive values also be 2 chars long
+            c_value = format!(" {}", c_value);
         }
 
         ui.painter().text(
             little_top_left,
             egui::Align2::LEFT_TOP,
-            constraints[c_index].2.to_string(),
-            egui::FontId::new(cell_size * 0.3, egui::FontFamily::Monospace),
+            c_value,
+            egui::FontId::new(cell_size * 0.28, egui::FontFamily::Monospace),
             c_value_color,
         );
         little_top_left.x += cell_size / 3.0;
