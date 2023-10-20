@@ -19,7 +19,7 @@ struct CellState {
 struct Cell<'a> {
     val: Option<i32>,
     c_index: usize,
-    constraints: &'a Vec<(i32, i32, i32)>
+    constraints: &'a Vec<(i32, i32, i32)>,
 }
 
 impl SATApp {
@@ -79,16 +79,11 @@ impl SATApp {
                     cell_state.col_num = col_num;
                     let mut cell = Cell {
                         val: *val,
-                        c_index: c_index,
-                        constraints: &constraints
+                        c_index,
+                        constraints: &constraints,
                     };
 
-                    c_index = self.draw_sudoku_cell(
-                        ui,
-                        cell_size,
-                        cell_state,
-                        &mut cell,
-                    );
+                    c_index = self.draw_sudoku_cell(ui, cell_size, cell_state, &mut cell);
 
                     // new column
                     if col_num % 3 == 2 && col_num != 8 {
@@ -97,7 +92,7 @@ impl SATApp {
                     } else {
                         cell_state.top_left.x += cell_size + cell_spacing;
                         cell_state.bottom_right.x += cell_size + cell_spacing;
-                    } 
+                    }
                 }
 
                 // new row
@@ -122,7 +117,7 @@ impl SATApp {
         ui: &mut Ui,
         cell_size: f32,
         cell_state: CellState, //Passed as clone, should not be increased here
-        cell: & mut Cell
+        cell: &mut Cell,
     ) -> usize {
         if cell_state.row_num == 0 {
             draw_col_number(ui, cell_state.top_left, cell_size, cell_state.col_num);
@@ -197,7 +192,6 @@ fn draw_little_numbers(
     cell: &mut Cell,
     row_num: usize,
     col_num: usize,
-
 ) -> (bool, usize) {
     let mut drew_constraint = false;
     let mut little_top_left = top_left;
