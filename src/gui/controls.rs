@@ -226,7 +226,9 @@ impl SATApp {
 
     fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
-            if ui.button(RichText::new("<<").size(text_scale)).clicked()
+            if (ui.button(RichText::new("<<").size(text_scale)).clicked()
+                ||
+                ctx.input(|i| i.modifiers.shift && i.key_pressed(Key::ArrowLeft)))
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(0);
@@ -234,7 +236,9 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
 
-            if ui.button(RichText::new("<").size(text_scale)).clicked()
+            if (ui.button(RichText::new(">>").size(text_scale)).clicked()
+                ||
+                ctx.input(|i| i.modifiers.shift && i.key_pressed(Key::ArrowRight)))
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
