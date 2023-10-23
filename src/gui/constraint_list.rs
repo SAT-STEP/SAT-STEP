@@ -1,6 +1,6 @@
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -20,7 +20,7 @@ impl SATApp {
                 self.learned_constraints_labels(ui, text_scale);
                 ui.end_row();
             });
-        self.list_of_constraints(ui, text_scale).response
+        self.list_of_constraints(ui, text_scale, ctx).response
     }
 
     fn learned_constraints_labels(
@@ -50,7 +50,12 @@ impl SATApp {
         })
     }
 
-    fn list_of_constraints(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn list_of_constraints(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+    ) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
             ScrollArea::both()
                 .auto_shrink([false; 2])
@@ -173,6 +178,21 @@ impl SATApp {
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }
+                    }
+
+                    let current_constraint_row: usize =
+                        self.state.clicked_constraint_index.unwrap_or(0);
+                    if ctx.input(|i| i.key_pressed(Key::ArrowDown))
+                        && (current_constraint_row < self.state.filtered_length - 1)
+                        && current_constraint_row % self.state.page_length
+                            < self.state.page_length - 1
+                    {
+                        self.state.clicked_constraint_index = Some(current_constraint_row + 1);
+                        println!("Go to line number {}", current_constraint_row + 1 + 1)
+                    }
+                    if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
+                        self.state.clicked_constraint_index = Some(current_constraint_row - 1);
+                        println!("Go to line number {}", current_constraint_row - 1 + 1)
                     }
                 });
         })
