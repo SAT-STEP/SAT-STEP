@@ -14,20 +14,40 @@ impl SATApp {
     pub fn constraint_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
-        self.buttons(ui, text_scale, ctx);
-        self.filters(ui, text_scale, ctx);
-        self.page_length_input(ui, text_scale, ctx);
-        self.page_buttons(ui, text_scale, ctx);
+
+        egui::Grid::new("grid")
+            .num_columns(1)
+            .striped(true)
+            .spacing([0.0, text_scale * 0.5])
+            .show(ui, |ui| {
+                self.starting(ui, text_scale, ctx);
+                ui.end_row();
+
+                self.learned_constraints_labels(ui, text_scale);
+                ui.end_row();
+
+                self.filters(ui, text_scale, ctx);
+                ui.end_row();
+
+                self.page_length_input(ui, text_scale, ctx);
+                ui.end_row();
+
+                self.page_buttons(ui, text_scale, ctx);
+                ui.end_row();
+
+                self.exit(ui, text_scale, ctx);
+                ui.end_row();
+            });
         self.list_of_constraints(ui, text_scale, ctx).response
     }
 
-    fn buttons(
+    fn starting(
         &mut self,
         ui: &mut Ui,
         text_scale: f32,
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
-        ui.horizontal_wrapped(|ui| {
+        ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
                 .clicked()
@@ -74,6 +94,15 @@ impl SATApp {
                     }
                 }
             }
+        })
+    }
+
+    fn learned_constraints_labels(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+    ) -> egui::InnerResponse<()> {
+        ui.horizontal_wrapped(|ui| {
             ui.add(
                 Label::new(
                     RichText::new(format!("Learned constraints: {}", self.constraints.len()))
@@ -81,6 +110,7 @@ impl SATApp {
                 )
                 .wrap(false),
             );
+            ui.separator();
             ui.add(
                 Label::new(
                     RichText::new(format!(
@@ -102,8 +132,9 @@ impl SATApp {
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
         // Row for filtering functionality
-        ui.horizontal_wrapped(|ui| {
-            let max_length_label = ui.label(RichText::new("Max length: ").size(text_scale));
+        ui.horizontal(|ui| {
+            let max_length_label =
+                ui.label(RichText::new("Max. constraint length: ").size(text_scale));
 
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -117,7 +148,7 @@ impl SATApp {
             .labelled_by(max_length_label.id);
 
             if ui
-                .button(RichText::new("Filter").size(text_scale))
+                .button(RichText::new("Select").size(text_scale))
                 .clicked()
                 || ctx.input(|i| i.key_pressed(Key::Enter))
             {
@@ -125,9 +156,7 @@ impl SATApp {
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
-            if ui
-                .button(RichText::new("Clear filters").size(text_scale))
-                .clicked()
+            if ui.button(RichText::new("Clear").size(text_scale)).clicked()
                 || ctx.input(|i| i.key_pressed(Key::C))
             {
                 self.state.clear_filters();
@@ -143,12 +172,15 @@ impl SATApp {
         text_scale: f32,
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
-        ui.horizontal_wrapped(|ui| {
+        ui.horizontal(|ui| {
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
 
-            let row_number_label =
-                ui.label(RichText::new("Number of rows per page: ").size(text_scale));
+            let row_number_label = ui
+                .label(RichText::new("Number of rows per page: ").size(text_scale))
+                .on_hover_text(
+                    RichText::new("Empty and * put all rows on a single page.").italics(),
+                );
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
                     .desired_width(5.0 * text_scale)
@@ -235,6 +267,21 @@ impl SATApp {
                 &mut self.state.show_solved_sudoku,
                 RichText::new("Show solved sudoku").size(text_scale),
             );
+        })
+    }
+
+    fn exit(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+    ) -> egui::InnerResponse<()> {
+        ui.horizontal_wrapped(|ui| {
+            if ui.button(RichText::new("Quit").size(text_scale)).clicked()
+                || ctx.input(|i| i.key_pressed(Key::Q))
+            {
+                self.state.quit();
+            }
         })
     }
 
@@ -377,14 +424,15 @@ impl SATApp {
                     let mut current_page_length: usize = self.state.page_length;
 
                     // Check number of the rows on the last page
-                    if self.state.page_number + 1 == self.state.page_count {
-                        if self.state.filtered_length % self.state.page_length != 0 {
-                            current_page_length = self.state.filtered_length
-                                - ((self.state.page_count as usize - 1) * self.state.page_length)
-                                - 1;
-                        }
+                    if self.state.page_number + 1 == self.state.page_count
+                        && self.state.filtered_length % self.state.page_length != 0
+                    {
+                        current_page_length = self.state.filtered_length
+                            - ((self.state.page_count as usize - 1) * self.state.page_length)
+                            - 1;
                     }
 
+                    // Actions when a constraint row is clicked with the ArrowDown button
                     if ctx.input(|i| i.key_pressed(Key::ArrowDown))
                         && current_constraint_row < self.state.filtered_length - 1
                         && current_constraint_row % self.state.page_length
@@ -395,6 +443,7 @@ impl SATApp {
                         self.state.clicked_constraint_index = Some(current_constraint_row);
                     }
 
+                    // Actions when a constraint row is clicked with the ArrowUp button
                     if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
                         current_constraint_row -= 1;
                         self.state.clicked_constraint_index = Some(current_constraint_row);
