@@ -24,8 +24,11 @@ impl SATApp {
 
                 self.page_length_input(ui, text_scale, ctx);
                 ui.end_row();
+
+                self.page_buttons(ui, text_scale, ctx);
+                ui.end_row();
             });
-        self.page_buttons(ui, text_scale, ctx).response
+        self.exit_button(ui, text_scale, ctx).response
     }
 
     fn buttons(
@@ -289,6 +292,21 @@ impl SATApp {
                 &mut self.state.show_solved_sudoku,
                 RichText::new("Show solved sudoku").size(text_scale),
             );
+        })
+    }
+
+    fn exit_button(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+        ) -> egui::InnerResponse<()> {
+        ui.horizontal_wrapped(|ui| {
+            if ui.button(RichText::new("Quit").size(text_scale)).clicked()
+                || ctx.input(|i| i.key_pressed(Key::Q))
+                {
+                    self.state.quit();
+                }
         })
     }
 

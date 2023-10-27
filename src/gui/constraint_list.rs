@@ -188,14 +188,15 @@ impl SATApp {
                     let mut current_page_length: usize = self.state.page_length;
 
                     // Check number of the rows on the last page
-                    if self.state.page_number + 1 == self.state.page_count {
-                        if self.state.filtered_length % self.state.page_length != 0 {
-                            current_page_length = self.state.filtered_length
-                                - ((self.state.page_count as usize - 1) * self.state.page_length)
-                                - 1;
-                        }
+                    if self.state.page_number + 1 == self.state.page_count
+                        && self.state.filtered_length % self.state.page_length != 0
+                    {
+                        current_page_length = self.state.filtered_length
+                            - ((self.state.page_count as usize - 1) * self.state.page_length)
+                            - 1;
                     }
 
+                    // Actions when a constraint row is clicked with the ArrowDown button
                     if ctx.input(|i| i.key_pressed(Key::ArrowDown))
                         && current_constraint_row < self.state.filtered_length - 1
                         && current_constraint_row % self.state.page_length
@@ -206,6 +207,7 @@ impl SATApp {
                         self.state.clicked_constraint_index = Some(current_constraint_row);
                     }
 
+                    // Actions when a constraint row is clicked with the ArrowUp button
                     if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
                         current_constraint_row -= 1;
                         self.state.clicked_constraint_index = Some(current_constraint_row);
