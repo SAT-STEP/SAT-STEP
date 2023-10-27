@@ -369,19 +369,35 @@ impl SATApp {
                         }
                     }
 
-                    let current_constraint_row: usize =
+                    // Index of the row that has been clicked on the particular page, between 0 and page length minus 1
+                    let mut current_constraint_row: usize =
                         self.state.clicked_constraint_index.unwrap_or(0);
+
+                    // Number of the rows on the current page, which might be less on the last page than on other pages
+                    let mut current_page_length: usize = self.state.page_length;
+
+                    // Check number of the rows on the last page
+                    if self.state.page_number + 1 == self.state.page_count {
+                        if self.state.filtered_length % self.state.page_length != 0 {
+                            current_page_length = self.state.filtered_length
+                                - ((self.state.page_count as usize - 1) * self.state.page_length)
+                                - 1;
+                        }
+                    }
+
                     if ctx.input(|i| i.key_pressed(Key::ArrowDown))
-                        && (current_constraint_row < self.state.filtered_length - 1)
+                        && current_constraint_row < self.state.filtered_length - 1
                         && current_constraint_row % self.state.page_length
                             < self.state.page_length - 1
+                        && current_constraint_row < current_page_length
                     {
-                        self.state.clicked_constraint_index = Some(current_constraint_row + 1);
-                        println!("Go to line number {}", current_constraint_row + 1 + 1)
+                        current_constraint_row += 1;
+                        self.state.clicked_constraint_index = Some(current_constraint_row);
                     }
+
                     if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
-                        self.state.clicked_constraint_index = Some(current_constraint_row - 1);
-                        println!("Go to line number {}", current_constraint_row - 1 + 1)
+                        current_constraint_row -= 1;
+                        self.state.clicked_constraint_index = Some(current_constraint_row);
                     }
                 });
         })
