@@ -1,6 +1,6 @@
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Align,
 };
 use std::ops::Add;
 
@@ -205,12 +205,19 @@ impl SATApp {
                     {
                         current_constraint_row += 1;
                         self.state.clicked_constraint_index = Some(current_constraint_row);
+                        // Check how far down the visible list currently and keep in view
+                        if current_constraint_row > last_item - 4 {
+                        // Scroll down with the selection
+                        ui.scroll_with_delta(Vec2::new(0.0,row_height*-1.0));
+                        }
                     }
 
                     // Actions when a constraint row is clicked with the ArrowUp button
                     if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
                         current_constraint_row -= 1;
                         self.state.clicked_constraint_index = Some(current_constraint_row);
+                        // Scroll up with the selection
+                        ui.scroll_with_delta(Vec2::new(0.0,row_height));
                     }
                 });
         })
