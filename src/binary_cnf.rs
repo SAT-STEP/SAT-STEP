@@ -71,10 +71,10 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
         for subgrid_col in 0..=2 {
             for index1 in 0..9 {
                 for index2 in (index1 + 1)..9 {
-                    let row = subgrid_row * 3 + index1 % 3;
-                    let col = subgrid_col * 3 + index1 / 3;
-                    let row2 = subgrid_row * 3 + index2 % 3;
-                    let col2 = subgrid_col * 3 + index2 / 3;
+                    let row = 1 + subgrid_row * 3 + index1 % 3;
+                    let col = 1 + subgrid_col * 3 + index1 / 3;
+                    let row2 = 1 + subgrid_row * 3 + index2 % 3;
+                    let col2 = 1 + subgrid_col * 3 + index2 / 3;
                     clauses.push(vec![
                                  -eq_cnf_identifier(row, col, row2, col2, 0),
                                  -eq_cnf_identifier(row, col, row2, col2, 1),
@@ -89,15 +89,15 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // no numbers > 9
     for row in 1..=9 {
         for col in 1..=9 {
-            for forbidden in 9..15 {
+            for forbidden in 9..16 {
                 let mut cell_clause = Vec::with_capacity(4);
                 let mut mask = 1;
                 for index in 0..4 {
                     // Here we invert the bits, since we do not want to allow the forbidden numbers
                     if (forbidden & mask) != 0 {
-                        cell_clause.push(-cnf_identifier(row as i32 + 1, col as i32 + 1, index));
+                        cell_clause.push(-cnf_identifier(row as i32, col as i32, index));
                     } else {
-                        cell_clause.push(cnf_identifier(row as i32 + 1, col as i32 + 1, index));
+                        cell_clause.push(cnf_identifier(row as i32, col as i32, index));
                     }
                     mask *= 2;
                 }

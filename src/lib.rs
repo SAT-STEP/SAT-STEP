@@ -78,7 +78,7 @@ pub fn solve_sudoku(
         for row in 1..=9 {
             let mut row_values = Vec::with_capacity(9);
             for col in 1..=9 {
-                let mut value: i32 = 0;
+                let mut value: i32 = 1;
                 for bit in 0..4 {
                     if solver.value(cnf_identifier(row, col, bit)).unwrap() {
                         value += (2 as i32).pow(bit as u32);
