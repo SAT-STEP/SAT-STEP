@@ -109,7 +109,8 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // respect all the clues
     for (row, line) in clues.iter().enumerate() {
         for (col, val) in line.iter().enumerate() {
-            if let Some(val) = val {
+            if let Some(mut val) = val {
+                val -= 1;
                 let mut mask = 1;
                 for index in 0..4 {
                     if (val & mask) != 0 {
