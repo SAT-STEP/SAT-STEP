@@ -89,7 +89,7 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // no numbers > 9
     for row in 1..=9 {
         for col in 1..=9 {
-            for forbidden in 10..16 {
+            for forbidden in 9..15 {
                 let mut cell_clause = Vec::with_capacity(4);
                 let mut mask = 1;
                 for index in 0..4 {
@@ -103,13 +103,6 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
                 }
                 clauses.push(cell_clause);
             }
-            // forbid 0 separately
-            clauses.push(vec![
-                         cnf_identifier(row as i32 + 1, col as i32 + 1, 0),
-                         cnf_identifier(row as i32 + 1, col as i32 + 1, 1),
-                         cnf_identifier(row as i32 + 1, col as i32 + 1, 2),
-                         cnf_identifier(row as i32 + 1, col as i32 + 1, 3),
-            ]);
         }
     }
 
@@ -137,7 +130,7 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
 pub fn cnf_identifier(row: i32, col: i32, bit: i32) -> i32 {
     // Creates cnf identifier from sudoku based on row, column and value
     // So every row, column and value combination has a unique identifier
-    (row - 1) * 4 * 9 + (col - 1) * 4 + bit
+    (row - 1) * 4 * 9 + (col - 1) * 4 + bit + 1
 }
 
 #[inline(always)]
@@ -148,6 +141,7 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
         + (row2 - 1) * 4 * 9 * 9 * 9
         + (col2 - 1) * 4 * 9 * 9
         + bit
+        + 1
 }
 
 #[inline(always)]
