@@ -1,3 +1,8 @@
+use cadical::Solver;
+
+use crate::cadical_wrapper::CadicalCallbackWrapper;
+
+#[allow(dead_code)]
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
@@ -43,12 +48,11 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
                     let col2 = 1 + subgrid_col * 3 + index2 / 3;
                     clauses.append(&mut eq_variable_init(row, col, row2, col2));
                     clauses.push(vec![
-                                 -eq_cnf_identifier(row, col, row2, col2, 0),
-                                 -eq_cnf_identifier(row, col, row2, col2, 1),
-                                 -eq_cnf_identifier(row, col, row2, col2, 2),
-                                 -eq_cnf_identifier(row, col, row2, col2, 3),
+                        -eq_cnf_identifier(row, col, row2, col2, 0),
+                        -eq_cnf_identifier(row, col, row2, col2, 1),
+                        -eq_cnf_identifier(row, col, row2, col2, 2),
+                        -eq_cnf_identifier(row, col, row2, col2, 3),
                     ]);
-
                 }
             }
         }
@@ -62,9 +66,9 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
                 for index in 0..4 {
                     // Here we invert the bits, since we do not want to allow the forbidden numbers
                     if (forbidden & mask) != 0 {
-                        cell_clause.push(-cnf_identifier(row as i32, col as i32, index));
+                        cell_clause.push(-cnf_identifier(row, col, index));
                     } else {
-                        cell_clause.push(cnf_identifier(row as i32, col as i32, index));
+                        cell_clause.push(cnf_identifier(row, col, index));
                     }
                     mask *= 2;
                 }
@@ -95,36 +99,48 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
 }
 
 /// Initialize variables that indicate 2 cells have same bits in some position
+#[allow(dead_code)]
 fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
     for bit in 0..4 {
         clauses.push(vec![
-                     -eq_cnf_identifier(row, col, row2, col2, bit),
-                     cnf_identifier(row, col, bit),
-                     -cnf_identifier(row2, col2, bit),
+            -eq_cnf_identifier(row, col, row2, col2, bit),
+            cnf_identifier(row, col, bit),
+            -cnf_identifier(row2, col2, bit),
         ]);
 
         clauses.push(vec![
-                     -eq_cnf_identifier(row, col, row2, col2, bit),
-                     -cnf_identifier(row, col, bit),
-                     cnf_identifier(row2, col2, bit),
+            -eq_cnf_identifier(row, col, row2, col2, bit),
+            -cnf_identifier(row, col, bit),
+            cnf_identifier(row2, col2, bit),
         ]);
 
         clauses.push(vec![
-                     eq_cnf_identifier(row, col, row2, col2, bit),
-                     -cnf_identifier(row, col, bit),
-                     -cnf_identifier(row2, col2, bit),
+            eq_cnf_identifier(row, col, row2, col2, bit),
+            -cnf_identifier(row, col, bit),
+            -cnf_identifier(row2, col2, bit),
         ]);
 
         clauses.push(vec![
-                     eq_cnf_identifier(row, col, row2, col2, bit),
-                     cnf_identifier(row, col, bit),
-                     cnf_identifier(row2, col2, bit),
+            eq_cnf_identifier(row, col, row2, col2, bit),
+            cnf_identifier(row, col, bit),
+            cnf_identifier(row2, col2, bit),
         ]);
     }
 
     clauses
+}
+
+#[allow(dead_code)] // allowed since binary encoding isn't used yet
+pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
+    let mut value: i32 = 1;
+    for bit in 0..4 {
+        if solver.value(cnf_identifier(row, col, bit)).unwrap() {
+            value += 2_i32.pow(bit as u32);
+        }
+    }
+    value
 }
 
 #[inline(always)]
@@ -145,6 +161,8 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
         + 1
 }
 
+/// These do not work for the new encoding YET, which is why they are not used YET
+#[allow(dead_code)]
 #[inline(always)]
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     // Reverse CNF-identifier creation
@@ -159,6 +177,7 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     )
 }
 
+#[allow(dead_code)]
 pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
     let mut tuples = Vec::new();
     for constraint in constraints.iter() {
@@ -169,4 +188,36 @@ pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i3
         tuples.push(temp);
     }
     tuples
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use super::*;
+
+    #[test]
+    fn no_overlapping_identifiers() {
+        let mut identifiers: Vec<i32> = Vec::new();
+        let mut identifiers_set: HashSet<i32> = HashSet::new();
+
+        for row in 1..=9 {
+            for col in 1..=9 {
+                for row2 in 1..=9 {
+                    for col2 in 1..=9 {
+                        for bit in 0..4 {
+                            identifiers_set.insert(eq_cnf_identifier(row, col, row2, col2, bit));
+                            identifiers.push(eq_cnf_identifier(row, col, row2, col2, bit));
+                        }
+                    }
+                }
+                for bit in 0..4 {
+                    identifiers_set.insert(cnf_identifier(row, col, bit));
+                    identifiers.push(cnf_identifier(row, col, bit));
+                }
+            }
+        }
+
+        assert_eq!(identifiers.len(), identifiers_set.len());
+    }
 }
