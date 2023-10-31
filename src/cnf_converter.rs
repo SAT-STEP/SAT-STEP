@@ -1,4 +1,6 @@
-use crate::error::GenericError;
+use cadical::Solver;
+
+use crate::{cadical_wrapper::CadicalCallbackWrapper, error::GenericError};
 
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
@@ -146,6 +148,15 @@ pub fn clues_from_string(
     }
 
     Ok(clues)
+}
+
+pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
+    for val in 1..=9 {
+        if solver.value(cnf_identifier(row, col, val)).unwrap() {
+            return val;
+        }
+    }
+    -1
 }
 
 #[cfg(test)]
