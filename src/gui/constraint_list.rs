@@ -84,6 +84,14 @@ impl SATApp {
                     }
                 }
             }
+
+            if ui
+                .button(RichText::new("Show trail").size(text_scale))
+                .clicked()
+            {
+                self.state.show_trail = !self.state.show_trail;
+                println!("Clicked, show_trail: {}", self.state.show_trail);
+            }
         })
     }
 

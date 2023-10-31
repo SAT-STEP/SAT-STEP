@@ -61,6 +61,57 @@ impl Default for ConstraintList {
     }
 }
 
+
+#[derive(Clone)]
+pub struct Trail {
+    pub conflict_literals: Rc<RefCell<Vec<(i32, i32)>>>,
+    pub trail: Rc<RefCell<Vec<Vec<i32>>>>,
+}
+
+
+impl Trail {
+    pub fn new() -> Self {
+        Self {
+            conflict_literals: Rc::new(RefCell::new(Vec::new())),
+            trail: Rc::new(RefCell::new(Vec::new())),
+        }
+    }
+
+    // for testing
+    //pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
+    //    Self(constraints)
+    //}
+
+    pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
+        self.conflict_literals.borrow_mut().push(conflict_literals);
+        self.trail.borrow_mut().push(trail);
+    }
+
+    pub fn clear(&mut self) {
+        self.conflict_literals.borrow_mut().clear();
+        self.trail.borrow_mut().clear();
+    }
+
+    //pub fn len(&self) -> usize {
+    //    self.0.borrow().len()
+    //}
+
+    //pub fn is_empty(&self) -> bool {
+    //    self.0.borrow().is_empty()
+    //}
+
+    //pub fn borrow(&self) -> std::cell::Ref<'_, Vec<Vec<i32>>> {
+    //    self.0.borrow()
+    //}
+}
+
+impl Default for Trail {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
 pub fn solve_sudoku(
     sudoku_clues: &[Vec<Option<i32>>],
     solver: &mut Solver<CadicalCallbackWrapper>,
