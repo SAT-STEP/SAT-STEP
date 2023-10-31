@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Key
 };
 use std::ops::Add;
 
@@ -11,7 +11,7 @@ use super::SATApp;
 
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
+    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32, ctx) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
 
@@ -20,7 +20,7 @@ impl SATApp {
             .striped(true)
             .spacing([0.0, text_scale * 0.5])
             .show(ui, |ui| {
-                self.buttons(ui, text_scale);
+                self.buttons(ui, text_scale, ctx);
                 ui.end_row();
 
                 self.learned_constraints_labels(ui, text_scale);
@@ -38,7 +38,7 @@ impl SATApp {
         self.list_of_constraints(ui, text_scale).response
     }
 
-    fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn buttons(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
@@ -48,6 +48,7 @@ impl SATApp {
                     .add_filter("text", &["txt"])
                     .pick_file()
                 {
+                    print!("{}", file_path.display());
                     let sudoku_result = crate::get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
@@ -66,6 +67,7 @@ impl SATApp {
                     }
                 }
             }
+
             if ui
                 .button(RichText::new("Solve sudoku").size(text_scale))
                 .clicked()
@@ -81,6 +83,33 @@ impl SATApp {
                     }
                     Err(err) => {
                         println!("{}", err);
+                    }
+                }
+            }
+            if ui
+                .button(RichText::new("Create Sudoku").size(text_scale))
+                .clicked()
+            {
+                self.state.editor_active=true;
+                self.state.reinit();
+                let empty = 
+                ".........
+                .........
+                .........
+                .........
+                .........
+                .........
+                .........
+                .........
+                .........".to_string();
+                let sudoku = crate::clues_from_string(empty, ".");
+                match sudoku {
+                    Ok(sudoku_vec) => {
+                        self.sudoku = sudoku_vec;
+                        self.clues = self.sudoku.clone();
+                    }
+                    Err(e) => {
+                        self.current_error = Some(e);
                     }
                 }
             }
@@ -356,7 +385,6 @@ impl SATApp {
                                     );
                                 }
                             }
-
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }

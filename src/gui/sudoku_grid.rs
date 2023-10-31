@@ -124,6 +124,7 @@ impl SATApp {
 
         // Filter constraint list by cell
         if rect_action.clicked() {
+
             if self.state.selected_cell
                 == Some((cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1))
             {

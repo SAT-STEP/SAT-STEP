@@ -13,6 +13,7 @@ pub struct AppState {
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
     pub little_number_constraints: Vec<(i32, i32, i32)>,
+    pub editor_active: bool,
 }
 
 impl AppState {
@@ -32,6 +33,7 @@ impl AppState {
             filtered_length: 0,
             show_solved_sudoku: true,
             little_number_constraints: Vec::new(),
+            editor_active: false,
         }
     }
 
