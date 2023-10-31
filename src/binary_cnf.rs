@@ -2,46 +2,11 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
-    // define how equivalence constraints work
-    for row in 1..=9 {
-        for col in 1..=9 {
-            for row2 in 1..=9 {
-                for col2 in 1..=9 {
-                    for bit in 0..4 {
-                        clauses.push(vec![
-                            -eq_cnf_identifier(row, col, row2, col2, bit),
-                            cnf_identifier(row, col, bit),
-                            -cnf_identifier(row2, col2, bit),
-                        ]);
-                        
-                        clauses.push(vec![
-                            -eq_cnf_identifier(row, col, row2, col2, bit),
-                            -cnf_identifier(row, col, bit),
-                            cnf_identifier(row2, col2, bit),
-                        ]);
-                        
-                        clauses.push(vec![
-                            eq_cnf_identifier(row, col, row2, col2, bit),
-                            -cnf_identifier(row, col, bit),
-                            -cnf_identifier(row2, col2, bit),
-                        ]);
-                        
-                        clauses.push(vec![
-                            eq_cnf_identifier(row, col, row2, col2, bit),
-                            cnf_identifier(row, col, bit),
-                            cnf_identifier(row2, col2, bit),
-                        ]);
-                        
-                    }
-                }
-            }
-        }
-    }
-
     // every number in each row is different
     for row in 1..=9 {
         for col in 1..=9 {
             for col2 in (col + 1)..=9 {
+                clauses.append(&mut eq_variable_init(row, col, row, col2));
                 clauses.push(vec![
                     -eq_cnf_identifier(row, col, row, col2, 0),
                     -eq_cnf_identifier(row, col, row, col2, 1),
@@ -56,6 +21,7 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     for col in 1..=9 {
         for row in 1..=9 {
             for row2 in (row + 1)..=9 {
+                clauses.append(&mut eq_variable_init(row, col, row2, col));
                 clauses.push(vec![
                     -eq_cnf_identifier(row, col, row2, col, 0),
                     -eq_cnf_identifier(row, col, row2, col, 1),
@@ -75,6 +41,7 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
                     let col = 1 + subgrid_col * 3 + index1 / 3;
                     let row2 = 1 + subgrid_row * 3 + index2 % 3;
                     let col2 = 1 + subgrid_col * 3 + index2 / 3;
+                    clauses.append(&mut eq_variable_init(row, col, row2, col2));
                     clauses.push(vec![
                                  -eq_cnf_identifier(row, col, row2, col2, 0),
                                  -eq_cnf_identifier(row, col, row2, col2, 1),
@@ -122,6 +89,39 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
                 }
             }
         }
+    }
+
+    clauses
+}
+
+/// Initialize variables that indicate 2 cells have same bits in some position
+fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
+    let mut clauses: Vec<Vec<i32>> = Vec::new();
+
+    for bit in 0..4 {
+        clauses.push(vec![
+                     -eq_cnf_identifier(row, col, row2, col2, bit),
+                     cnf_identifier(row, col, bit),
+                     -cnf_identifier(row2, col2, bit),
+        ]);
+
+        clauses.push(vec![
+                     -eq_cnf_identifier(row, col, row2, col2, bit),
+                     -cnf_identifier(row, col, bit),
+                     cnf_identifier(row2, col2, bit),
+        ]);
+
+        clauses.push(vec![
+                     eq_cnf_identifier(row, col, row2, col2, bit),
+                     -cnf_identifier(row, col, bit),
+                     -cnf_identifier(row2, col2, bit),
+        ]);
+
+        clauses.push(vec![
+                     eq_cnf_identifier(row, col, row2, col2, bit),
+                     cnf_identifier(row, col, bit),
+                     cnf_identifier(row2, col2, bit),
+        ]);
     }
 
     clauses
