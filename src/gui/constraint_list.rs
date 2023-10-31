@@ -11,7 +11,7 @@ use super::SATApp;
 
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32, ctx) -> Response {
+    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
 
@@ -86,6 +86,7 @@ impl SATApp {
                     }
                 }
             }
+
             if ui
                 .button(RichText::new("Create Sudoku").size(text_scale))
                 .clicked()
@@ -111,6 +112,16 @@ impl SATApp {
                     Err(e) => {
                         self.current_error = Some(e);
                     }
+                }
+            }
+            let events = ui.input().events.clone();
+            for event in &events {
+                match event {
+                    egui::Event::Key{key, pressed, modifiers, ..} => {
+                        println!("{:?} = {:?}", key, pressed);
+                    },
+                    egui::Event::Text(t) => { println!("Text = {:?}", t) }
+                    _ => {}
                 }
             }
         })

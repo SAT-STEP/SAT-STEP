@@ -109,10 +109,10 @@ impl eframe::App for SATApp {
             } else {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
-                        self.constraint_list(ui, width);
+                        self.constraint_list(ui, width, ctx);
                     });
                     columns[1].vertical_centered(|ui| {
-                        self.sudoku_grid(ui, height, width);
+                        self.sudoku_grid(ui, height, width, ctx);
                     });
                 });
             }

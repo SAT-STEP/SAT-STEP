@@ -16,7 +16,7 @@ struct CellState {
 }
 
 impl SATApp {
-    pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
+    pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32, ctx: &egui::Context) -> Response {
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
         let cell_size = minimum_dimension / 10.4; // 1 row-col number + 9 sudoku cells + 0.4 cell spacing
 
