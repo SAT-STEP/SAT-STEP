@@ -3,7 +3,13 @@ use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Key
 };
-use std::ops::Add;
+use std::{
+        ops::Add,
+        collections::HashSet
+};
+
+
+
 
 use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
@@ -114,13 +120,15 @@ impl SATApp {
                     }
                 }
             }
-            let events = ui.input().events.clone();
-            for event in &events {
-                match event {
-                    egui::Event::Key{key, pressed, modifiers, ..} => {
-                        println!("{:?} = {:?}", key, pressed);
-                    },
-                    egui::Event::Text(t) => { println!("Text = {:?}", t) }
+            // Capture the current events of the frame.
+            // Would be preferable to not copy all events.
+            let keys = ctx.input(|i| i.events.clone());
+            //println!("{:?}", keys);
+            for key in &keys {
+                match key {
+                    egui::Event::Text(t) if t.len() == 1 => {
+                        println!("Number {:?} pressed!!", key)
+                    }
                     _ => {}
                 }
             }
