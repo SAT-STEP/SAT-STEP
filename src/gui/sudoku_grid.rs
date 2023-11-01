@@ -16,7 +16,12 @@ struct CellState {
 }
 
 impl SATApp {
-    pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32, ctx: &egui::Context) -> Response {
+    pub fn sudoku_grid(
+        &mut self,
+        ui: &mut Ui,
+        height: f32,
+        width: f32,
+    ) -> Response {
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
         let cell_size = minimum_dimension / 10.4; // 1 row-col number + 9 sudoku cells + 0.4 cell spacing
 
@@ -39,8 +44,13 @@ impl SATApp {
         let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
-
-            recording_label(ui, grid_top_left.x, grid_top_left.y, cell_size, self.state.editor_active);
+            recording_label(
+                ui,
+                grid_top_left.x,
+                grid_top_left.y,
+                cell_size,
+                self.state.editor_active,
+            );
 
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
@@ -128,7 +138,6 @@ impl SATApp {
 
         // Filter constraint list by cell
         if rect_action.clicked() {
-
             if self.state.selected_cell
                 == Some((cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1))
             {
@@ -262,14 +271,14 @@ fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, row_num: usize) 
     );
 }
 
-fn recording_label(ui: &mut Ui, width: f32, height: f32, cell_size: f32, recording: bool, ) {
+fn recording_label(ui: &mut Ui, width: f32, height: f32, cell_size: f32, recording: bool) {
     if recording {
         ui.painter().text(
-            Pos2::from((width+cell_size, height-cell_size*0.9)),
+            Pos2::from((width + cell_size, height - cell_size * 0.9)),
             egui::Align2::LEFT_CENTER,
             "RECORDING",
-            egui::FontId::new(cell_size*0.5, egui::FontFamily::Monospace),
+            egui::FontId::new(cell_size * 0.5, egui::FontFamily::Monospace),
             Color32::RED,
-            );
+        );
     }
 }

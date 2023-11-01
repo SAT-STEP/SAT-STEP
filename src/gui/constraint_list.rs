@@ -1,15 +1,9 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Key
+    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
-use std::{
-        ops::Add,
-        collections::HashSet
-};
-
-
-
+use std::ops::Add;
 
 use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
@@ -44,7 +38,12 @@ impl SATApp {
         self.list_of_constraints(ui, text_scale).response
     }
 
-    fn buttons(&mut self, ui: &mut Ui, text_scale: f32, ctx: &egui::Context) -> egui::InnerResponse<()> {
+    fn buttons(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+    ) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
@@ -100,11 +99,10 @@ impl SATApp {
                 .button(RichText::new("Create Sudoku").size(text_scale))
                 .clicked()
             {
-                self.state.editor_active=true;
+                self.state.editor_active = true;
                 self.constraints.clear();
                 self.state.reinit();
-                let empty = 
-                ".........
+                let empty = ".........
                 .........
                 .........
                 .........
@@ -112,7 +110,8 @@ impl SATApp {
                 .........
                 .........
                 .........
-                .........".to_string();
+                ........."
+                    .to_string();
                 let sudoku = crate::clues_from_string(empty, ".");
                 match sudoku {
                     Ok(sudoku_vec) => {
@@ -124,7 +123,7 @@ impl SATApp {
                     }
                 }
             }
-            if self.state.editor_active == true {
+            if self.state.editor_active {
                 // Capture the current events of the frame.
                 // Would be preferable to not copy all events, but eguis
                 // limitation.
@@ -134,19 +133,21 @@ impl SATApp {
                     match key {
                         egui::Event::Text(t) if t.len() == 1 => {
                             if let Ok(n) = t.parse::<i32>() {
-                                if n == 0 { break }
-                                if self.state.selected_cell != None {
-                                    if let Some(cell_state) = self.state.selected_cell 
-                                    {
-                                        self.sudoku[cell_state.0 as usize - 1][cell_state.1 as usize - 1] = Some(n);
+                                if n == 0 {
+                                    break;
+                                }
+                                if self.state.selected_cell.is_some() {
+                                    if let Some(cell_state) = self.state.selected_cell {
+                                        self.sudoku[cell_state.0 as usize - 1]
+                                            [cell_state.1 as usize - 1] = Some(n);
                                     }
                                 }
-                                    println!("Number {:?} pressed!!", n);
+                                println!("Number {:?} pressed!!", n);
                             }
                         }
                         _ => {}
                     }
-                self.clues = self.sudoku.clone();
+                    self.clues = self.sudoku.clone();
                 }
             }
         })
