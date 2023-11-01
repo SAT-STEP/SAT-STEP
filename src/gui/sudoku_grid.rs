@@ -16,12 +16,7 @@ struct CellState {
 }
 
 impl SATApp {
-    pub fn sudoku_grid(
-        &mut self,
-        ui: &mut Ui,
-        height: f32,
-        width: f32,
-    ) -> Response {
+    pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
         let cell_size = minimum_dimension / 10.4; // 1 row-col number + 9 sudoku cells + 0.4 cell spacing
 
@@ -276,9 +271,9 @@ fn recording_label(ui: &mut Ui, width: f32, height: f32, cell_size: f32, recordi
         ui.painter().text(
             Pos2::from((width + cell_size, height - cell_size * 0.9)),
             egui::Align2::LEFT_CENTER,
-            "RECORDING",
-            egui::FontId::new(cell_size * 0.5, egui::FontFamily::Monospace),
-            Color32::RED,
+            "input mode on",
+            egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
+            Color32::GRAY,
         );
     }
 }

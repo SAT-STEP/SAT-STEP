@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Key,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -140,13 +140,15 @@ impl SATApp {
                                 }
                             }
                         }
-                        egui::Event::Key{key, pressed: true,..} => {
+                        egui::Event::Key {
+                            key, pressed: true, ..
+                        } => {
                             if key == &Key::Backspace {
                                 if let Some(cell_state) = self.state.selected_cell {
                                     self.sudoku[cell_state.0 as usize - 1]
                                         [cell_state.1 as usize - 1] = None;
                                 }
-                            } 
+                            }
                         }
                         _ => {}
                     }
