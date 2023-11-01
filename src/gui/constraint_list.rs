@@ -50,6 +50,7 @@ impl SATApp {
                 .button(RichText::new("Open file...").size(text_scale))
                 .clicked()
             {
+                self.state.editor_active = false;
                 if let Some(file_path) = rfd::FileDialog::new()
                     .add_filter("text", &["txt"])
                     .pick_file()
@@ -78,6 +79,8 @@ impl SATApp {
                 .button(RichText::new("Solve sudoku").size(text_scale))
                 .clicked()
             {
+                self.state.editor_active = false;
+
                 let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
@@ -98,6 +101,7 @@ impl SATApp {
                 .clicked()
             {
                 self.state.editor_active=true;
+                self.constraints.clear();
                 self.state.reinit();
                 let empty = 
                 ".........
@@ -120,27 +124,29 @@ impl SATApp {
                     }
                 }
             }
-            // Capture the current events of the frame.
-            // Would be preferable to not copy all events.
-            let keys = ctx.input(|i| i.events.clone());
-            //println!("{:?}", keys);
-            for key in &keys {
-                match key {
-                    egui::Event::Text(t) if t.len() == 1 => {
-                        if let Ok(n) = t.parse::<i32>() {
-                            if n == 0 { break }
-                            if self.state.editor_active == true && self.state.selected_cell != None {
-                                if let Some(cell_state) = self.state.selected_cell 
-                                {
-                                    self.sudoku[cell_state.0 as usize - 1][cell_state.1 as usize - 1] = Some(n);
-                                    println!("{:?}", cell_state);
+            if self.state.editor_active == true {
+                // Capture the current events of the frame.
+                // Would be preferable to not copy all events, but eguis
+                // limitation.
+                let keys = ctx.input(|i| i.events.clone());
+                //println!("{:?}", keys);
+                for key in &keys {
+                    match key {
+                        egui::Event::Text(t) if t.len() == 1 => {
+                            if let Ok(n) = t.parse::<i32>() {
+                                if n == 0 { break }
+                                if self.state.selected_cell != None {
+                                    if let Some(cell_state) = self.state.selected_cell 
+                                    {
+                                        self.sudoku[cell_state.0 as usize - 1][cell_state.1 as usize - 1] = Some(n);
+                                    }
                                 }
-                                    println!("{:?}",self.state.selected_cell);
+                                    println!("Number {:?} pressed!!", n);
                             }
-                                println!("Number {:?} pressed!!", n);
                         }
+                        _ => {}
                     }
-                    _ => {}
+                self.clues = self.sudoku.clone();
                 }
             }
         })

@@ -26,6 +26,7 @@ impl SATApp {
         // using these centers the sudoku in the middle of its column
         let top_left_y = (height - minimum_dimension) / 2.0 + cell_size;
         let top_left_x = width + (width - minimum_dimension) / 2.0;
+        let grid_top_left = Pos2::from((top_left_x, top_left_y));
 
         let mut cell_state = CellState {
             top_left: Pos2::new(top_left_x, top_left_y),
@@ -38,6 +39,9 @@ impl SATApp {
         let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
+
+            recording_label(ui, grid_top_left.x, grid_top_left.y, cell_size, self.state.editor_active);
+
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
                 cell_state.draw_constraints = true;
@@ -256,4 +260,16 @@ fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, row_num: usize) 
         egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
         Color32::DARK_GRAY,
     );
+}
+
+fn recording_label(ui: &mut Ui, width: f32, height: f32, cell_size: f32, recording: bool, ) {
+    if recording {
+        ui.painter().text(
+            Pos2::from((width+cell_size, height-cell_size*0.9)),
+            egui::Align2::LEFT_CENTER,
+            "RECORDING",
+            egui::FontId::new(cell_size*0.5, egui::FontFamily::Monospace),
+            Color32::RED,
+            );
+    }
 }
