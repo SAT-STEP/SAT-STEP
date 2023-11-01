@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Event::Key,
 };
 use std::ops::Add;
 
@@ -124,11 +124,7 @@ impl SATApp {
                 }
             }
             if self.state.editor_active {
-                // Capture the current events of the frame.
-                // Would be preferable to not copy all events, but eguis
-                // limitation.
                 let keys = ctx.input(|i| i.events.clone());
-                //println!("{:?}", keys);
                 for key in &keys {
                     match key {
                         egui::Event::Text(t) if t.len() == 1 => {
@@ -142,8 +138,14 @@ impl SATApp {
                                             [cell_state.1 as usize - 1] = Some(n);
                                     }
                                 }
-                                println!("Number {:?} pressed!!", n);
                             }
+                        }
+                        egui::Event::Key{key: _backspace, pressed: true,..} => {
+                            if let Some(cell_state) = self.state.selected_cell {
+                                self.sudoku[cell_state.0 as usize - 1]
+                                    [cell_state.1 as usize - 1] = None;
+                            }
+                            
                         }
                         _ => {}
                     }
