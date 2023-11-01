@@ -54,7 +54,6 @@ impl SATApp {
                     .add_filter("text", &["txt"])
                     .pick_file()
                 {
-                    print!("{}", file_path.display());
                     let sudoku_result = crate::get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
