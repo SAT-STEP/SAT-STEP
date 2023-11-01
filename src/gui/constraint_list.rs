@@ -127,7 +127,18 @@ impl SATApp {
             for key in &keys {
                 match key {
                     egui::Event::Text(t) if t.len() == 1 => {
-                        println!("Number {:?} pressed!!", key)
+                        if let Ok(n) = t.parse::<i32>() {
+                            if n == 0 { break }
+                            if self.state.editor_active == true && self.state.selected_cell != None {
+                                if let Some(cell_state) = self.state.selected_cell 
+                                {
+                                    self.sudoku[cell_state.0 as usize - 1][cell_state.1 as usize - 1] = Some(n);
+                                    println!("{:?}", cell_state);
+                                }
+                                    println!("{:?}",self.state.selected_cell);
+                            }
+                                println!("Number {:?} pressed!!", n);
+                        }
                     }
                     _ => {}
                 }
