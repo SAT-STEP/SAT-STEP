@@ -168,7 +168,7 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     // Reverse CNF-identifier creation
     // Return tuple of (row, col, bit_index, bit_value) from identifier
     // bit_value will be false for negative ids, positive otherwise
-    let bit_value = if identifier > 0 { true } else { false };
+    let bit_value = identifier > 0;
     identifier = identifier.abs() - 1;
     (
         identifier / (9 * 4) + 1,
@@ -183,7 +183,7 @@ pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, 
     // Reverse CNF-identifier creation for equality constraints
     // Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
     // equal will be false, if the bits in the two cells are different
-    let equal = if identifier > 0 { true } else { false };
+    let equal = identifier > 0;
     identifier = identifier.abs() - 1 - 9*9*4;
     (
         identifier / (9 * 9 * 9 * 4) + 1,
