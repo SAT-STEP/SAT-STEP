@@ -153,10 +153,10 @@ pub fn cnf_identifier(row: i32, col: i32, bit: i32) -> i32 {
 #[inline(always)]
 pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> i32 {
     9 * 9 * 4
-        + (row - 1) * 4 * 9
-        + (col - 1) * 4
-        + (row2 - 1) * 4 * 9 * 9 * 9
-        + (col2 - 1) * 4 * 9 * 9
+        + (row - 1) * 4 * 9 * 9 * 9
+        + (col - 1) * 4 * 9 * 9
+        + (row2 - 1)* 4 * 9 
+        + (col2 - 1)* 4
         + bit
         + 1
 }
@@ -164,21 +164,40 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
 /// These do not work for the new encoding YET, which is why they are not used YET
 #[allow(dead_code)]
 #[inline(always)]
-pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
+pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     // Reverse CNF-identifier creation
-    // Return tuple of (row, col, val) from identifier
-    // Val will be negative for negative ids, positive otherwise
-    let negation_multiplier = if identifier > 0 { 1 } else { -1 };
+    // Return tuple of (row, col, bit_index, bit_value) from identifier
+    // bit_value will be false for negative ids, positive otherwise
+    let bit_value = if identifier > 0 { true } else { false };
     identifier = identifier.abs() - 1;
     (
         identifier / (9 * 4) + 1,
         (identifier % (9 * 4)) / 4 + 1,
-        negation_multiplier * (identifier % 4 + 1),
+        (identifier % 4),
+        bit_value,
     )
 }
 
 #[allow(dead_code)]
-pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
+pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool) {
+    // Reverse CNF-identifier creation for equality constraints
+    // Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
+    // equal will be false, if the bits in the two cells are different
+    let equal = if identifier > 0 { true } else { false };
+    identifier = identifier.abs() - 1 - 9*9*4;
+    (
+        identifier / (9 * 9 * 9 * 4) + 1,
+        (identifier % (9 * 9 * 9 * 4)) / (4 * 9 * 9) + 1,
+        (identifier % (9 * 9 * 4)) / (4 * 9) + 1,
+        (identifier % (9 * 4)) / 4 + 1,
+        (identifier % 4),
+        equal,
+    )
+
+}
+
+#[allow(dead_code)]
+pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32, bool)>> {
     let mut tuples = Vec::new();
     for constraint in constraints.iter() {
         let mut temp = Vec::with_capacity(constraint.len());
@@ -219,5 +238,27 @@ mod tests {
         }
 
         assert_eq!(identifiers.len(), identifiers_set.len());
+    }
+
+    #[test]
+    fn test_to_id_and_back() {
+        assert_eq!((1, 1, 0, true), identifier_to_tuple(cnf_identifier(1, 1, 0)));
+        assert_eq!((1, 2, 3, true), identifier_to_tuple(cnf_identifier(1, 2, 3)));
+        assert_eq!((9, 9, 3, true), identifier_to_tuple(cnf_identifier(9, 9, 3)));
+        assert_eq!(
+            (6, 2, 0, false),
+            identifier_to_tuple(-1 * cnf_identifier(6, 2, 0))
+        );
+    }
+
+    #[test]
+    fn test_to_eq_id_and_back() {
+        assert_eq!((1, 1, 1, 1, 0, true), eq_identifier_to_tuple(eq_cnf_identifier(1, 1, 1, 1, 0)));
+        assert_eq!((1, 2, 3, 4, 0, true), eq_identifier_to_tuple(eq_cnf_identifier(1, 2, 3, 4, 0)));
+        assert_eq!((9, 9, 9, 9, 3, true), eq_identifier_to_tuple(eq_cnf_identifier(9, 9, 9, 9, 3)));
+        assert_eq!(
+            (6, 2, 8, 2, 0, false),
+            eq_identifier_to_tuple(-1 * eq_cnf_identifier(6, 2, 8, 2, 0))
+        );
     }
 }
