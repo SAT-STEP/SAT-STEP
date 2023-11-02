@@ -2,9 +2,9 @@ mod app_state;
 mod binary_cnf;
 mod cadical_wrapper;
 mod cnf_converter;
+mod cnf_var;
 mod error;
 mod filtering;
-mod cnf_var;
 pub mod gui;
 
 #[cfg(test)]

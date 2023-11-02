@@ -1,9 +1,9 @@
+use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable};
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId
+    Color32, FontId,
 };
-use crate::{cnf_var::CnfVariable, cadical_wrapper::CadicalCallbackWrapper};
 
 pub struct BitVar {
     pub row: i32,
@@ -24,10 +24,21 @@ pub struct EqVar {
 impl CnfVariable for BitVar {
     fn new(identifier: i32) -> BitVar {
         let (row, col, bit_index, bit_value) = identifier_to_tuple(identifier);
-        BitVar { row, col, bit_index, bit_value }
+        BitVar {
+            row,
+            col,
+            bit_index,
+            bit_value,
+        }
     }
 
-    fn human_readable(&self, text_job: &mut LayoutJob, large_font: FontId, small_font: FontId, text_color: Color32) {
+    fn human_readable(
+        &self,
+        text_job: &mut LayoutJob,
+        large_font: FontId,
+        small_font: FontId,
+        text_color: Color32,
+    ) {
         let (lead_char, color) = if self.bit_value {
             ("B", text_color)
         } else {
@@ -66,10 +77,23 @@ impl CnfVariable for BitVar {
 impl CnfVariable for EqVar {
     fn new(identifier: i32) -> EqVar {
         let (row, col, row2, col2, bit_index, equal) = eq_identifier_to_tuple(identifier);
-        EqVar { row, col, row2, col2, bit_index, equal }
+        EqVar {
+            row,
+            col,
+            row2,
+            col2,
+            bit_index,
+            equal,
+        }
     }
 
-    fn human_readable(&self, text_job: &mut LayoutJob, large_font: FontId, small_font: FontId, text_color: Color32) {
+    fn human_readable(
+        &self,
+        text_job: &mut LayoutJob,
+        large_font: FontId,
+        small_font: FontId,
+        text_color: Color32,
+    ) {
         let (lead_char, color) = if self.equal {
             ("EQ", text_color)
         } else {
@@ -104,7 +128,6 @@ impl CnfVariable for EqVar {
         }
     }
 }
-
 
 #[allow(dead_code)]
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {

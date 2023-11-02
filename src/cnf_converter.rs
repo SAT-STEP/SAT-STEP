@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId
+    Color32, FontId,
 };
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable, error::GenericError};
@@ -18,7 +18,13 @@ impl CnfVariable for DecimalVar {
         DecimalVar { row, col, val }
     }
 
-    fn human_readable(&self, text_job: &mut LayoutJob, large_font: FontId, small_font: FontId, text_color: Color32) {
+    fn human_readable(
+        &self,
+        text_job: &mut LayoutJob,
+        large_font: FontId,
+        small_font: FontId,
+        text_color: Color32,
+    ) {
         let (lead_char, color) = if self.val > 0 {
             ("", text_color)
         } else {
