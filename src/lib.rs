@@ -4,6 +4,7 @@ mod cadical_wrapper;
 mod cnf_converter;
 mod error;
 mod filtering;
+mod cnf_var;
 pub mod gui;
 
 #[cfg(test)]
