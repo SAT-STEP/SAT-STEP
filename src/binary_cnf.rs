@@ -5,6 +5,7 @@ use egui::{
     Color32, FontId,
 };
 
+#[derive(Clone)]
 pub struct BitVar {
     pub row: i32,
     pub col: i32,
@@ -12,6 +13,7 @@ pub struct BitVar {
     pub bit_value: bool,
 }
 
+#[derive(Clone)]
 pub struct EqVar {
     pub row: i32,
     pub col: i32,
@@ -21,7 +23,7 @@ pub struct EqVar {
     pub equal: bool,
 }
 
-impl CnfVariable for BitVar {
+impl BitVar {
     fn new(identifier: i32) -> BitVar {
         let (row, col, bit_index, bit_value) = identifier_to_tuple(identifier);
         BitVar {
@@ -31,6 +33,10 @@ impl CnfVariable for BitVar {
             bit_value,
         }
     }
+}
+
+impl CnfVariable for BitVar {
+
 
     fn human_readable(
         &self,
@@ -74,7 +80,7 @@ impl CnfVariable for BitVar {
     }
 }
 
-impl CnfVariable for EqVar {
+impl EqVar {
     fn new(identifier: i32) -> EqVar {
         let (row, col, row2, col2, bit_index, equal) = eq_identifier_to_tuple(identifier);
         EqVar {
@@ -86,6 +92,10 @@ impl CnfVariable for EqVar {
             equal,
         }
     }
+}
+
+impl CnfVariable for EqVar {
+
 
     fn human_readable(
         &self,

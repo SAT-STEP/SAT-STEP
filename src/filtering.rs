@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{cnf_converter::identifier_to_tuple, ConstraintList};
+use crate::{cnf_converter::identifier_to_tuple, ConstraintList, cnf_var::CnfVariable};
 
 pub struct ListFilter {
     constraints: ConstraintList,
@@ -89,7 +89,7 @@ impl ListFilter {
         &self,
         page_number: usize,
         page_length: usize,
-    ) -> Vec<(i32, i32, i32)> {
+    ) -> Vec<Box<dyn CnfVariable>> {
         let all_filtered_indexes = self.get_filtered_index_list();
         let stop: usize =
             std::cmp::min(all_filtered_indexes.len(), (page_number + 1) * page_length);

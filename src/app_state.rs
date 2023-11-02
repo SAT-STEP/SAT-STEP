@@ -1,4 +1,4 @@
-use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList};
+use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList, cnf_var::CnfVariable};
 
 pub struct AppState {
     filter: ListFilter,
@@ -12,7 +12,7 @@ pub struct AppState {
     pub page_length_input: String,
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
-    pub little_number_constraints: Vec<(i32, i32, i32)>,
+    pub little_number_constraints: Vec<Box<dyn CnfVariable>>,
 }
 
 impl AppState {

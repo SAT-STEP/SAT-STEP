@@ -1,7 +1,14 @@
 use egui::{text::LayoutJob, Color32, FontId};
 
+// #[derive(Clone)]
+// pub enum CnfVariables {
+//     Decimal(DecimalVar),
+//     Bit(BitVar),
+//     Equality(EqVar),
+// }
+
 pub trait CnfVariable {
-    fn new(identifier: i32) -> Self;
+    //fn new(identifier: i32) -> Self;
 
     fn human_readable(
         &self,

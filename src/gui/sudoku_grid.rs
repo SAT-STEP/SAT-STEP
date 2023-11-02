@@ -2,7 +2,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-use crate::cnf_converter::create_tuples_from_constraints;
+use crate::{cnf_converter::create_tuples_from_constraints, cnf_var::CnfVariables};
 
 use super::SATApp;
 
@@ -35,7 +35,7 @@ impl SATApp {
             draw_constraints: false,
         };
 
-        let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
+        let mut constraints: Vec<CnfVariables> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
             if let Some(num) = self.state.clicked_constraint_index {
@@ -48,15 +48,15 @@ impl SATApp {
                 }
             }
             // sort them so don't have to search in loop
-            constraints.sort_by(
-                |(r1, c1, _), (r2, c2, _)| {
-                    if r1 != r2 {
-                        r1.cmp(r2)
-                    } else {
-                        c1.cmp(c2)
-                    }
-                },
-            );
+            // constraints.sort_by(
+            //     |(r1, c1, _), (r2, c2, _)| {
+            //         if r1 != r2 {
+            //             r1.cmp(r2)
+            //         } else {
+            //             c1.cmp(c2)
+            //         }
+            //     },
+            // );
 
             let mut c_index = 0;
 
@@ -112,7 +112,7 @@ impl SATApp {
         cell_size: f32,
         cell_state: CellState, //Passed as clone, should not be increased here
         val: Option<i32>,
-        constraints: &Vec<(i32, i32, i32)>,
+        constraints: &Vec<CnfVariables>,
         mut c_index: usize,
     ) -> usize {
         if cell_state.row_num == 0 {
@@ -132,7 +132,7 @@ impl SATApp {
                 self.state
                     .select_cell(cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1);
             }
-            self.rendered_constraints = create_tuples_from_constraints(self.state.get_filtered());
+            self.rendered_constraints = self.state.get_filtered();
         }
 
         if self.state.selected_cell
@@ -187,7 +187,7 @@ fn draw_little_numbers(
     top_left: Pos2,
     cell_size: f32,
     mut c_index: usize,
-    constraints: &Vec<(i32, i32, i32)>,
+    constraints: &Vec<CnfVariables>,
     row_num: usize,
     col_num: usize,
 ) -> (bool, usize) {

@@ -6,17 +6,22 @@ use egui::{
 
 use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable, error::GenericError};
 
+#[derive(Clone)]
 pub struct DecimalVar {
     pub row: i32,
     pub col: i32,
     pub val: i32,
 }
 
-impl CnfVariable for DecimalVar {
+impl DecimalVar {
     fn new(identifier: i32) -> DecimalVar {
         let (row, col, val) = identifier_to_tuple(identifier);
         DecimalVar { row, col, val }
     }
+}
+
+impl CnfVariable for DecimalVar {
+
 
     fn human_readable(
         &self,
