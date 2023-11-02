@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -11,7 +11,7 @@ use super::SATApp;
 
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
+    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
 
@@ -20,7 +20,7 @@ impl SATApp {
             .striped(true)
             .spacing([0.0, text_scale * 0.5])
             .show(ui, |ui| {
-                self.buttons(ui, text_scale);
+                self.buttons(ui, text_scale, ctx);
                 ui.end_row();
 
                 self.learned_constraints_labels(ui, text_scale);
@@ -38,12 +38,18 @@ impl SATApp {
         self.list_of_constraints(ui, text_scale).response
     }
 
-    fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn buttons(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+    ) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
                 .clicked()
             {
+                self.state.editor_active = false;
                 if let Some(file_path) = rfd::FileDialog::new()
                     .add_filter("text", &["txt"])
                     .pick_file()
@@ -66,10 +72,13 @@ impl SATApp {
                     }
                 }
             }
+
             if ui
                 .button(RichText::new("Solve sudoku").size(text_scale))
                 .clicked()
             {
+                self.state.editor_active = false;
+
                 let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
@@ -82,6 +91,67 @@ impl SATApp {
                     Err(err) => {
                         println!("{}", err);
                     }
+                }
+            }
+
+            if ui
+                .button(RichText::new("Create Sudoku").size(text_scale))
+                .clicked()
+            {
+                self.state.editor_active = true;
+                self.constraints.clear();
+                self.state.reinit();
+                let empty = ".........
+                .........
+                .........
+                .........
+                .........
+                .........
+                .........
+                .........
+                ........."
+                    .to_string();
+                let sudoku = crate::clues_from_string(empty, ".");
+                match sudoku {
+                    Ok(sudoku_vec) => {
+                        self.sudoku = sudoku_vec;
+                        self.clues = self.sudoku.clone();
+                    }
+                    Err(e) => {
+                        self.current_error = Some(e);
+                    }
+                }
+            }
+            if self.state.editor_active {
+                let keys = ctx.input(|i| i.events.clone());
+                for key in &keys {
+                    match key {
+                        egui::Event::Text(t) if t.len() == 1 => {
+                            if let Ok(n) = t.parse::<i32>() {
+                                if n == 0 {
+                                    break;
+                                }
+                                if self.state.selected_cell.is_some() {
+                                    if let Some(cell_state) = self.state.selected_cell {
+                                        self.sudoku[cell_state.0 as usize - 1]
+                                            [cell_state.1 as usize - 1] = Some(n);
+                                    }
+                                }
+                            }
+                        }
+                        egui::Event::Key {
+                            key, pressed: true, ..
+                        } => {
+                            if key == &Key::Backspace {
+                                if let Some(cell_state) = self.state.selected_cell {
+                                    self.sudoku[cell_state.0 as usize - 1]
+                                        [cell_state.1 as usize - 1] = None;
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                    self.clues = self.sudoku.clone();
                 }
             }
         })
@@ -356,7 +426,6 @@ impl SATApp {
                                     );
                                 }
                             }
-
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }
