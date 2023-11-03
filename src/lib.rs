@@ -8,7 +8,7 @@ pub mod gui;
 #[cfg(test)]
 mod tests;
 
-use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc, env};
+use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc, path::Path};
 
 use cadical::Solver;
 
@@ -100,17 +100,14 @@ pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericErro
     }
 }
 
-pub fn write_sudoku(sudoku: String) -> Result<(), GenericError> {
-    let mut path = "";
-    match env::current_dir() {
-        Ok(p) => path = &p.display().to_string(), 
+pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
+    let save_result = fs::write(path.display().to_string(), sudoku);
+    match save_result {
         Err(_) => Err(GenericError {
-            msg: "No current path!".to_string(),
+            msg: "Saving the file failed".to_string(),
         }),
+        _ => Ok(())
     }
-    fs::write(path, sudoku);
-    Ok(())
-
 }
 /// Parses the max_length filter input for applying the filter.
 pub fn parse_numeric_input(input: &str) -> Option<i32> {
