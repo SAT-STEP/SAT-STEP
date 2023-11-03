@@ -2,7 +2,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-use crate::cnf_converter::create_tuples_from_constraints;
+use crate::cnf_converter::{create_tuples_from_constraints, identifier_to_tuple};
 
 use super::SATApp;
 
@@ -14,6 +14,7 @@ struct CellState {
     col_num: usize,
     bottom_right: Pos2,
     draw_constraints: bool,
+    draw_conflict_literals: bool,
 }
 
 struct Cell<'a> {
@@ -40,6 +41,7 @@ impl SATApp {
             col_num: 0,
             bottom_right: Pos2::new(top_left_x + cell_size, top_left_y + cell_size),
             draw_constraints: false,
+            draw_conflict_literals: false,
         };
 
         let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
@@ -48,24 +50,45 @@ impl SATApp {
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
                 cell_state.draw_constraints = true;
+            } else if let Some(num) = self.state.clicked_conflict_index {
+                if self.state.show_trail {
+                    constraints = self.state.trail.clone().unwrap();
+                } else {
+                    constraints = self.constraints.borrow()[num]
+                        .clone()
+                        .iter()
+                        .map(|x| identifier_to_tuple(*x))
+                        .collect();
+                    cell_state.draw_conflict_literals = true;
+                }
+                cell_state.draw_constraints = true;
             } else {
                 constraints = self.state.little_number_constraints.clone();
                 if !self.state.show_solved_sudoku {
                     cell_state.draw_constraints = true;
                 }
             }
-            // sort them so don't have to search in loop
-            constraints.sort_by(
-                |(r1, c1, _), (r2, c2, _)| {
-                    if r1 != r2 {
-                        r1.cmp(r2)
-                    } else {
-                        c1.cmp(c2)
-                    }
-                },
-            );
+
+            if cell_state.draw_constraints {
+                // sort them so don't have to search in loop
+                constraints.sort_by(
+                    |(r1, c1, _), (r2, c2, _)| {
+                        if r1 != r2 {
+                            r1.cmp(r2)
+                        } else {
+                            c1.cmp(c2)
+                        }
+                    },
+                );
+            }
 
             let mut c_index = 0;
+
+            let mut cell = Cell {
+                val: None,
+                c_index,
+                constraints: &constraints,
+            };
 
             // row
             for (row_num, row) in self.sudoku.clone().iter().enumerate().take(9) {
@@ -77,11 +100,9 @@ impl SATApp {
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
                     cell_state.col_num = col_num;
-                    let mut cell = Cell {
-                        val: *val,
-                        c_index,
-                        constraints: &constraints,
-                    };
+
+                    cell.val = *val;
+                    cell.c_index = c_index;
 
                     c_index = self.draw_sudoku_cell(ui, cell_size, cell_state, &mut cell);
 
@@ -149,16 +170,49 @@ impl SATApp {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
 
+        let mut top_left = cell_state.top_left;
+        let mut little_num_pos = 0;
+        let mut drew_conflict_literal = false;
+        // draw conflict literals
+        if cell_state.draw_conflict_literals {
+            if let Some(conflicts) = self.state.conflict_literals {
+                for conflict in conflicts {
+                    let (row, col, val) = conflict;
+                    if row - 1 == cell_state.row_num as i32 && col - 1 == cell_state.col_num as i32
+                    {
+                        let val_string = if val < 0 {
+                            val.to_string()
+                        } else {
+                            format!(" {}", val)
+                        };
+
+                        ui.painter().text(
+                            top_left,
+                            egui::Align2::LEFT_TOP,
+                            val_string,
+                            egui::FontId::new(cell_size * 0.28, egui::FontFamily::Monospace),
+                            Color32::from_rgb(80, 0, 0),
+                        );
+
+                        drew_conflict_literal = true;
+                        top_left.x += cell_size / 3f32;
+                        little_num_pos += 1;
+                    }
+                }
+            }
+        }
+
         let mut drew_constraint = false;
         if cell_state.draw_constraints {
             // draw little numbers
             (drew_constraint, cell.c_index) = draw_little_numbers(
                 ui,
-                cell_state.top_left,
+                top_left,
                 cell_size,
                 cell,
                 cell_state.row_num,
                 cell_state.col_num,
+                little_num_pos,
             );
         }
 
@@ -170,7 +224,7 @@ impl SATApp {
 
         if let Some(num) = cell.val {
             // don't draw big number if drew little numbers
-            if !drew_constraint {
+            if !drew_constraint && !drew_conflict_literal {
                 let center = cell_state.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
                 ui.painter().text(
                     center,
@@ -192,10 +246,10 @@ fn draw_little_numbers(
     cell: &mut Cell,
     row_num: usize,
     col_num: usize,
+    mut little_num_pos: i32,
 ) -> (bool, usize) {
     let mut drew_constraint = false;
     let mut little_top_left = top_left;
-    let mut little_num_pos = 0;
 
     // while on little numbers reference this row and block
     while cell.c_index < cell.constraints.len()

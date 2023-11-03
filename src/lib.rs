@@ -61,13 +61,12 @@ impl Default for ConstraintList {
     }
 }
 
-
+// Datastructure to hold conflict literals and trail data
 #[derive(Clone)]
 pub struct Trail {
     pub conflict_literals: Rc<RefCell<Vec<(i32, i32)>>>,
     pub trail: Rc<RefCell<Vec<Vec<i32>>>>,
 }
-
 
 impl Trail {
     pub fn new() -> Self {
@@ -76,11 +75,6 @@ impl Trail {
             trail: Rc::new(RefCell::new(Vec::new())),
         }
     }
-
-    // for testing
-    //pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
-    //    Self(constraints)
-    //}
 
     pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
         self.conflict_literals.borrow_mut().push(conflict_literals);
@@ -92,17 +86,17 @@ impl Trail {
         self.trail.borrow_mut().clear();
     }
 
-    //pub fn len(&self) -> usize {
-    //    self.0.borrow().len()
-    //}
+    pub fn trail_at_index(&self, index: usize) -> Vec<i32> {
+        self.trail.borrow()[index].clone()
+    }
 
-    //pub fn is_empty(&self) -> bool {
-    //    self.0.borrow().is_empty()
-    //}
+    pub fn len(&self) -> usize {
+        self.trail.borrow().len()
+    }
 
-    //pub fn borrow(&self) -> std::cell::Ref<'_, Vec<Vec<i32>>> {
-    //    self.0.borrow()
-    //}
+    pub fn is_empty(&self) -> bool {
+        self.trail.borrow().is_empty()
+    }
 }
 
 impl Default for Trail {
@@ -110,7 +104,6 @@ impl Default for Trail {
         Self::new()
     }
 }
-
 
 pub fn solve_sudoku(
     sudoku_clues: &[Vec<Option<i32>>],

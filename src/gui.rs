@@ -116,7 +116,7 @@ impl eframe::App for SATApp {
             } else {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
-                        if !self.state.show_trail {
+                        if !self.state.show_trail_view {
                             self.constraint_list(ui, width);
                         } else {
                             self.trail_panel(ui, width);

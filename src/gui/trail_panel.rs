@@ -1,14 +1,51 @@
 use std::ops::Add;
 
-use egui::{Response, Ui, ScrollArea, TextStyle, Color32, FontId, text::LayoutJob, TextFormat, Rect, Vec2, NumExt};
+use egui::{
+    text::LayoutJob, Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea,
+    TextFormat, TextStyle, Ui, Vec2,
+};
 
-use crate::cnf_converter::identifier_to_tuple;
+use crate::cnf_converter::{create_tuples_from_constraints, identifier_to_tuple};
 
 use super::SATApp;
 
 impl SATApp {
     pub fn trail_panel(&mut self, ui: &mut Ui, width: f32) -> Response {
         let text_scale = (width / 35.0).max(10.0);
+        self.buttons(ui, text_scale);
+
+        ui.horizontal_wrapped(|ui| {
+            ui.add(Label::new(RichText::new("Show trail").size(text_scale)));
+
+            let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
+            let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+            if response.clicked() {
+                self.state.show_trail = !self.state.show_trail;
+                self.state.show_conflict_literals = !self.state.show_conflict_literals;
+                response.mark_changed();
+            }
+            response.widget_info(|| {
+                egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
+            });
+
+            let how_on = ui
+                .ctx()
+                .animate_bool(response.id, self.state.show_conflict_literals);
+            let visuals = ui.style().interact_selectable(&response, true);
+            let rect = rect.expand(visuals.expansion);
+            let radius = 0.5 * rect.height();
+            ui.painter()
+                .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
+            let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
+            let center = egui::pos2(circle_x, rect.center().y);
+            ui.painter()
+                .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
+
+            ui.add(Label::new(
+                RichText::new("Show conflict literals and learned constraints").size(text_scale),
+            ));
+        });
+
         ui.vertical(|ui| {
             ScrollArea::both()
                 .auto_shrink([false; 2])
@@ -28,7 +65,7 @@ impl SATApp {
                     let large_font = FontId::new(large_font_size, font_id.family.clone());
                     let small_font = FontId::new(small_font_size, font_id.family.clone());
 
-                    let num_rows: usize = self.rendered_constraints.len();
+                    let num_rows: usize = self.trail.len();
                     let row_height = ui.fonts(|f| f.row_height(&large_font)) + spacing;
 
                     ui.set_height(row_height * num_rows as f32);
@@ -84,7 +121,6 @@ impl SATApp {
                                 },
                             );
 
-
                             let (row, col, val) = identifier_to_tuple(literal2);
 
                             let (lead_char, color) = if val > 0 {
@@ -129,20 +165,25 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                match self.state.clicked_constraint_index {
+                                let old_index = self.state.clicked_conflict_index;
+                                self.state.clear_filters();
+                                self.rendered_constraints =
+                                    create_tuples_from_constraints(self.state.get_filtered());
+                                match old_index {
                                     Some(index) => {
-                                        // clicking constraint again clears little numbers
-                                        if index == i {
-                                            self.state.clicked_constraint_index = None;
-                                        } else {
-                                            self.state.clicked_constraint_index = Some(i);
+                                        if index != i {
+                                            let trail = self.trail.trail_at_index(i);
+                                            self.state.set_trail(i, *conflict_literal, trail);
                                         }
                                     }
-                                    None => self.state.clicked_constraint_index = Some(i),
+                                    None => {
+                                        let trail = self.trail.trail_at_index(i);
+                                        self.state.set_trail(i, *conflict_literal, trail);
+                                    }
                                 }
                             }
 
-                            if let Some(clicked_index) = self.state.clicked_constraint_index {
+                            if let Some(clicked_index) = self.state.clicked_conflict_index {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
                                         rect_action.rect,
@@ -157,6 +198,7 @@ impl SATApp {
                         }
                     }
                 });
-            }).response
+        })
+        .response
     }
 }

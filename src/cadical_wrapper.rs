@@ -10,7 +10,10 @@ pub struct CadicalCallbackWrapper {
 
 impl CadicalCallbackWrapper {
     pub fn new(learned_clauses: ConstraintList, trail: Trail) -> Self {
-        Self { learned_clauses, trail }
+        Self {
+            learned_clauses,
+            trail,
+        }
     }
 }
 
@@ -44,9 +47,7 @@ impl Callbacks for CadicalCallbackWrapper {
     fn learn_trail(&mut self, conflict_literals: &[i32], trail: &[i32]) {
         //println!("Conflict literals: {:?}", conflict_literals);
         //println!("Trail: {:?}", trail);
-        self.trail.push(
-            (conflict_literals[0], conflict_literals[1]),
-            trail.to_vec(),
-        )
+        self.trail
+            .push((conflict_literals[0], conflict_literals[1]), trail.to_vec())
     }
 }

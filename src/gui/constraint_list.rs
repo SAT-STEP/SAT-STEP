@@ -38,7 +38,7 @@ impl SATApp {
         self.list_of_constraints(ui, text_scale).response
     }
 
-    fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    pub fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Open file...").size(text_scale))
@@ -85,12 +85,13 @@ impl SATApp {
                 }
             }
 
-            if ui
-                .button(RichText::new("Show trail").size(text_scale))
-                .clicked()
-            {
-                self.state.show_trail = !self.state.show_trail;
-                println!("Clicked, show_trail: {}", self.state.show_trail);
+            let show_trail_text = if !self.state.show_trail_view {
+                RichText::new("Show trail")
+            } else {
+                RichText::new("Show learned constraints")
+            };
+            if ui.button(show_trail_text.size(text_scale)).clicked() {
+                self.state.show_trail_view = !self.state.show_trail_view;
             }
         })
     }
@@ -342,6 +343,7 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
+                                self.state.clear_trail();
                                 match self.state.clicked_constraint_index {
                                     Some(index) => {
                                         // clicking constraint again clears little numbers
