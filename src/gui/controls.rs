@@ -1,7 +1,7 @@
 use cadical::Solver;
 use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
+use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku, GenericError};
 
 use super::SATApp;
 
@@ -89,23 +89,20 @@ impl SATApp {
                 .clicked()
             {
                 self.state.editor_active = true;
+
                 self.constraints.clear();
                 self.state.reinit();
-                let empty = ".........
-                .........
-                .........
-                .........
-                .........
-                .........
-                .........
-                .........
-                ........."
-                    .to_string();
-                let sudoku = crate::clues_from_string(empty, ".");
+                self.rendered_constraints = Vec::new();
+
+                let sudoku = self.get_empty_sudoku();
+
                 match sudoku {
                     Ok(sudoku_vec) => {
                         self.sudoku = sudoku_vec;
                         self.clues = self.sudoku.clone();
+                        self.solver = Solver::with_config("plain").unwrap();
+                        self.solver
+                            .set_callbacks(Some(self.callback_wrapper.clone()));
                     }
                     Err(e) => {
                         self.current_error = Some(e);
@@ -268,5 +265,20 @@ impl SATApp {
                 RichText::new("Show solved sudoku").size(text_scale),
             );
         })
+    }
+
+    fn get_empty_sudoku(&mut self) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
+        let empty = ".........
+        .........
+        .........
+        .........
+        .........
+        .........
+        .........
+        .........
+        ........."
+            .to_string();
+
+        crate::clues_from_string(empty, ".")
     }
 }
