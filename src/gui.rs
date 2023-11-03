@@ -1,4 +1,5 @@
 mod constraint_list;
+mod controls;
 mod sudoku_grid;
 mod trail_panel;
 
@@ -117,9 +118,10 @@ impl eframe::App for SATApp {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
                         if !self.state.show_trail_view {
+                            self.controls(ui, width, ctx);
                             self.constraint_list(ui, width);
                         } else {
-                            self.trail_panel(ui, width);
+                            self.trail_panel(ui, ctx, width);
                         }
                     });
                     columns[1].vertical_centered(|ui| {

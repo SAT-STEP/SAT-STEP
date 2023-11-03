@@ -1,11 +1,8 @@
-use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
-
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
@@ -20,80 +17,10 @@ impl SATApp {
             .striped(true)
             .spacing([0.0, text_scale * 0.5])
             .show(ui, |ui| {
-                self.buttons(ui, text_scale);
-                ui.end_row();
-
                 self.learned_constraints_labels(ui, text_scale);
-                ui.end_row();
-
-                self.filters(ui, text_scale);
-                ui.end_row();
-
-                self.page_length_input(ui, text_scale);
-                ui.end_row();
-
-                self.page_buttons(ui, text_scale);
                 ui.end_row();
             });
         self.list_of_constraints(ui, text_scale).response
-    }
-
-    pub fn buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            if ui
-                .button(RichText::new("Open file...").size(text_scale))
-                .clicked()
-            {
-                if let Some(file_path) = rfd::FileDialog::new()
-                    .add_filter("text", &["txt"])
-                    .pick_file()
-                {
-                    let sudoku_result = crate::get_sudoku(file_path.display().to_string());
-                    match sudoku_result {
-                        Ok(sudoku_vec) => {
-                            self.sudoku = sudoku_vec;
-                            self.clues = self.sudoku.clone();
-                            self.constraints.clear();
-                            self.rendered_constraints = Vec::new();
-                            self.state.reinit();
-                            self.solver = Solver::with_config("plain").unwrap();
-                            self.solver
-                                .set_callbacks(Some(self.callback_wrapper.clone()));
-                        }
-                        Err(e) => {
-                            self.current_error = Some(e);
-                        }
-                    }
-                }
-            }
-            if ui
-                .button(RichText::new("Solve sudoku").size(text_scale))
-                .clicked()
-            {
-                let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
-                match solve_result {
-                    Ok(solved) => {
-                        self.sudoku = solved;
-                        // Reinitialize filtering for a new sudoku
-                        self.state.reinit();
-                        self.rendered_constraints =
-                            create_tuples_from_constraints(self.state.get_filtered());
-                    }
-                    Err(err) => {
-                        println!("{}", err);
-                    }
-                }
-            }
-
-            let show_trail_text = if !self.state.show_trail_view {
-                RichText::new("Show trail")
-            } else {
-                RichText::new("Show learned constraints")
-            };
-            if ui.button(show_trail_text.size(text_scale)).clicked() {
-                self.state.show_trail_view = !self.state.show_trail_view;
-            }
-        })
     }
 
     fn learned_constraints_labels(
@@ -119,128 +46,6 @@ impl SATApp {
                     .size(text_scale),
                 )
                 .wrap(false),
-            );
-        })
-    }
-    // Row for filtering functionality
-    fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        // Row for filtering functionality
-        ui.horizontal(|ui| {
-            let max_length_label =
-                ui.label(RichText::new("Max. constraint length: ").size(text_scale));
-
-            let font_id = TextStyle::Body.resolve(ui.style());
-            let font = FontId::new(text_scale, font_id.family.clone());
-
-            // Text input field is set as 2x text_scale, this allows it to hold 2 digits
-            ui.add(
-                egui::TextEdit::singleline(&mut self.state.max_length_input)
-                    .desired_width(2.0 * text_scale)
-                    .font(font),
-            )
-            .labelled_by(max_length_label.id);
-
-            if ui
-                .button(RichText::new("Select").size(text_scale))
-                .clicked()
-            {
-                self.state.filter_by_max_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-            if ui.button(RichText::new("Clear").size(text_scale)).clicked() {
-                self.state.clear_filters();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-        })
-    }
-
-    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            let font_id = TextStyle::Body.resolve(ui.style());
-            let font = FontId::new(text_scale, font_id.family.clone());
-
-            let row_number_label = ui
-                .label(RichText::new("Number of rows per page: ").size(text_scale))
-                .on_hover_text(
-                    RichText::new("Empty and * put all rows on a single page.").italics(),
-                );
-            ui.add(
-                egui::TextEdit::singleline(&mut self.state.page_length_input)
-                    .desired_width(5.0 * text_scale)
-                    .font(font),
-            )
-            .labelled_by(row_number_label.id);
-
-            if ui
-                .button(RichText::new("Select").size(text_scale))
-                .clicked()
-            {
-                if self.state.page_length_input.is_empty()
-                    || self.state.page_length_input.eq_ignore_ascii_case("*")
-                {
-                    self.state.page_length_input = self.state.filtered_length.to_string();
-                }
-
-                self.state.set_page_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-        })
-    }
-
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            if ui.button(RichText::new("<<").size(text_scale)).clicked()
-                && self.state.page_number > 0
-            {
-                self.state.set_page_number(0);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            if ui.button(RichText::new("<").size(text_scale)).clicked()
-                && self.state.page_number > 0
-            {
-                self.state.set_page_number(self.state.page_number - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            ui.add(
-                Label::new(
-                    RichText::new(format!(
-                        "Page {}/{}",
-                        self.state.page_number + 1,
-                        self.state.page_count,
-                    ))
-                    .size(text_scale),
-                )
-                .wrap(false),
-            );
-
-            if ui.button(RichText::new(">").size(text_scale)).clicked()
-                && self.state.page_count > 0
-                && self.state.page_number < self.state.page_count - 1
-            {
-                self.state.set_page_number(self.state.page_number + 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            if ui.button(RichText::new(">>").size(text_scale)).clicked()
-                && self.state.page_count > 0
-                && self.state.page_number < self.state.page_count - 1
-            {
-                self.state.set_page_number(self.state.page_count - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            ui.checkbox(
-                &mut self.state.show_solved_sudoku,
-                RichText::new("Show solved sudoku").size(text_scale),
             );
         })
     }
@@ -366,7 +171,6 @@ impl SATApp {
                                     );
                                 }
                             }
-
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }

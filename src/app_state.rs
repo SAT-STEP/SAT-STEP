@@ -21,6 +21,7 @@ pub struct AppState {
     pub show_trail: bool,
     pub little_number_constraints: Vec<(i32, i32, i32)>,
     pub show_trail_view: bool,
+    pub editor_active: bool,
 }
 
 impl AppState {
@@ -46,6 +47,7 @@ impl AppState {
             show_trail: true,
             little_number_constraints: Vec::new(),
             show_trail_view: false,
+            editor_active: false,
         }
     }
 

@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use egui::{
-    text::LayoutJob, Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea,
+    text::LayoutJob, Color32, Context, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea,
     TextFormat, TextStyle, Ui, Vec2,
 };
 
@@ -10,9 +10,9 @@ use crate::cnf_converter::{create_tuples_from_constraints, identifier_to_tuple};
 use super::SATApp;
 
 impl SATApp {
-    pub fn trail_panel(&mut self, ui: &mut Ui, width: f32) -> Response {
+    pub fn trail_panel(&mut self, ui: &mut Ui, ctx: &Context, width: f32) -> Response {
         let text_scale = (width / 35.0).max(10.0);
-        self.buttons(ui, text_scale);
+        self.buttons(ui, text_scale, ctx);
 
         ui.horizontal_wrapped(|ui| {
             ui.add(Label::new(RichText::new("Show trail").size(text_scale)));
