@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
+use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid};
 
 use super::SATApp;
 
@@ -155,6 +155,12 @@ impl SATApp {
                     self.clues = self.sudoku.clone();
                 }
             }
+            if ui
+                .button(RichText::new("Save Grid").size(text_scale))
+                .clicked()
+                {
+                    string_from_grid(self.sudoku.clone());
+                }
         })
     }
 

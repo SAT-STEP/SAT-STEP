@@ -148,6 +148,25 @@ pub fn clues_from_string(
     Ok(clues)
 }
 
+pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
+    let mut return_string = String::new();
+    for row in 0..=8 {
+        for col in 0..=8 {
+            match grid[row][col] {
+                Some(v) => {
+                    return_string.push_str(&v.to_string());
+                }
+                None => {
+                    return_string.push('.');
+                }
+            }
+        }
+        return_string.push('\n');
+    }
+    return_string.pop();
+    println!("{:?}", return_string);
+    return return_string;
+}
 #[cfg(test)]
 mod tests {
     use super::{clues_from_string, *};

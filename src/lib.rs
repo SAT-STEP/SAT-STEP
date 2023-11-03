@@ -8,12 +8,12 @@ pub mod gui;
 #[cfg(test)]
 mod tests;
 
-use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc};
+use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc, env};
 
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf, string_from_grid};
 use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
@@ -100,6 +100,18 @@ pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericErro
     }
 }
 
+pub fn write_sudoku(sudoku: String) -> Result<(), GenericError> {
+    let mut path = "";
+    match env::current_dir() {
+        Ok(p) => path = &p.display().to_string(), 
+        Err(_) => Err(GenericError {
+            msg: "No current path!".to_string(),
+        }),
+    }
+    fs::write(path, sudoku);
+    Ok(())
+
+}
 /// Parses the max_length filter input for applying the filter.
 pub fn parse_numeric_input(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
@@ -113,3 +125,4 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
         Err(_err) => None,
     }
 }
+
