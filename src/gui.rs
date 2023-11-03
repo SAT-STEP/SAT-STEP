@@ -1,5 +1,4 @@
 mod constraint_list;
-mod controls;
 mod sudoku_grid;
 
 use cadical::Solver;
@@ -111,7 +110,6 @@ impl eframe::App for SATApp {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
                         self.constraint_list(ui, ctx, width);
-                        self.controls(ui, width, ctx);
                     });
                     columns[1].vertical_centered(|ui| {
                         self.sudoku_grid(ui, height, width);
