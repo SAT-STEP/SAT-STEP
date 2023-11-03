@@ -195,7 +195,7 @@ impl SATApp {
                             - ((self.state.page_count as usize - 1) * self.state.page_length)
                             - 1;
                     }
-                    
+
                     let mut scroll_delta = Vec2::ZERO;
 
                     if self.state.clicked_constraint_index.is_some() {
@@ -210,13 +210,15 @@ impl SATApp {
                             self.state.clicked_constraint_index = Some(current_constraint_row);
                             // Check how far down the visible list currently and keep in view
                             if current_constraint_row > last_item - 5 {
-                            // Scroll down with the selection
+                                // Scroll down with the selection
                                 scroll_delta.y -= row_height;
                             }
                         }
 
                         // Actions when a constraint row is clicked with the ArrowUp button
-                        if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
+                        if ctx.input(|i| i.key_pressed(Key::ArrowUp))
+                            && (current_constraint_row > 0)
+                        {
                             current_constraint_row -= 1;
                             self.state.clicked_constraint_index = Some(current_constraint_row);
                             // Scroll up with the selection

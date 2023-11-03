@@ -111,7 +111,7 @@ impl eframe::App for SATApp {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
                         self.controls(ui, width, ctx);
-                        self.constraint_list(ui, width);
+                        self.constraint_list(ui, ctx, width);
                     });
                     columns[1].vertical_centered(|ui| {
                         self.sudoku_grid(ui, height, width);

@@ -247,8 +247,8 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
 
-            if (ui.button(RichText::new(">>").size(text_scale)).clicked()
-                || ctx.input(|i| i.modifiers.shift && i.key_pressed(Key::ArrowRight)))
+            if (ui.button(RichText::new("<").size(text_scale)).clicked()
+                || ctx.input(|i| i.key_pressed(Key::ArrowLeft)))
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
@@ -268,8 +268,8 @@ impl SATApp {
                 .wrap(false),
             );
 
-            if (ui.button(RichText::new("<").size(text_scale)).clicked()
-                || ctx.input(|i| i.key_pressed(Key::ArrowLeft)))
+            if (ui.button(RichText::new(">").size(text_scale)).clicked()
+                || ctx.input(|i| i.key_pressed(Key::ArrowRight)))
                 && self.state.page_count > 0
                 && self.state.page_number < self.state.page_count - 1
             {
@@ -278,8 +278,8 @@ impl SATApp {
                     create_tuples_from_constraints(self.state.get_filtered());
             }
 
-            if (ui.button(RichText::new(">").size(text_scale)).clicked()
-                || ctx.input(|i| i.key_pressed(Key::ArrowRight)))
+            if (ui.button(RichText::new(">>").size(text_scale)).clicked()
+                || ctx.input(|i| i.modifiers.shift && i.key_pressed(Key::ArrowRight)))
                 && self.state.page_count > 0
                 && self.state.page_number < self.state.page_count - 1
             {
@@ -300,13 +300,13 @@ impl SATApp {
         ui: &mut Ui,
         text_scale: f32,
         ctx: &egui::Context,
-        ) -> egui::InnerResponse<()> {
+    ) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
             if ui.button(RichText::new("Quit").size(text_scale)).clicked()
                 || ctx.input(|i| i.key_pressed(Key::Q))
-                {
-                    self.state.quit();
-                }
+            {
+                self.state.quit();
+            }
         })
     }
 
