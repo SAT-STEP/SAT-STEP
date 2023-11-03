@@ -4,9 +4,9 @@ use egui::{
     Color32, FontId,
 };
 
-use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable, error::GenericError};
+use crate::{cadical_wrapper::CadicalCallbackWrapper, error::GenericError};
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct DecimalVar {
     pub row: i32,
     pub col: i32,
@@ -14,14 +14,10 @@ pub struct DecimalVar {
 }
 
 impl DecimalVar {
-    fn new(identifier: i32) -> DecimalVar {
+    pub fn new(identifier: i32) -> DecimalVar {
         let (row, col, val) = identifier_to_tuple(identifier);
         DecimalVar { row, col, val }
     }
-}
-
-impl CnfVariable for DecimalVar {
-
 
     fn human_readable(
         &self,

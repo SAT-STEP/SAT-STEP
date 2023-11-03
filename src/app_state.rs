@@ -1,4 +1,9 @@
-use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList, cnf_var::CnfVariable};
+use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList, cnf_var::CnfVariableType, cnf_converter::DecimalVar, binary_cnf::{BitVar, EqVar}};
+
+pub enum EncodingType {
+    Decimal,
+    Binary,
+}
 
 pub struct AppState {
     filter: ListFilter,
@@ -12,13 +17,15 @@ pub struct AppState {
     pub page_length_input: String,
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
-    pub little_number_constraints: Vec<Box<dyn CnfVariable>>,
+    pub little_number_constraints: Vec<CnfVariableType>,
+    pub encoding: EncodingType,
 }
 
 impl AppState {
     pub fn new(constraints: ConstraintList) -> Self {
         let mut filter = ListFilter::new(constraints.clone());
-        filter.reinit();
+        let mut encoding = EncodingType::Decimal;
+        filter.reinit(encoding);
         Self {
             filter,
             max_length: None,
@@ -32,10 +39,11 @@ impl AppState {
             filtered_length: 0,
             show_solved_sudoku: true,
             little_number_constraints: Vec::new(),
+            encoding,
         }
     }
 
-    pub fn get_filtered(&mut self) -> Vec<Vec<i32>> {
+    pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariableType>> {
         let (list, length) = self
             .filter
             .get_filtered(self.page_number as usize, self.page_length);
@@ -44,12 +52,30 @@ impl AppState {
 
         self.update_little_number_constraints();
 
-        list
+        let enum_constraints = list.iter().map(|&constraint| {
+            match self.encoding {
+                EncodingType::Decimal => {
+                    constraint.iter().map(|&x| CnfVariableType::Decimal(DecimalVar::new(x))).collect()
+                },
+                EncodingType::Binary => {
+                    constraint.iter().map(|&x|{
+                        if x > 9*9*4 {
+                            CnfVariableType::Equality(EqVar::new(x))
+                        }
+                        else {
+                            CnfVariableType::Bit(BitVar::new(x))
+                        }
+                    }).collect()
+                },
+            }
+        }).collect();
+
+        enum_constraints
     }
 
     pub fn reinit(&mut self) {
         self.clear_filters();
-        self.filter.reinit();
+        self.filter.reinit(self.encoding);
 
         self.page_number = 0;
         self.page_count = 0;
@@ -125,9 +151,24 @@ impl AppState {
     }
 
     pub fn update_little_number_constraints(&mut self) {
-        self.little_number_constraints = self
+        let constraints = self
             .filter
             .get_little_number_constraints(self.page_number as usize, self.page_length);
+        self.little_number_constraints = match self.encoding {
+            EncodingType::Decimal => {
+                constraints.iter().map(|&x| CnfVariableType::Decimal(DecimalVar::new(x))).collect()
+            },
+            EncodingType::Binary => {
+                constraints.iter().map(|&x|{
+                    if x > 9*9*4 {
+                        CnfVariableType::Equality(EqVar::new(x))
+                    }
+                    else {
+                        CnfVariableType::Bit(BitVar::new(x))
+                    }
+                }).collect()
+            },
+        }
     }
 }
 

@@ -1,11 +1,11 @@
-use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable};
+use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BitVar {
     pub row: i32,
     pub col: i32,
@@ -13,7 +13,7 @@ pub struct BitVar {
     pub bit_value: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EqVar {
     pub row: i32,
     pub col: i32,
@@ -24,7 +24,7 @@ pub struct EqVar {
 }
 
 impl BitVar {
-    fn new(identifier: i32) -> BitVar {
+    pub fn new(identifier: i32) -> BitVar {
         let (row, col, bit_index, bit_value) = identifier_to_tuple(identifier);
         BitVar {
             row,
@@ -33,10 +33,6 @@ impl BitVar {
             bit_value,
         }
     }
-}
-
-impl CnfVariable for BitVar {
-
 
     fn human_readable(
         &self,
@@ -81,7 +77,7 @@ impl CnfVariable for BitVar {
 }
 
 impl EqVar {
-    fn new(identifier: i32) -> EqVar {
+    pub fn new(identifier: i32) -> EqVar {
         let (row, col, row2, col2, bit_index, equal) = eq_identifier_to_tuple(identifier);
         EqVar {
             row,
@@ -92,10 +88,6 @@ impl EqVar {
             equal,
         }
     }
-}
-
-impl CnfVariable for EqVar {
-
 
     fn human_readable(
         &self,

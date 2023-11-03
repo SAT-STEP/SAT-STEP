@@ -2,7 +2,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-use crate::{cnf_converter::create_tuples_from_constraints, cnf_var::CnfVariables};
+use crate::{cnf_converter::create_tuples_from_constraints, cnf_var::CnfVariableType};
 
 use super::SATApp;
 
@@ -35,7 +35,7 @@ impl SATApp {
             draw_constraints: false,
         };
 
-        let mut constraints: Vec<CnfVariables> = Vec::new();
+        let mut constraints: Vec<CnfVariableType> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
             if let Some(num) = self.state.clicked_constraint_index {
@@ -112,7 +112,7 @@ impl SATApp {
         cell_size: f32,
         cell_state: CellState, //Passed as clone, should not be increased here
         val: Option<i32>,
-        constraints: &Vec<CnfVariables>,
+        constraints: &Vec<CnfVariableType>,
         mut c_index: usize,
     ) -> usize {
         if cell_state.row_num == 0 {
@@ -187,7 +187,7 @@ fn draw_little_numbers(
     top_left: Pos2,
     cell_size: f32,
     mut c_index: usize,
-    constraints: &Vec<CnfVariables>,
+    constraints: &Vec<CnfVariableType>,
     row_num: usize,
     col_num: usize,
 ) -> (bool, usize) {
