@@ -1,7 +1,5 @@
 use cadical::Solver;
-use egui::{
-    FontId, Key, Label, Response, RichText, TextStyle, Ui,
-};
+use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
@@ -27,7 +25,7 @@ impl SATApp {
                 self.page_length_input(ui, text_scale);
                 ui.end_row();
             });
-            self.page_buttons(ui, text_scale).response
+        self.page_buttons(ui, text_scale).response
     }
 
     fn buttons(

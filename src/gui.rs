@@ -1,6 +1,6 @@
 mod constraint_list;
-mod sudoku_grid;
 mod controls;
+mod sudoku_grid;
 
 use cadical::Solver;
 use eframe::egui;
