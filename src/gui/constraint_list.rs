@@ -198,30 +198,32 @@ impl SATApp {
                     
                     let mut scroll_delta = Vec2::ZERO;
 
-                    // Actions when a constraint row is clicked with the ArrowDown button
-                    if ctx.input(|i| i.key_pressed(Key::ArrowDown))
-                        && current_constraint_row < self.state.filtered_length - 1
-                        && current_constraint_row % self.state.page_length
-                            < self.state.page_length - 1
-                        && current_constraint_row < current_page_length
-                    {
-                        current_constraint_row += 1;
-                        self.state.clicked_constraint_index = Some(current_constraint_row);
-                        // Check how far down the visible list currently and keep in view
-                        if current_constraint_row > last_item - 5 {
-                        // Scroll down with the selection
-                            scroll_delta.y -= row_height;
+                    if self.state.clicked_constraint_index.is_some() {
+                        // Actions when a constraint row is clicked with the ArrowDown button
+                        if ctx.input(|i| i.key_pressed(Key::ArrowDown))
+                            && current_constraint_row < self.state.filtered_length - 1
+                            && current_constraint_row % self.state.page_length
+                                < self.state.page_length - 1
+                            && current_constraint_row < current_page_length
+                        {
+                            current_constraint_row += 1;
+                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            // Check how far down the visible list currently and keep in view
+                            if current_constraint_row > last_item - 5 {
+                            // Scroll down with the selection
+                                scroll_delta.y -= row_height;
+                            }
                         }
-                    }
 
-                    // Actions when a constraint row is clicked with the ArrowUp button
-                    if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
-                        current_constraint_row -= 1;
-                        self.state.clicked_constraint_index = Some(current_constraint_row);
-                        // Scroll up with the selection
-                        scroll_delta.y += row_height;
+                        // Actions when a constraint row is clicked with the ArrowUp button
+                        if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_constraint_row > 0) {
+                            current_constraint_row -= 1;
+                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            // Scroll up with the selection
+                            scroll_delta.y += row_height;
+                        }
+                        ui.scroll_with_delta(scroll_delta);
                     }
-                    ui.scroll_with_delta(scroll_delta);
                 });
         })
     }
