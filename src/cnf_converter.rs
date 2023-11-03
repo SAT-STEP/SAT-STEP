@@ -163,8 +163,6 @@ pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
         }
         return_string.push('\n');
     }
-    return_string.pop();
-    println!("{:?}", return_string);
     return return_string;
 }
 #[cfg(test)]
@@ -230,5 +228,51 @@ mod tests {
         assert_eq!((1, 2, 1), tuples[1][0]);
         assert_eq!((1, 2, 2), tuples[1][1]);
         assert_eq!((1, 2, 3), tuples[1][2]);
+    }
+
+    #[test]
+    fn test_string_from_grid() {
+        let mut test_vec = vec![vec![<Option<i32>>::None; 9];9];
+        test_vec[0][0] = Some(1);
+        test_vec[1][1] = Some(2);
+        test_vec[2][2] = Some(3);
+        test_vec[3][3] = Some(4);
+        let output_string = string_from_grid(test_vec);
+
+        let test_string =  "1........\n\
+                 .2.......\n\
+                 ..3......\n\
+                 ...4.....\n\
+                 .........\n\
+                 .........\n\
+                 .........\n\
+                 .........\n\
+                 .........\n";
+
+        assert_eq!(output_string, test_string)
+
+    }
+
+    #[test]
+    fn test_string_from_grid_second() {
+        let mut test_vec = vec![vec![<Option<i32>>::None; 9];9];
+        test_vec[0][5] = Some(1);
+        test_vec[2][3] = Some(2);
+        test_vec[4][7] = Some(3);
+        test_vec[7][5] = Some(4);
+        let output_string = string_from_grid(test_vec);
+
+        let test_string =  ".....1...\n\
+                 .........\n\
+                 ...2.....\n\
+                 .........\n\
+                 .......3.\n\
+                 .........\n\
+                 .........\n\
+                 .....4...\n\
+                 .........\n";
+
+        assert_eq!(output_string, test_string)
+
     }
 }
