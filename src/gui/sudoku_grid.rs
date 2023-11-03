@@ -7,12 +7,19 @@ use crate::cnf_converter::create_tuples_from_constraints;
 use super::SATApp;
 
 #[derive(Copy, Clone)]
+
 struct CellState {
     top_left: Pos2,
     row_num: usize,
     col_num: usize,
     bottom_right: Pos2,
     draw_constraints: bool,
+}
+
+struct Cell<'a> {
+    val: Option<i32>,
+    c_index: usize,
+    constraints: &'a Vec<(i32, i32, i32)>,
 }
 
 impl SATApp {
@@ -26,6 +33,7 @@ impl SATApp {
         // using these centers the sudoku in the middle of its column
         let top_left_y = (height - minimum_dimension) / 2.0 + cell_size;
         let top_left_x = width + (width - minimum_dimension) / 2.0;
+        let grid_top_left = Pos2::from((top_left_x, top_left_y));
 
         let mut cell_state = CellState {
             top_left: Pos2::new(top_left_x, top_left_y),
@@ -38,6 +46,14 @@ impl SATApp {
         let mut constraints: Vec<(i32, i32, i32)> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
+            recording_label(
+                ui,
+                grid_top_left.x,
+                grid_top_left.y,
+                cell_size,
+                self.state.editor_active,
+            );
+
             if let Some(num) = self.state.clicked_constraint_index {
                 constraints = self.rendered_constraints[num].clone();
                 cell_state.draw_constraints = true;
@@ -70,14 +86,13 @@ impl SATApp {
                 // column
                 for (col_num, val) in row.iter().enumerate().take(9) {
                     cell_state.col_num = col_num;
-                    c_index = self.draw_sudoku_cell(
-                        ui,
-                        cell_size,
-                        cell_state,
-                        *val,
-                        &constraints,
+                    let mut cell = Cell {
+                        val: *val,
                         c_index,
-                    );
+                        constraints: &constraints,
+                    };
+
+                    c_index = self.draw_sudoku_cell(ui, cell_size, cell_state, &mut cell);
 
                     // new column
                     if col_num % 3 == 2 && col_num != 8 {
@@ -111,9 +126,7 @@ impl SATApp {
         ui: &mut Ui,
         cell_size: f32,
         cell_state: CellState, //Passed as clone, should not be increased here
-        val: Option<i32>,
-        constraints: &Vec<(i32, i32, i32)>,
-        mut c_index: usize,
+        cell: &mut Cell,
     ) -> usize {
         if cell_state.row_num == 0 {
             draw_col_number(ui, cell_state.top_left, cell_size, cell_state.col_num);
@@ -148,12 +161,11 @@ impl SATApp {
         let mut drew_constraint = false;
         if cell_state.draw_constraints {
             // draw little numbers
-            (drew_constraint, c_index) = draw_little_numbers(
+            (drew_constraint, cell.c_index) = draw_little_numbers(
                 ui,
                 cell_state.top_left,
                 cell_size,
-                c_index,
-                constraints,
+                cell,
                 cell_state.row_num,
                 cell_state.col_num,
             );
@@ -162,10 +174,10 @@ impl SATApp {
         if !self.state.show_solved_sudoku
             && self.clues[cell_state.row_num][cell_state.col_num].is_none()
         {
-            return c_index;
+            return cell.c_index;
         }
 
-        if let Some(num) = val {
+        if let Some(num) = cell.val {
             // don't draw big number if drew little numbers
             if !drew_constraint {
                 let center = cell_state.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
@@ -178,7 +190,7 @@ impl SATApp {
                 );
             }
         }
-        c_index
+        cell.c_index
     }
 }
 
@@ -186,8 +198,7 @@ fn draw_little_numbers(
     ui: &mut Ui,
     top_left: Pos2,
     cell_size: f32,
-    mut c_index: usize,
-    constraints: &Vec<(i32, i32, i32)>,
+    cell: &mut Cell,
     row_num: usize,
     col_num: usize,
 ) -> (bool, usize) {
@@ -196,9 +207,9 @@ fn draw_little_numbers(
     let mut little_num_pos = 0;
 
     // while on little numbers reference this row and block
-    while c_index < constraints.len()
-        && constraints[c_index].0 == (row_num as i32 + 1)
-        && constraints[c_index].1 == (col_num as i32 + 1)
+    while cell.c_index < cell.constraints.len()
+        && cell.constraints[cell.c_index].0 == (row_num as i32 + 1)
+        && cell.constraints[cell.c_index].1 == (col_num as i32 + 1)
     {
         // new row for little numbers
         if little_num_pos % 3 == 0 && little_num_pos != 0 {
@@ -208,26 +219,30 @@ fn draw_little_numbers(
 
         // if value of the picked cell is negative, it will be shown in red,
         // if not negative, in blue
-        let c_value = constraints[c_index].2;
+        let c_value = cell.constraints[cell.c_index].2;
+        let mut c_value_string = c_value.to_string();
         let mut c_value_color = Color32::BLUE;
         if c_value < 0 {
             c_value_color = Color32::RED;
+        } else {
+            // Adding a whitespace makes the positive values also be 2 chars long
+            c_value_string = format!(" {}", c_value);
         }
 
         ui.painter().text(
             little_top_left,
             egui::Align2::LEFT_TOP,
-            constraints[c_index].2.to_string(),
-            egui::FontId::new(cell_size * 0.3, egui::FontFamily::Monospace),
+            c_value_string,
+            egui::FontId::new(cell_size * 0.28, egui::FontFamily::Monospace),
             c_value_color,
         );
         little_top_left.x += cell_size / 3.0;
-        c_index += 1;
+        cell.c_index += 1;
         little_num_pos += 1;
 
         drew_constraint = true;
     }
-    (drew_constraint, c_index)
+    (drew_constraint, cell.c_index)
 }
 
 fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, col_num: usize) {
@@ -252,4 +267,16 @@ fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, row_num: usize) 
         egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
         Color32::DARK_GRAY,
     );
+}
+
+fn recording_label(ui: &mut Ui, width: f32, height: f32, cell_size: f32, recording: bool) {
+    if recording {
+        ui.painter().text(
+            Pos2::from((width + cell_size, height - cell_size * 0.9)),
+            egui::Align2::LEFT_CENTER,
+            "input mode on",
+            egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
+            Color32::GRAY,
+        );
+    }
 }

@@ -1,11 +1,8 @@
-use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
-
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
 
 use super::SATApp;
 
@@ -96,6 +93,7 @@ impl SATApp {
             }
         })
     }
+
 
     fn learned_constraints_labels(
         &mut self,
@@ -410,7 +408,6 @@ impl SATApp {
                                     );
                                 }
                             }
-
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }
