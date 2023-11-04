@@ -1,4 +1,64 @@
-use crate::error::GenericError;
+use cadical::Solver;
+use egui::{
+    text::{LayoutJob, TextFormat},
+    Color32, FontId,
+};
+
+use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable, error::GenericError};
+
+pub struct DecimalVar {
+    pub row: i32,
+    pub col: i32,
+    pub val: i32,
+}
+
+impl CnfVariable for DecimalVar {
+    fn new(identifier: i32) -> DecimalVar {
+        let (row, col, val) = identifier_to_tuple(identifier);
+        DecimalVar { row, col, val }
+    }
+
+    fn human_readable(
+        &self,
+        text_job: &mut LayoutJob,
+        large_font: FontId,
+        small_font: FontId,
+        text_color: Color32,
+    ) {
+        let (lead_char, color) = if self.val > 0 {
+            ("", text_color)
+        } else {
+            ("~", Color32::RED)
+        };
+
+        text_job.append(
+            &format!("{}{}", lead_char, self.val.abs()),
+            0.0,
+            TextFormat {
+                font_id: large_font.clone(),
+                color,
+                ..Default::default()
+            },
+        );
+        text_job.append(
+            &format!("({},{})", self.row, self.col),
+            0.0,
+            TextFormat {
+                font_id: small_font.clone(),
+                color,
+                ..Default::default()
+            },
+        );
+    }
+
+    fn to_cnf(&self) -> i32 {
+        if self.val > 0 {
+            cnf_identifier(self.row, self.col, self.val)
+        } else {
+            -cnf_identifier(self.row, self.col, self.val.abs())
+        }
+    }
+}
 
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
@@ -165,6 +225,16 @@ pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
     }
     return_string
 }
+
+pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
+    for val in 1..=9 {
+        if solver.value(cnf_identifier(row, col, val)).unwrap() {
+            return val;
+        }
+    }
+    -1
+}
+
 #[cfg(test)]
 mod tests {
     use super::{clues_from_string, *};

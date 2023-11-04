@@ -1,19 +1,14 @@
-use cadical::Solver;
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
-use crate::{
-    cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid, write_sudoku,
-};
-
 use super::SATApp;
 
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
+    pub fn constraint_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
 
@@ -22,155 +17,11 @@ impl SATApp {
             .striped(true)
             .spacing([0.0, text_scale * 0.5])
             .show(ui, |ui| {
-                self.buttons(ui, text_scale, ctx);
-                ui.end_row();
-
                 self.learned_constraints_labels(ui, text_scale);
                 ui.end_row();
-
-                self.filters(ui, text_scale);
-                ui.end_row();
-
-                self.page_length_input(ui, text_scale);
-                ui.end_row();
-
-                self.page_buttons(ui, text_scale);
-                ui.end_row();
             });
-        self.list_of_constraints(ui, text_scale).response
-    }
-
-    fn buttons(
-        &mut self,
-        ui: &mut Ui,
-        text_scale: f32,
-        ctx: &egui::Context,
-    ) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            if ui
-                .button(RichText::new("Open file...").size(text_scale))
-                .clicked()
-            {
-                self.state.editor_active = false;
-                if let Some(file_path) = rfd::FileDialog::new()
-                    .add_filter("text", &["txt"])
-                    .pick_file()
-                {
-                    print!("{}", file_path.display());
-                    let sudoku_result = crate::get_sudoku(file_path.display().to_string());
-                    match sudoku_result {
-                        Ok(sudoku_vec) => {
-                            self.sudoku = sudoku_vec;
-                            self.clues = self.sudoku.clone();
-                            self.constraints.clear();
-                            self.rendered_constraints = Vec::new();
-                            self.state.reinit();
-                            self.solver = Solver::with_config("plain").unwrap();
-                            self.solver
-                                .set_callbacks(Some(self.callback_wrapper.clone()));
-                        }
-                        Err(e) => {
-                            self.current_error = Some(e);
-                        }
-                    }
-                }
-            }
-
-            if ui
-                .button(RichText::new("Solve sudoku").size(text_scale))
-                .clicked()
-            {
-                self.state.editor_active = false;
-
-                let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
-                match solve_result {
-                    Ok(solved) => {
-                        self.sudoku = solved;
-                        // Reinitialize filtering for a new sudoku
-                        self.state.reinit();
-                        self.rendered_constraints =
-                            create_tuples_from_constraints(self.state.get_filtered());
-                    }
-                    Err(err) => {
-                        println!("{}", err);
-                    }
-                }
-            }
-
-            if ui
-                .button(RichText::new("Create Sudoku").size(text_scale))
-                .clicked()
-            {
-                self.state.editor_active = true;
-                self.constraints.clear();
-                self.state.reinit();
-                let empty = ".........
-                .........
-                .........
-                .........
-                .........
-                .........
-                .........
-                .........
-                ........."
-                    .to_string();
-                let sudoku = crate::clues_from_string(empty, ".");
-                match sudoku {
-                    Ok(sudoku_vec) => {
-                        self.sudoku = sudoku_vec;
-                        self.clues = self.sudoku.clone();
-                    }
-                    Err(e) => {
-                        self.current_error = Some(e);
-                    }
-                }
-            }
-
-            if self.state.editor_active {
-                let keys = ctx.input(|i| i.events.clone());
-                for key in &keys {
-                    match key {
-                        egui::Event::Text(t) if t.len() == 1 => {
-                            if let Ok(n) = t.parse::<i32>() {
-                                if n == 0 {
-                                    break;
-                                }
-                                if self.state.selected_cell.is_some() {
-                                    if let Some(cell_state) = self.state.selected_cell {
-                                        self.sudoku[cell_state.0 as usize - 1]
-                                            [cell_state.1 as usize - 1] = Some(n);
-                                    }
-                                }
-                            }
-                        }
-                        egui::Event::Key {
-                            key, pressed: true, ..
-                        } => {
-                            if key == &Key::Backspace {
-                                if let Some(cell_state) = self.state.selected_cell {
-                                    self.sudoku[cell_state.0 as usize - 1]
-                                        [cell_state.1 as usize - 1] = None;
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                    self.clues = self.sudoku.clone();
-                }
-            }
-            if ui
-                .button(RichText::new("Save Grid").size(text_scale))
-                .clicked()
-            {
-                if let Some(save_path) = rfd::FileDialog::new().save_file() {
-                    let sudoku_string = string_from_grid(self.sudoku.clone());
-                    let save_result = write_sudoku(sudoku_string, &save_path);
-                    if let Err(e) = save_result {
-                        self.current_error = Some(e);
-                    }
-                }
-            }
-        })
+    
+        self.list_of_constraints(ui, text_scale, ctx).response
     }
 
     fn learned_constraints_labels(
@@ -199,130 +50,13 @@ impl SATApp {
             );
         })
     }
-    // Row for filtering functionality
-    fn filters(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        // Row for filtering functionality
-        ui.horizontal(|ui| {
-            let max_length_label =
-                ui.label(RichText::new("Max. constraint length: ").size(text_scale));
 
-            let font_id = TextStyle::Body.resolve(ui.style());
-            let font = FontId::new(text_scale, font_id.family.clone());
-
-            // Text input field is set as 2x text_scale, this allows it to hold 2 digits
-            ui.add(
-                egui::TextEdit::singleline(&mut self.state.max_length_input)
-                    .desired_width(2.0 * text_scale)
-                    .font(font),
-            )
-            .labelled_by(max_length_label.id);
-
-            if ui
-                .button(RichText::new("Select").size(text_scale))
-                .clicked()
-            {
-                self.state.filter_by_max_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-            if ui.button(RichText::new("Clear").size(text_scale)).clicked() {
-                self.state.clear_filters();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-        })
-    }
-
-    fn page_length_input(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            let font_id = TextStyle::Body.resolve(ui.style());
-            let font = FontId::new(text_scale, font_id.family.clone());
-
-            let row_number_label = ui
-                .label(RichText::new("Number of rows per page: ").size(text_scale))
-                .on_hover_text(
-                    RichText::new("Empty and * put all rows on a single page.").italics(),
-                );
-            ui.add(
-                egui::TextEdit::singleline(&mut self.state.page_length_input)
-                    .desired_width(5.0 * text_scale)
-                    .font(font),
-            )
-            .labelled_by(row_number_label.id);
-
-            if ui
-                .button(RichText::new("Select").size(text_scale))
-                .clicked()
-            {
-                if self.state.page_length_input.is_empty()
-                    || self.state.page_length_input.eq_ignore_ascii_case("*")
-                {
-                    self.state.page_length_input = self.state.filtered_length.to_string();
-                }
-
-                self.state.set_page_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-        })
-    }
-
-    fn page_buttons(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            if ui.button(RichText::new("<<").size(text_scale)).clicked()
-                && self.state.page_number > 0
-            {
-                self.state.set_page_number(0);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            if ui.button(RichText::new("<").size(text_scale)).clicked()
-                && self.state.page_number > 0
-            {
-                self.state.set_page_number(self.state.page_number - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            ui.add(
-                Label::new(
-                    RichText::new(format!(
-                        "Page {}/{}",
-                        self.state.page_number + 1,
-                        self.state.page_count,
-                    ))
-                    .size(text_scale),
-                )
-                .wrap(false),
-            );
-
-            if ui.button(RichText::new(">").size(text_scale)).clicked()
-                && self.state.page_count > 0
-                && self.state.page_number < self.state.page_count - 1
-            {
-                self.state.set_page_number(self.state.page_number + 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            if ui.button(RichText::new(">>").size(text_scale)).clicked()
-                && self.state.page_count > 0
-                && self.state.page_number < self.state.page_count - 1
-            {
-                self.state.set_page_number(self.state.page_count - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
-            }
-
-            ui.checkbox(
-                &mut self.state.show_solved_sudoku,
-                RichText::new("Show solved sudoku").size(text_scale),
-            );
-        })
-    }
-
-    fn list_of_constraints(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn list_of_constraints(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+    ) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
             ScrollArea::both()
                 .auto_shrink([false; 2])
@@ -445,6 +179,53 @@ impl SATApp {
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }
+                    }
+
+                    // Index of the row that has been clicked on the particular page, between 0 and page length minus 1
+                    let mut current_constraint_row: usize =
+                        self.state.clicked_constraint_index.unwrap_or(0);
+
+                    // Number of the rows on the current page, which might be less on the last page than on other pages
+                    let mut current_page_length: usize = self.state.page_length;
+
+                    // Check number of the rows on the last page
+                    if self.state.page_number + 1 == self.state.page_count
+                        && self.state.filtered_length % self.state.page_length != 0
+                    {
+                        current_page_length = self.state.filtered_length
+                            - ((self.state.page_count as usize - 1) * self.state.page_length)
+                            - 1;
+                    }
+
+                    let mut scroll_delta = Vec2::ZERO;
+
+                    if self.state.clicked_constraint_index.is_some() {
+                        // Actions when a constraint row is clicked with the ArrowDown button
+                        if ctx.input(|i| i.key_pressed(Key::ArrowDown))
+                            && current_constraint_row < self.state.filtered_length - 1
+                            && current_constraint_row % self.state.page_length
+                                < self.state.page_length - 1
+                            && current_constraint_row < current_page_length
+                        {
+                            current_constraint_row += 1;
+                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            // Check how far down the visible list currently and keep in view
+                            if current_constraint_row > last_item - 5 {
+                                // Scroll down with the selection
+                                scroll_delta.y -= row_height;
+                            }
+                        }
+
+                        // Actions when a constraint row is clicked with the ArrowUp button
+                        if ctx.input(|i| i.key_pressed(Key::ArrowUp))
+                            && (current_constraint_row > 0)
+                        {
+                            current_constraint_row -= 1;
+                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            // Scroll up with the selection
+                            scroll_delta.y += row_height;
+                        }
+                        ui.scroll_with_delta(scroll_delta);
                     }
                 });
         })
