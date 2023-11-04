@@ -8,12 +8,12 @@ pub mod gui;
 #[cfg(test)]
 mod tests;
 
-use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc, path::Path};
+use std::{cell::RefCell, fs, num::ParseIntError, path::Path, rc::Rc};
 
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf, string_from_grid};
+use cnf_converter::{clues_from_string, cnf_identifier, string_from_grid, sudoku_to_cnf};
 use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
@@ -106,7 +106,7 @@ pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
         Err(_) => Err(GenericError {
             msg: "Saving the file failed".to_string(),
         }),
-        _ => Ok(())
+        _ => Ok(()),
     }
 }
 /// Parses the max_length filter input for applying the filter.
@@ -122,4 +122,3 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
         Err(_err) => None,
     }
 }
-

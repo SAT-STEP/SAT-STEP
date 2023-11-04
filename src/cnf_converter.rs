@@ -150,9 +150,9 @@ pub fn clues_from_string(
 
 pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
     let mut return_string = String::new();
-    for row in 0..=8 {
-        for col in 0..=8 {
-            match grid[row][col] {
+    for row in grid.iter().take(9) {
+        for col in row.iter().take(9) {
+            match col {
                 Some(v) => {
                     return_string.push_str(&v.to_string());
                 }
@@ -163,7 +163,7 @@ pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
         }
         return_string.push('\n');
     }
-    return return_string;
+    return_string
 }
 #[cfg(test)]
 mod tests {
@@ -232,14 +232,14 @@ mod tests {
 
     #[test]
     fn test_string_from_grid() {
-        let mut test_vec = vec![vec![<Option<i32>>::None; 9];9];
+        let mut test_vec = vec![vec![<Option<i32>>::None; 9]; 9];
         test_vec[0][0] = Some(1);
         test_vec[1][1] = Some(2);
         test_vec[2][2] = Some(3);
         test_vec[3][3] = Some(4);
         let output_string = string_from_grid(test_vec);
 
-        let test_string =  "1........\n\
+        let test_string = "1........\n\
                  .2.......\n\
                  ..3......\n\
                  ...4.....\n\
@@ -250,19 +250,18 @@ mod tests {
                  .........\n";
 
         assert_eq!(output_string, test_string)
-
     }
 
     #[test]
     fn test_string_from_grid_second() {
-        let mut test_vec = vec![vec![<Option<i32>>::None; 9];9];
+        let mut test_vec = vec![vec![<Option<i32>>::None; 9]; 9];
         test_vec[0][5] = Some(1);
         test_vec[2][3] = Some(2);
         test_vec[4][7] = Some(3);
         test_vec[7][5] = Some(4);
         let output_string = string_from_grid(test_vec);
 
-        let test_string =  ".....1...\n\
+        let test_string = ".....1...\n\
                  .........\n\
                  ...2.....\n\
                  .........\n\
@@ -273,6 +272,5 @@ mod tests {
                  .........\n";
 
         assert_eq!(output_string, test_string)
-
     }
 }

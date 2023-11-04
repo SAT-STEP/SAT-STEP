@@ -5,7 +5,9 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid, write_sudoku};
+use crate::{
+    cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid, write_sudoku,
+};
 
 use super::SATApp;
 
@@ -159,20 +161,15 @@ impl SATApp {
             if ui
                 .button(RichText::new("Save Grid").size(text_scale))
                 .clicked()
-                {
-                    if let Some(save_path) = rfd::FileDialog::new()
-                        .save_file()
-                    {
-                        let sudoku_string = string_from_grid(self.sudoku.clone());
-                        let save_result = write_sudoku(sudoku_string, &save_path);
-                        match save_result {
-                            Err(e) => {
-                                self.current_error = Some(e);
-                            }
-                            _ => {}
-                        }
+            {
+                if let Some(save_path) = rfd::FileDialog::new().save_file() {
+                    let sudoku_string = string_from_grid(self.sudoku.clone());
+                    let save_result = write_sudoku(sudoku_string, &save_path);
+                    if let Err(e) = save_result {
+                        self.current_error = Some(e);
                     }
                 }
+            }
         })
     }
 
