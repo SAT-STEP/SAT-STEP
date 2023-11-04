@@ -1,8 +1,11 @@
 use cadical::Solver;
 use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid, write_sudoku, GenericError};
 use super::SATApp;
+use crate::{
+    cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid, write_sudoku,
+    GenericError,
+};
 
 impl SATApp {
     /// Constraint list GUI element

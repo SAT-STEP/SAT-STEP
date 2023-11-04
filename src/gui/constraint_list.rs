@@ -20,7 +20,7 @@ impl SATApp {
                 self.learned_constraints_labels(ui, text_scale);
                 ui.end_row();
             });
-    
+
         self.list_of_constraints(ui, text_scale, ctx).response
     }
 
