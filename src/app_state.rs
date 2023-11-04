@@ -131,6 +131,10 @@ impl AppState {
             .filter
             .get_little_number_constraints(self.page_number as usize, self.page_length);
     }
+
+    pub fn quit(&mut self) {
+        std::process::exit(0);
+    }
 }
 
 #[cfg(test)]
