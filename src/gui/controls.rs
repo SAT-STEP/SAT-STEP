@@ -41,7 +41,7 @@ impl SATApp {
     ) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui
-                .button(RichText::new("Open file...").size(text_scale))
+                .button(RichText::new("Open - O").size(text_scale))
                 .clicked()
                 || ctx.input(|i| i.key_pressed(Key::O))
             {
@@ -70,9 +70,9 @@ impl SATApp {
             }
 
             if ui
-                .button(RichText::new("Solve sudoku").size(text_scale))
+                .button(RichText::new("Process - P").size(text_scale))
                 .clicked()
-                || ctx.input(|i| i.key_pressed(Key::S))
+                || ctx.input(|i| i.key_pressed(Key::P))
             {
                 self.state.editor_active = false;
 
@@ -92,8 +92,9 @@ impl SATApp {
             }
 
             if ui
-                .button(RichText::new("Create Sudoku").size(text_scale))
+                .button(RichText::new("New - N").size(text_scale))
                 .clicked()
+                || ctx.input(|i| i.key_pressed(Key::N))
             {
                 self.state.editor_active = true;
 
@@ -149,8 +150,9 @@ impl SATApp {
                 }
             }
             if ui
-                .button(RichText::new("Save Grid").size(text_scale))
+                .button(RichText::new("Save - S").size(text_scale))
                 .clicked()
+                || ctx.input(|i| i.key_pressed(Key::S))
             {
                 if let Some(save_path) = rfd::FileDialog::new().save_file() {
                     let sudoku_string = string_from_grid(self.sudoku.clone());
@@ -195,7 +197,9 @@ impl SATApp {
                 self.rendered_constraints =
                     create_tuples_from_constraints(self.state.get_filtered());
             }
-            if ui.button(RichText::new("Clear").size(text_scale)).clicked()
+            if ui
+                .button(RichText::new("Clear - C").size(text_scale))
+                .clicked()
                 || ctx.input(|i| i.key_pressed(Key::C))
             {
                 self.state.clear_filters();
@@ -316,7 +320,9 @@ impl SATApp {
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
         ui.horizontal_wrapped(|ui| {
-            if ui.button(RichText::new("Quit").size(text_scale)).clicked()
+            if ui
+                .button(RichText::new("Quit - Q").size(text_scale))
+                .clicked()
                 || ctx.input(|i| i.key_pressed(Key::Q))
             {
                 self.state.quit();
