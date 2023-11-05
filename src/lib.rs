@@ -1,6 +1,8 @@
 mod app_state;
+mod binary_cnf;
 mod cadical_wrapper;
 mod cnf_converter;
+mod cnf_var;
 mod error;
 mod filtering;
 pub mod gui;
@@ -13,7 +15,9 @@ use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc};
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use cnf_converter::clues_from_string;
+// use binary_cnf::{sudoku_to_cnf, get_cell_value};
+use cnf_converter::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
@@ -120,12 +124,8 @@ pub fn solve_sudoku(
         for row in 1..=9 {
             let mut row_values = Vec::with_capacity(9);
             for col in 1..=9 {
-                for val in 1..=9 {
-                    if solver.value(cnf_identifier(row, col, val)).unwrap() {
-                        row_values.push(Some(val));
-                        break;
-                    }
-                }
+                let value = get_cell_value(solver, row, col);
+                row_values.push(Some(value));
             }
             solved.push(row_values);
         }

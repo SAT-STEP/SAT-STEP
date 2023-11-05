@@ -119,7 +119,7 @@ impl eframe::App for SATApp {
                     columns[0].vertical_centered(|ui| {
                         if !self.state.show_trail_view {
                             self.controls(ui, width, ctx);
-                            self.constraint_list(ui, width);
+                            self.constraint_list(ui, ctx, width);
                         } else {
                             self.trail_panel(ui, ctx, width);
                         }

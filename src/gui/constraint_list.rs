@@ -1,6 +1,6 @@
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -8,7 +8,7 @@ use super::SATApp;
 
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, width: f32) -> Response {
+    pub fn constraint_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
 
@@ -20,7 +20,7 @@ impl SATApp {
                 self.learned_constraints_labels(ui, text_scale);
                 ui.end_row();
             });
-        self.list_of_constraints(ui, text_scale).response
+        self.list_of_constraints(ui, text_scale, ctx).response
     }
 
     fn learned_constraints_labels(
@@ -50,7 +50,12 @@ impl SATApp {
         })
     }
 
-    fn list_of_constraints(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+    fn list_of_constraints(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+        ctx: &egui::Context,
+    ) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
             ScrollArea::both()
                 .auto_shrink([false; 2])
@@ -174,6 +179,53 @@ impl SATApp {
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }
+                    }
+
+                    // Index of the row that has been clicked on the particular page, between 0 and page length minus 1
+                    let mut current_constraint_row: usize =
+                        self.state.clicked_constraint_index.unwrap_or(0);
+
+                    // Number of the rows on the current page, which might be less on the last page than on other pages
+                    let mut current_page_length: usize = self.state.page_length;
+
+                    // Check number of the rows on the last page
+                    if self.state.page_number + 1 == self.state.page_count
+                        && self.state.filtered_length % self.state.page_length != 0
+                    {
+                        current_page_length = self.state.filtered_length
+                            - ((self.state.page_count as usize - 1) * self.state.page_length)
+                            - 1;
+                    }
+
+                    let mut scroll_delta = Vec2::ZERO;
+
+                    if self.state.clicked_constraint_index.is_some() {
+                        // Actions when a constraint row is clicked with the ArrowDown button
+                        if ctx.input(|i| i.key_pressed(Key::ArrowDown))
+                            && current_constraint_row < self.state.filtered_length - 1
+                            && current_constraint_row % self.state.page_length
+                                < self.state.page_length - 1
+                            && current_constraint_row < current_page_length
+                        {
+                            current_constraint_row += 1;
+                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            // Check how far down the visible list currently and keep in view
+                            if current_constraint_row > last_item - 5 {
+                                // Scroll down with the selection
+                                scroll_delta.y -= row_height;
+                            }
+                        }
+
+                        // Actions when a constraint row is clicked with the ArrowUp button
+                        if ctx.input(|i| i.key_pressed(Key::ArrowUp))
+                            && (current_constraint_row > 0)
+                        {
+                            current_constraint_row -= 1;
+                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            // Scroll up with the selection
+                            scroll_delta.y += row_height;
+                        }
+                        ui.scroll_with_delta(scroll_delta);
                     }
                 });
         })

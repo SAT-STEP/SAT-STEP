@@ -168,6 +168,10 @@ impl AppState {
         ]);
         self.trail = Some(trail.iter().map(|x| identifier_to_tuple(*x)).collect());
     }
+
+    pub fn quit(&mut self) {
+        std::process::exit(0);
+    }
 }
 
 #[cfg(test)]
