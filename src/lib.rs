@@ -135,4 +135,25 @@ mod tests {
         assert!(written.is_ok());
         assert_eq!(read_to_text, "00000000".to_string());
     }
+
+    #[test]
+    fn test_write_no_sudoku() {
+        let test_text: String = "".to_string();
+        let test_path: &Path = Path::new("");
+        let written = write_sudoku(test_text, &test_path);
+
+        assert!(written.is_err());
+    }
+
+    #[test]
+    fn test_write_no_valid_path() {
+        let test_text2: String = "".to_string();
+        let test_path2: &Path = Path::new("./foo/foo.txt");
+        let path_exists: bool = test_path2.exists();
+        let assumed_error_message = "Saving the file failed".to_string();
+        let test_result = write_sudoku(test_text2, &test_path2);
+
+        assert_eq!(path_exists, false);
+        assert_eq!(test_result.err().unwrap().msg, assumed_error_message);
+    }
 }
