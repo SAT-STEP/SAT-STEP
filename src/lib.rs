@@ -135,5 +135,4 @@ mod tests {
         assert!(written.is_ok());
         assert_eq!(read_to_text, "00000000".to_string());
     }
-
 }
