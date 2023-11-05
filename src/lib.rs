@@ -7,9 +7,6 @@ mod error;
 mod filtering;
 pub mod gui;
 
-#[cfg(test)]
-mod tests;
-
 use std::{cell::RefCell, fs, num::ParseIntError, path::Path, rc::Rc};
 
 use cadical::Solver;
@@ -121,4 +118,22 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
         }
         Err(_err) => None,
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn test_write_sudoku() {
+        let test_text: String = "00000000".to_string();
+        let test_path: &Path = Path::new("./data/test_sudoku.txt");
+        let written = write_sudoku(test_text, &test_path);
+        let read_to_text = fs::read_to_string(test_path).unwrap();
+
+        assert!(written.is_ok());
+        assert_eq!(read_to_text, "00000000".to_string());
+    }
+
 }
