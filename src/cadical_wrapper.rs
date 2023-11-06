@@ -1,15 +1,19 @@
 use cadical::Callbacks;
 
-use crate::ConstraintList;
+use crate::{ConstraintList, Trail};
 
 #[derive(Clone)]
 pub struct CadicalCallbackWrapper {
     pub learned_clauses: ConstraintList,
+    pub trail: Trail,
 }
 
 impl CadicalCallbackWrapper {
-    pub fn new(learned_clauses: ConstraintList) -> Self {
-        Self { learned_clauses }
+    pub fn new(learned_clauses: ConstraintList, trail: Trail) -> Self {
+        Self {
+            learned_clauses,
+            trail,
+        }
     }
 }
 
@@ -40,8 +44,8 @@ impl Callbacks for CadicalCallbackWrapper {
     }
 
     // called when a new derived clause is learnt
-    fn learn_trail(&mut self, _conflict_literals: &[i32], _trail: &[i32]) {
-        //println!("Conflict literals: {:?}", conflict_literals);
-        //println!("Trail: {:?}", trail);
+    fn learn_trail(&mut self, conflict_literals: &[i32], trail: &[i32]) {
+        self.trail
+            .push((conflict_literals[0], conflict_literals[1]), trail.to_vec())
     }
 }

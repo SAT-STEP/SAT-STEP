@@ -1,4 +1,6 @@
-use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList};
+use crate::{
+    cnf_converter::identifier_to_tuple, filtering::ListFilter, parse_numeric_input, ConstraintList,
+};
 
 pub struct AppState {
     filter: ListFilter,
@@ -6,13 +8,19 @@ pub struct AppState {
     pub max_length_input: String,
     pub selected_cell: Option<(i32, i32)>,
     pub clicked_constraint_index: Option<usize>,
+    pub conflict_literals: Option<[(i32, i32, i32); 2]>,
+    pub clicked_conflict_index: Option<usize>,
+    pub trail: Option<Vec<(i32, i32, i32)>>,
     pub page_number: i32,
     pub page_count: i32,
     pub page_length: usize,
     pub page_length_input: String,
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
+    pub show_conflict_literals: bool,
+    pub show_trail: bool,
     pub little_number_constraints: Vec<(i32, i32, i32)>,
+    pub show_trail_view: bool,
     pub editor_active: bool,
 }
 
@@ -26,13 +34,19 @@ impl AppState {
             max_length_input: String::new(),
             selected_cell: None,
             clicked_constraint_index: None,
+            clicked_conflict_index: None,
+            conflict_literals: None,
+            trail: None,
             page_number: 0,
             page_count: 0,
             page_length: 100,
             page_length_input: "100".to_string(),
             filtered_length: 0,
             show_solved_sudoku: true,
+            show_conflict_literals: false,
+            show_trail: true,
             little_number_constraints: Vec::new(),
+            show_trail_view: false,
             editor_active: false,
         }
     }
@@ -62,6 +76,7 @@ impl AppState {
     }
 
     pub fn filter_by_max_length(&mut self) {
+        self.clear_trail();
         self.max_length = parse_numeric_input(self.max_length_input.as_str());
 
         if let Some(max_length) = self.max_length {
@@ -71,6 +86,7 @@ impl AppState {
     }
 
     pub fn select_cell(&mut self, row: i32, col: i32) {
+        self.clear_trail();
         self.set_page_number(0);
 
         self.selected_cell = Some((row, col));
@@ -87,6 +103,7 @@ impl AppState {
     }
 
     pub fn set_page_length(&mut self) {
+        self.clear_trail();
         let page_input = parse_numeric_input(&self.page_length_input);
 
         if let Some(input) = page_input {
@@ -98,6 +115,7 @@ impl AppState {
     }
 
     pub fn set_page_number(&mut self, page_number: i32) {
+        self.clear_trail();
         self.clicked_constraint_index = None;
 
         self.page_number = std::cmp::min(page_number, self.page_count - 1);
@@ -109,6 +127,8 @@ impl AppState {
 
         self.clear_length();
         self.clear_cell();
+
+        self.clear_trail();
     }
 
     pub fn clear_length(&mut self) {
@@ -130,6 +150,23 @@ impl AppState {
         self.little_number_constraints = self
             .filter
             .get_little_number_constraints(self.page_number as usize, self.page_length);
+    }
+
+    pub fn clear_trail(&mut self) {
+        self.conflict_literals = None;
+        self.clicked_conflict_index = None;
+        self.trail = None;
+    }
+
+    pub fn set_trail(&mut self, index: usize, conflict_literals: (i32, i32), trail: Vec<i32>) {
+        self.clear_filters();
+
+        self.clicked_conflict_index = Some(index);
+        self.conflict_literals = Some([
+            identifier_to_tuple(conflict_literals.0),
+            identifier_to_tuple(conflict_literals.1),
+        ]);
+        self.trail = Some(trail.iter().map(|x| identifier_to_tuple(*x)).collect());
     }
 
     pub fn quit(&mut self) {

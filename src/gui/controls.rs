@@ -31,7 +31,7 @@ impl SATApp {
         self.exit_button(ui, text_scale, ctx).response
     }
 
-    fn buttons(
+    pub fn buttons(
         &mut self,
         ui: &mut Ui,
         text_scale: f32,
@@ -96,6 +96,7 @@ impl SATApp {
                 self.state.editor_active = true;
 
                 self.constraints.clear();
+                self.trail.clear();
                 self.state.reinit();
                 self.rendered_constraints = Vec::new();
 
@@ -114,6 +115,16 @@ impl SATApp {
                     }
                 }
             }
+
+            let show_trail_text = if !self.state.show_trail_view {
+                RichText::new("Show trail")
+            } else {
+                RichText::new("Show learned constraints")
+            };
+            if ui.button(show_trail_text.size(text_scale)).clicked() {
+                self.state.show_trail_view = !self.state.show_trail_view;
+            }
+
             if self.state.editor_active {
                 let keys = ctx.input(|i| i.events.clone());
                 for key in &keys {

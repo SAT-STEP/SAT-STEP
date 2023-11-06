@@ -153,6 +153,7 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
+                                self.state.clear_trail();
                                 match self.state.clicked_constraint_index {
                                     Some(index) => {
                                         // clicking constraint again clears little numbers
