@@ -119,15 +119,6 @@ impl SATApp {
                 }
             }
 
-            let show_trail_text = if !self.state.show_trail_view {
-                RichText::new("Show trail")
-            } else {
-                RichText::new("Show learned constraints")
-            };
-            if ui.button(show_trail_text.size(text_scale)).clicked() {
-                self.state.show_trail_view = !self.state.show_trail_view;
-            }
-
             if self.state.editor_active {
                 let keys = ctx.input(|i| i.events.clone());
                 for key in &keys {
@@ -172,6 +163,15 @@ impl SATApp {
                         self.current_error = Some(e);
                     }
                 }
+            }
+
+            let show_trail_text = if !self.state.show_trail_view {
+                RichText::new("Show trail")
+            } else {
+                RichText::new("Show learned constraints")
+            };
+            if ui.button(show_trail_text.size(text_scale)).clicked() {
+                self.state.show_trail_view = !self.state.show_trail_view;
             }
         })
     }
