@@ -126,6 +126,35 @@ mod tests {
     use std::path::Path;
 
     #[test]
+    fn test_get_sudoku() {
+        let test_file: String = "./data/sample_sudoku.txt".to_string();
+        let test_getting_sudoku = get_sudoku(test_file);
+
+        assert!(test_getting_sudoku.is_ok());
+    }
+
+    #[test]
+    fn test_get_no_sudoku() {
+        let test_file: String = "./data/foo_sudoku.txt".to_string();
+        let test_file_exists: bool = Path::new("./data/foo_sudoku.txt").exists();
+        let test_getting_sudoku = get_sudoku(test_file);
+
+        assert_eq!(test_file_exists, false);
+        assert!(test_getting_sudoku.is_err());
+    }
+
+    #[test]
+    fn test_get_wrong_filetype() {
+        let test_file: String = "./data/foo.exe".to_string();
+        let file_exists: bool = Path::new("./data/foo.exe").exists();
+        let assumed_error_message = "Invalid filetype!".to_string();
+        let test_result = get_sudoku(test_file);
+
+        assert_eq!(file_exists, false);
+        assert_eq!(test_result.err().unwrap().msg, assumed_error_message);
+    }
+
+    #[test]
     fn test_write_sudoku() {
         let test_text: String = "00000000".to_string();
         let test_path: &Path = Path::new("./data/test_sudoku.txt");
