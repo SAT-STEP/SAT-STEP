@@ -1,19 +1,20 @@
 mod app_state;
+mod binary_cnf;
 mod cadical_wrapper;
 mod cnf_converter;
+mod cnf_var;
 mod error;
 mod filtering;
 pub mod gui;
 
-#[cfg(test)]
-mod tests;
-
-use std::{cell::RefCell, fs, num::ParseIntError, rc::Rc};
+use std::{cell::RefCell, fs, num::ParseIntError, path::Path, rc::Rc};
 
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
-use cnf_converter::{clues_from_string, cnf_identifier, sudoku_to_cnf};
+use cnf_converter::{clues_from_string, string_from_grid};
+// use binary_cnf::{sudoku_to_cnf, get_cell_value};
+use cnf_converter::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
@@ -61,6 +62,50 @@ impl Default for ConstraintList {
     }
 }
 
+// Datastructure to hold conflict literals and trail data
+#[derive(Clone)]
+pub struct Trail {
+    pub conflict_literals: Rc<RefCell<Vec<(i32, i32)>>>,
+    pub trail: Rc<RefCell<Vec<Vec<i32>>>>,
+}
+
+impl Trail {
+    pub fn new() -> Self {
+        Self {
+            conflict_literals: Rc::new(RefCell::new(Vec::new())),
+            trail: Rc::new(RefCell::new(Vec::new())),
+        }
+    }
+
+    pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
+        self.conflict_literals.borrow_mut().push(conflict_literals);
+        self.trail.borrow_mut().push(trail);
+    }
+
+    pub fn clear(&mut self) {
+        self.conflict_literals.borrow_mut().clear();
+        self.trail.borrow_mut().clear();
+    }
+
+    pub fn trail_at_index(&self, index: usize) -> Vec<i32> {
+        self.trail.borrow()[index].clone()
+    }
+
+    pub fn len(&self) -> usize {
+        self.trail.borrow().len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.trail.borrow().is_empty()
+    }
+}
+
+impl Default for Trail {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub fn solve_sudoku(
     sudoku_clues: &[Vec<Option<i32>>],
     solver: &mut Solver<CadicalCallbackWrapper>,
@@ -76,12 +121,8 @@ pub fn solve_sudoku(
         for row in 1..=9 {
             let mut row_values = Vec::with_capacity(9);
             for col in 1..=9 {
-                for val in 1..=9 {
-                    if solver.value(cnf_identifier(row, col, val)).unwrap() {
-                        row_values.push(Some(val));
-                        break;
-                    }
-                }
+                let value = get_cell_value(solver, row, col);
+                row_values.push(Some(value));
             }
             solved.push(row_values);
         }
@@ -100,6 +141,15 @@ pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericErro
     }
 }
 
+pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
+    let save_result = fs::write(path.display().to_string(), sudoku);
+    match save_result {
+        Err(_) => Err(GenericError {
+            msg: "Saving the file failed".to_string(),
+        }),
+        _ => Ok(()),
+    }
+}
 /// Parses the max_length filter input for applying the filter.
 pub fn parse_numeric_input(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
@@ -111,5 +161,72 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
             Some(parsed)
         }
         Err(_err) => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn test_get_sudoku() {
+        let test_file: String = "./data/sample_sudoku.txt".to_string();
+        let test_getting_sudoku = get_sudoku(test_file);
+
+        assert!(test_getting_sudoku.is_ok());
+    }
+
+    #[test]
+    fn test_get_no_sudoku() {
+        let test_file: String = "./data/foo_sudoku.txt".to_string();
+        let test_file_exists: bool = Path::new("./data/foo_sudoku.txt").exists();
+        let test_getting_sudoku = get_sudoku(test_file);
+
+        assert_eq!(test_file_exists, false);
+        assert!(test_getting_sudoku.is_err());
+    }
+
+    #[test]
+    fn test_get_wrong_filetype() {
+        let test_file: String = "./data/foo.exe".to_string();
+        let file_exists: bool = Path::new("./data/foo.exe").exists();
+        let assumed_error_message = "Invalid filetype!".to_string();
+        let test_result = get_sudoku(test_file);
+
+        assert_eq!(file_exists, false);
+        assert_eq!(test_result.err().unwrap().msg, assumed_error_message);
+    }
+
+    #[test]
+    fn test_write_sudoku() {
+        let test_text: String = "00000000".to_string();
+        let test_path: &Path = Path::new("./data/test_sudoku.txt");
+        let written = write_sudoku(test_text, &test_path);
+        let read_to_text = fs::read_to_string(test_path).unwrap();
+
+        assert!(written.is_ok());
+        assert_eq!(read_to_text, "00000000".to_string());
+    }
+
+    #[test]
+    fn test_write_no_sudoku() {
+        let test_text: String = "".to_string();
+        let test_path: &Path = Path::new("");
+        let written = write_sudoku(test_text, &test_path);
+
+        assert!(written.is_err());
+    }
+
+    #[test]
+    fn test_write_no_valid_path() {
+        let test_text2: String = "".to_string();
+        let test_path2: &Path = Path::new("./foo/foo.txt");
+        let path_exists: bool = test_path2.exists();
+        let assumed_error_message = "Saving the file failed".to_string();
+        let test_result = write_sudoku(test_text2, &test_path2);
+
+        assert_eq!(path_exists, false);
+        assert_eq!(test_result.err().unwrap().msg, assumed_error_message);
     }
 }

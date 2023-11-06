@@ -1,4 +1,64 @@
-use crate::error::GenericError;
+use cadical::Solver;
+use egui::{
+    text::{LayoutJob, TextFormat},
+    Color32, FontId,
+};
+
+use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable, error::GenericError};
+
+pub struct DecimalVar {
+    pub row: i32,
+    pub col: i32,
+    pub val: i32,
+}
+
+impl CnfVariable for DecimalVar {
+    fn new(identifier: i32) -> DecimalVar {
+        let (row, col, val) = identifier_to_tuple(identifier);
+        DecimalVar { row, col, val }
+    }
+
+    fn human_readable(
+        &self,
+        text_job: &mut LayoutJob,
+        large_font: FontId,
+        small_font: FontId,
+        text_color: Color32,
+    ) {
+        let (lead_char, color) = if self.val > 0 {
+            ("", text_color)
+        } else {
+            ("~", Color32::RED)
+        };
+
+        text_job.append(
+            &format!("{}{}", lead_char, self.val.abs()),
+            0.0,
+            TextFormat {
+                font_id: large_font.clone(),
+                color,
+                ..Default::default()
+            },
+        );
+        text_job.append(
+            &format!("({},{})", self.row, self.col),
+            0.0,
+            TextFormat {
+                font_id: small_font.clone(),
+                color,
+                ..Default::default()
+            },
+        );
+    }
+
+    fn to_cnf(&self) -> i32 {
+        if self.val > 0 {
+            cnf_identifier(self.row, self.col, self.val)
+        } else {
+            -cnf_identifier(self.row, self.col, self.val.abs())
+        }
+    }
+}
 
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
@@ -148,6 +208,33 @@ pub fn clues_from_string(
     Ok(clues)
 }
 
+pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
+    let mut return_string = String::new();
+    for row in grid.iter().take(9) {
+        for col in row.iter().take(9) {
+            match col {
+                Some(v) => {
+                    return_string.push_str(&v.to_string());
+                }
+                None => {
+                    return_string.push('.');
+                }
+            }
+        }
+        return_string.push('\n');
+    }
+    return_string
+}
+
+pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
+    for val in 1..=9 {
+        if solver.value(cnf_identifier(row, col, val)).unwrap() {
+            return val;
+        }
+    }
+    -1
+}
+
 #[cfg(test)]
 mod tests {
     use super::{clues_from_string, *};
@@ -211,5 +298,49 @@ mod tests {
         assert_eq!((1, 2, 1), tuples[1][0]);
         assert_eq!((1, 2, 2), tuples[1][1]);
         assert_eq!((1, 2, 3), tuples[1][2]);
+    }
+
+    #[test]
+    fn test_string_from_grid() {
+        let mut test_vec = vec![vec![<Option<i32>>::None; 9]; 9];
+        test_vec[0][0] = Some(1);
+        test_vec[1][1] = Some(2);
+        test_vec[2][2] = Some(3);
+        test_vec[3][3] = Some(4);
+        let output_string = string_from_grid(test_vec);
+
+        let test_string = "1........\n\
+                 .2.......\n\
+                 ..3......\n\
+                 ...4.....\n\
+                 .........\n\
+                 .........\n\
+                 .........\n\
+                 .........\n\
+                 .........\n";
+
+        assert_eq!(output_string, test_string)
+    }
+
+    #[test]
+    fn test_string_from_grid_second() {
+        let mut test_vec = vec![vec![<Option<i32>>::None; 9]; 9];
+        test_vec[0][5] = Some(1);
+        test_vec[2][3] = Some(2);
+        test_vec[4][7] = Some(3);
+        test_vec[7][5] = Some(4);
+        let output_string = string_from_grid(test_vec);
+
+        let test_string = ".....1...\n\
+                 .........\n\
+                 ...2.....\n\
+                 .........\n\
+                 .......3.\n\
+                 .........\n\
+                 .........\n\
+                 .....4...\n\
+                 .........\n";
+
+        assert_eq!(output_string, test_string)
     }
 }
