@@ -96,6 +96,7 @@ impl SATApp {
                 self.state.editor_active = true;
 
                 self.constraints.clear();
+                self.trail.clear();
                 self.state.reinit();
                 self.rendered_constraints = Vec::new();
 
