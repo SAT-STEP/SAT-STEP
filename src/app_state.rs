@@ -1,7 +1,9 @@
+//! State for the main app struct SATApp
 use crate::{
     cnf_converter::identifier_to_tuple, filtering::ListFilter, parse_numeric_input, ConstraintList,
 };
 
+/// Contains all data relevant to app state
 pub struct AppState {
     filter: ListFilter,
     pub max_length: Option<i32>,
