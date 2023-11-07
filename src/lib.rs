@@ -17,7 +17,7 @@ use cnf_converter::{clues_from_string, string_from_grid};
 use cnf_converter::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 
-/// ConstraintList is used to store the learned cnf_clauses inside a Rc<RefCell<Vec<Vec<i32>>>> 
+/// ConstraintList is used to store the learned cnf_clauses inside a `Rc<RefCell<Vec<Vec<i32>>>>` 
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
