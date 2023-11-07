@@ -17,7 +17,7 @@ use cnf_converter::{clues_from_string, string_from_grid};
 use cnf_converter::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 
-/// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
+/// ConstraintList is used to store the learned cnf_clauses inside a Rc<RefCell<Vec<Vec<i32>>>> 
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
@@ -131,6 +131,7 @@ pub fn solve_sudoku(
     Err(String::from("Solving sudoku failed!"))
 }
 
+/// Read a sudoku file
 pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
     let sudoku_result = fs::read_to_string(filename);
     match sudoku_result {
@@ -141,6 +142,7 @@ pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericErro
     }
 }
 
+/// Save a sudoku created through the GUI
 pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
     let save_result = fs::write(path.display().to_string(), sudoku);
     match save_result {
@@ -150,7 +152,7 @@ pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
         _ => Ok(()),
     }
 }
-/// Parses the max_length filter input for applying the filter.
+/// Parses numeric inputs given by the user. Inputs are for the max_length filter and page length.
 pub fn parse_numeric_input(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {
