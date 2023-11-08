@@ -84,8 +84,10 @@ impl SATApp {
                             let mut text_job = LayoutJob::default();
 
                             let (literal1_identifier, literal2_identifier) = *conflict_literal;
-                            let cnf_var1 = CnfVariable::from_cnf(literal1_identifier, &self.state.encoding);
-                            let cnf_var2 = CnfVariable::from_cnf(literal2_identifier, &self.state.encoding);
+                            let cnf_var1 =
+                                CnfVariable::from_cnf(literal1_identifier, &self.state.encoding);
+                            let cnf_var2 =
+                                CnfVariable::from_cnf(literal2_identifier, &self.state.encoding);
 
                             Self::append_var_to_layout_job(
                                 &cnf_var1,
@@ -139,16 +141,24 @@ impl SATApp {
                                             let trail = self.trail.trail_at_index(i);
                                             let enum_trail = trail
                                                 .iter()
-                                                .map(|&x| CnfVariable::from_cnf(x, &self.state.encoding))
+                                                .map(|&x| {
+                                                    CnfVariable::from_cnf(x, &self.state.encoding)
+                                                })
                                                 .collect();
-                                            self.state.set_trail(i, (cnf_var1, cnf_var2), enum_trail);
+                                            self.state.set_trail(
+                                                i,
+                                                (cnf_var1, cnf_var2),
+                                                enum_trail,
+                                            );
                                         }
                                     }
                                     None => {
                                         let trail = self.trail.trail_at_index(i);
                                         let enum_trail = trail
                                             .iter()
-                                            .map(|&x| CnfVariable::from_cnf(x, &self.state.encoding))
+                                            .map(|&x| {
+                                                CnfVariable::from_cnf(x, &self.state.encoding)
+                                            })
                                             .collect();
                                         self.state.set_trail(i, (cnf_var1, cnf_var2), enum_trail);
                                     }

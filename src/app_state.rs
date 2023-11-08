@@ -178,7 +178,12 @@ impl AppState {
         self.trail = None;
     }
 
-    pub fn set_trail(&mut self, index: usize, conflict_literals: (CnfVariable, CnfVariable), trail: Vec<CnfVariable>) {
+    pub fn set_trail(
+        &mut self,
+        index: usize,
+        conflict_literals: (CnfVariable, CnfVariable),
+        trail: Vec<CnfVariable>,
+    ) {
         self.clear_filters();
 
         self.clicked_conflict_index = Some(index);
