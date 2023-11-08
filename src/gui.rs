@@ -1,5 +1,7 @@
 mod constraint_list;
+mod controls;
 mod sudoku_grid;
+mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
@@ -9,6 +11,7 @@ use egui::Margin;
 use egui::RichText;
 
 use crate::cnf_var::CnfVariable;
+use crate::Trail;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, error::GenericError,
     ConstraintList,
@@ -19,6 +22,7 @@ pub struct SATApp {
     sudoku: Vec<Vec<Option<i32>>>,
     clues: Vec<Vec<Option<i32>>>,
     constraints: ConstraintList,
+    trail: Trail,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
     rendered_constraints: Vec<Vec<CnfVariable>>,
@@ -30,7 +34,8 @@ impl SATApp {
     pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
         let clues = sudoku.clone();
         let constraints = ConstraintList::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
+        let trail = Trail::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
         let state = AppState::new(constraints.clone());
@@ -39,6 +44,7 @@ impl SATApp {
             sudoku,
             clues,
             constraints,
+            trail,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
@@ -52,7 +58,8 @@ impl SATApp {
 impl Default for SATApp {
     fn default() -> Self {
         let constraints = ConstraintList::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone());
+        let trail = Trail::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
         let state = AppState::new(constraints.clone());
@@ -61,6 +68,7 @@ impl Default for SATApp {
             sudoku: Vec::new(),
             clues: Vec::new(),
             constraints,
+            trail,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
@@ -110,7 +118,12 @@ impl eframe::App for SATApp {
             } else {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
-                        self.constraint_list(ui, width);
+                        if !self.state.show_trail_view {
+                            self.controls(ui, width, ctx);
+                            self.constraint_list(ui, ctx, width);
+                        } else {
+                            self.trail_panel(ui, ctx, width);
+                        }
                     });
                     columns[1].vertical_centered(|ui| {
                         self.sudoku_grid(ui, height, width);

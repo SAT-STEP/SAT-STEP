@@ -31,11 +31,11 @@ jobs:
         # Build files are in ./target
         path: |
           ~/.cargo
-          ./target
-        key: ${{ runner.os  }}-${{ env.cache-name  }}-${{ hashFiles('./Cargo.lock')  }}
+          target/
+        key: ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./Cargo.lock') }}-${{ github.run_id }}
         restore-keys: |
-          ${{ runner.os  }}-${{ env.cache-name  }}-
-          ${{ runner.os  }}-
+          ${{ runner.os }}-${{ env.cache-name }}-${{ hashFiles('./Cargo.lock') }}
+          ${{ runner.os }}-${{ env.cache-name }}-
     - name: Build
       run: cargo build --verbose
     - name: Run tests

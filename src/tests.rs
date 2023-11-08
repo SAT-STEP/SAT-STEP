@@ -41,7 +41,7 @@ fn test_get_sudoku() {
 fn test_solve_sudoku() {
     let sudoku = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
     let mut solver = cadical::Solver::with_config("plain").unwrap();
-    let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new());
+    let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
     solver.set_callbacks(Some(callback_wrapper.clone()));
 
     let solved = solve_sudoku(&sudoku, &mut solver).unwrap();
@@ -194,4 +194,22 @@ fn test_constraint_list() {
     c_list.clear();
     assert_eq!(c_list.len(), 0);
     assert_eq!(c_list.is_empty(), true);
+}
+
+#[test]
+fn test_trail() {
+    let conflict_literals = vec![(100, 101), (300, 301)];
+    let trail_data = vec![vec![1, 2, 3], vec![4, 5, 6]];
+    let mut trail = Trail::new();
+
+    trail.push(conflict_literals[0], trail_data[0].clone());
+    trail.push(conflict_literals[1], trail_data[1].clone());
+    assert_eq!(trail.len(), 2);
+    assert_eq!(trail.trail_at_index(1), vec![4, 5, 6]);
+    assert_eq!(trail.is_empty(), false);
+
+    trail.clear();
+    assert_eq!(trail.len(), 0);
+    assert_eq!(trail.is_empty(), true);
+    assert_eq!(trail.conflict_literals.borrow().len(), 0);
 }
