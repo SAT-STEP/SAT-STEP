@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{cnf_converter::identifier_to_tuple, ConstraintList, app_state::EncodingType};
+use crate::{app_state::EncodingType, cnf_converter::identifier_to_tuple, ConstraintList};
 
 pub struct ListFilter {
     constraints: ConstraintList,
@@ -40,11 +40,11 @@ impl ListFilter {
     }
 
     // Kept in case there is a need to reinit more things in future
-    pub fn reinit(&mut self, encoding: EncodingType) {
+    pub fn reinit(&mut self, encoding: &EncodingType) {
         self.create_cell_map(encoding);
     }
 
-    fn create_cell_map(&mut self, encoding: EncodingType) {
+    fn create_cell_map(&mut self, encoding: &EncodingType) {
         for row in 1..=9 {
             for col in 1..=9 {
                 self.cell_constraints.insert((row, col), HashSet::new());
@@ -159,7 +159,7 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
-        filter.reinit();
+        filter.reinit(&EncodingType::Decimal);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);
@@ -185,7 +185,7 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints);
-        filter.reinit();
+        filter.reinit(&EncodingType::Decimal);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);

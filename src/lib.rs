@@ -16,7 +16,7 @@ use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf_converter::clues_from_string;
-// use binary_cnf::{sudoku_to_cnf, get_cell_value};
+//use binary_cnf::{sudoku_to_cnf, get_cell_value};
 use cnf_converter::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 

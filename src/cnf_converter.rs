@@ -1,5 +1,5 @@
-use cadical::Solver;
 use crate::{cadical_wrapper::CadicalCallbackWrapper, error::GenericError};
+use cadical::Solver;
 
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"

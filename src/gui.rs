@@ -11,7 +11,7 @@ use egui::RichText;
 use crate::cnf_var::CnfVariable;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, error::GenericError,
-    ConstraintList
+    ConstraintList,
 };
 
 /// Main app struct

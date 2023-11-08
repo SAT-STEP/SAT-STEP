@@ -1,4 +1,4 @@
-use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList, cnf_var::CnfVariable};
+use crate::{cnf_var::CnfVariable, filtering::ListFilter, parse_numeric_input, ConstraintList};
 
 pub enum EncodingType {
     Decimal,
@@ -25,7 +25,7 @@ impl AppState {
     pub fn new(constraints: ConstraintList) -> Self {
         let mut filter = ListFilter::new(constraints.clone());
         let mut encoding = EncodingType::Decimal;
-        filter.reinit(encoding);
+        filter.reinit(&encoding);
         Self {
             filter,
             max_length: None,
@@ -52,16 +52,22 @@ impl AppState {
 
         self.update_little_number_constraints();
 
-        let enum_constraints = list.iter().map(|&constraint| {
-            constraint.iter().map(|&x| { CnfVariable::from_cnf(x, self.encoding) }).collect()
-        }).collect();
+        let enum_constraints = list
+            .iter()
+            .map(|constraint| {
+                constraint
+                    .iter()
+                    .map(|&x| CnfVariable::from_cnf(x, &self.encoding))
+                    .collect()
+            })
+            .collect();
 
         enum_constraints
     }
 
     pub fn reinit(&mut self) {
         self.clear_filters();
-        self.filter.reinit(self.encoding);
+        self.filter.reinit(&self.encoding);
 
         self.page_number = 0;
         self.page_count = 0;
@@ -140,7 +146,10 @@ impl AppState {
         let constraints = self
             .filter
             .get_little_number_constraints(self.page_number as usize, self.page_length);
-        self.little_number_constraints = constraints.iter().map(|&x| { CnfVariable::from_cnf(x, self.encoding) }).collect();
+        self.little_number_constraints = constraints
+            .iter()
+            .map(|&x| CnfVariable::from_cnf(x, &self.encoding))
+            .collect();
     }
 }
 

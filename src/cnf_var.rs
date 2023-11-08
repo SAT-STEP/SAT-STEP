@@ -27,23 +27,35 @@ pub enum CnfVariable {
 }
 
 impl CnfVariable {
-    pub fn from_cnf(identifier: i32, encoding: EncodingType) -> Self {
+    pub fn from_cnf(identifier: i32, encoding: &EncodingType) -> Self {
         match encoding {
             EncodingType::Binary => {
                 if identifier.abs() > 9 * 9 * 4 {
-                    let (row, col, row2, col2, bit_index, equal) = binary_cnf::eq_identifier_to_tuple(identifier);
-                    Self::Equality { row, col, row2, col2, bit_index, equal }
+                    let (row, col, row2, col2, bit_index, equal) =
+                        binary_cnf::eq_identifier_to_tuple(identifier);
+                    Self::Equality {
+                        row,
+                        col,
+                        row2,
+                        col2,
+                        bit_index,
+                        equal,
+                    }
                 } else {
                     let (row, col, bit_index, value) = binary_cnf::identifier_to_tuple(identifier);
-                    Self::Bit { row, col, bit_index, value }
+                    Self::Bit {
+                        row,
+                        col,
+                        bit_index,
+                        value,
+                    }
                 }
-            },
+            }
             EncodingType::Decimal => {
                 let (row, col, value) = cnf_converter::identifier_to_tuple(identifier);
                 Self::Decimal { row, col, value }
             }
         }
-
     }
 
     pub fn to_cnf(&self) -> i32 {
