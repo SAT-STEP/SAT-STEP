@@ -2,7 +2,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
-use crate::{cnf_converter::create_tuples_from_constraints, cnf_var::CnfVariableType};
+use crate::cnf_var::CnfVariable;
 
 use super::SATApp;
 
@@ -35,7 +35,7 @@ impl SATApp {
             draw_constraints: false,
         };
 
-        let mut constraints: Vec<CnfVariableType> = Vec::new();
+        let mut constraints: Vec<CnfVariable> = Vec::new();
 
         ui.horizontal_wrapped(|ui| {
             if let Some(num) = self.state.clicked_constraint_index {
@@ -48,15 +48,7 @@ impl SATApp {
                 }
             }
             // sort them so don't have to search in loop
-            // constraints.sort_by(
-            //     |(r1, c1, _), (r2, c2, _)| {
-            //         if r1 != r2 {
-            //             r1.cmp(r2)
-            //         } else {
-            //             c1.cmp(c2)
-            //         }
-            //     },
-            // );
+            constraints.sort();
 
             let mut c_index = 0;
 
@@ -112,7 +104,7 @@ impl SATApp {
         cell_size: f32,
         cell_state: CellState, //Passed as clone, should not be increased here
         val: Option<i32>,
-        constraints: &Vec<CnfVariableType>,
+        constraints: &Vec<CnfVariable>,
         mut c_index: usize,
     ) -> usize {
         if cell_state.row_num == 0 {
@@ -148,15 +140,15 @@ impl SATApp {
         let mut drew_constraint = false;
         if cell_state.draw_constraints {
             // draw little numbers
-            (drew_constraint, c_index) = draw_little_numbers(
-                ui,
-                cell_state.top_left,
-                cell_size,
-                c_index,
-                constraints,
-                cell_state.row_num,
-                cell_state.col_num,
-            );
+            // (drew_constraint, c_index) = draw_little_numbers(
+            //     ui,
+            //     cell_state.top_left,
+            //     cell_size,
+            //     c_index,
+            //     constraints,
+            //     cell_state.row_num,
+            //     cell_state.col_num,
+            // );
         }
 
         if !self.state.show_solved_sudoku
@@ -182,53 +174,53 @@ impl SATApp {
     }
 }
 
-fn draw_little_numbers(
-    ui: &mut Ui,
-    top_left: Pos2,
-    cell_size: f32,
-    mut c_index: usize,
-    constraints: &Vec<CnfVariableType>,
-    row_num: usize,
-    col_num: usize,
-) -> (bool, usize) {
-    let mut drew_constraint = false;
-    let mut little_top_left = top_left;
-    let mut little_num_pos = 0;
-
-    // while on little numbers reference this row and block
-    while c_index < constraints.len()
-        && constraints[c_index].0 == (row_num as i32 + 1)
-        && constraints[c_index].1 == (col_num as i32 + 1)
-    {
-        // new row for little numbers
-        if little_num_pos % 3 == 0 && little_num_pos != 0 {
-            little_top_left.y += cell_size / 3.0;
-            little_top_left.x = top_left.x;
-        }
-
-        // if value of the picked cell is negative, it will be shown in red,
-        // if not negative, in blue
-        let c_value = constraints[c_index].2;
-        let mut c_value_color = Color32::BLUE;
-        if c_value < 0 {
-            c_value_color = Color32::RED;
-        }
-
-        ui.painter().text(
-            little_top_left,
-            egui::Align2::LEFT_TOP,
-            constraints[c_index].2.to_string(),
-            egui::FontId::new(cell_size * 0.3, egui::FontFamily::Monospace),
-            c_value_color,
-        );
-        little_top_left.x += cell_size / 3.0;
-        c_index += 1;
-        little_num_pos += 1;
-
-        drew_constraint = true;
-    }
-    (drew_constraint, c_index)
-}
+// fn draw_little_numbers(
+//     ui: &mut Ui,
+//     top_left: Pos2,
+//     cell_size: f32,
+//     mut c_index: usize,
+//     constraints: &Vec<CnfVariable>,
+//     row_num: usize,
+//     col_num: usize,
+// ) -> (bool, usize) {
+//     let mut drew_constraint = false;
+//     let mut little_top_left = top_left;
+//     let mut little_num_pos = 0;
+//
+//     // while on little numbers reference this row and block
+//     while c_index < constraints.len()
+//         && constraints[c_index].0 == (row_num as i32 + 1)
+//         && constraints[c_index].1 == (col_num as i32 + 1)
+//     {
+//         // new row for little numbers
+//         if little_num_pos % 3 == 0 && little_num_pos != 0 {
+//             little_top_left.y += cell_size / 3.0;
+//             little_top_left.x = top_left.x;
+//         }
+//
+//         // if value of the picked cell is negative, it will be shown in red,
+//         // if not negative, in blue
+//         let c_value = constraints[c_index].2;
+//         let mut c_value_color = Color32::BLUE;
+//         if c_value < 0 {
+//             c_value_color = Color32::RED;
+//         }
+//
+//         ui.painter().text(
+//             little_top_left,
+//             egui::Align2::LEFT_TOP,
+//             constraints[c_index].2.to_string(),
+//             egui::FontId::new(cell_size * 0.3, egui::FontFamily::Monospace),
+//             c_value_color,
+//         );
+//         little_top_left.x += cell_size / 3.0;
+//         c_index += 1;
+//         little_num_pos += 1;
+//
+//         drew_constraint = true;
+//     }
+//     (drew_constraint, c_index)
+// }
 
 fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, col_num: usize) {
     let center = Pos2::new(top_left.x, top_left.y - cell_size * 0.8)

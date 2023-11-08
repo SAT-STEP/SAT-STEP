@@ -1,4 +1,4 @@
-use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList, cnf_var::CnfVariableType, cnf_converter::DecimalVar, binary_cnf::{BitVar, EqVar}};
+use crate::{filtering::ListFilter, parse_numeric_input, ConstraintList, cnf_var::CnfVariable};
 
 pub enum EncodingType {
     Decimal,
@@ -17,7 +17,7 @@ pub struct AppState {
     pub page_length_input: String,
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
-    pub little_number_constraints: Vec<CnfVariableType>,
+    pub little_number_constraints: Vec<CnfVariable>,
     pub encoding: EncodingType,
 }
 
@@ -43,7 +43,7 @@ impl AppState {
         }
     }
 
-    pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariableType>> {
+    pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariable>> {
         let (list, length) = self
             .filter
             .get_filtered(self.page_number as usize, self.page_length);
@@ -53,21 +53,7 @@ impl AppState {
         self.update_little_number_constraints();
 
         let enum_constraints = list.iter().map(|&constraint| {
-            match self.encoding {
-                EncodingType::Decimal => {
-                    constraint.iter().map(|&x| CnfVariableType::Decimal(DecimalVar::new(x))).collect()
-                },
-                EncodingType::Binary => {
-                    constraint.iter().map(|&x|{
-                        if x > 9*9*4 {
-                            CnfVariableType::Equality(EqVar::new(x))
-                        }
-                        else {
-                            CnfVariableType::Bit(BitVar::new(x))
-                        }
-                    }).collect()
-                },
-            }
+            constraint.iter().map(|&x| { CnfVariable::from_cnf(x, self.encoding) }).collect()
         }).collect();
 
         enum_constraints
@@ -154,21 +140,7 @@ impl AppState {
         let constraints = self
             .filter
             .get_little_number_constraints(self.page_number as usize, self.page_length);
-        self.little_number_constraints = match self.encoding {
-            EncodingType::Decimal => {
-                constraints.iter().map(|&x| CnfVariableType::Decimal(DecimalVar::new(x))).collect()
-            },
-            EncodingType::Binary => {
-                constraints.iter().map(|&x|{
-                    if x > 9*9*4 {
-                        CnfVariableType::Equality(EqVar::new(x))
-                    }
-                    else {
-                        CnfVariableType::Bit(BitVar::new(x))
-                    }
-                }).collect()
-            },
-        }
+        self.little_number_constraints = constraints.iter().map(|&x| { CnfVariable::from_cnf(x, self.encoding) }).collect();
     }
 }
 

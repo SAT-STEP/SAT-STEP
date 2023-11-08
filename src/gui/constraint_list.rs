@@ -5,7 +5,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::{cnf_converter::create_tuples_from_constraints, solve_sudoku};
+use crate::{cnf_var::CnfVariable, solve_sudoku};
 
 use super::SATApp;
 
@@ -59,8 +59,7 @@ impl SATApp {
                         self.sudoku = solved;
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
-                        self.rendered_constraints =
-                            create_tuples_from_constraints(self.state.get_filtered());
+                        self.rendered_constraints = self.state.get_filtered();
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -109,16 +108,14 @@ impl SATApp {
                 .clicked()
             {
                 self.state.filter_by_max_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
             if ui
                 .button(RichText::new("Clear filters").size(text_scale))
                 .clicked()
             {
                 self.state.clear_filters();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
         })
     }
@@ -148,8 +145,7 @@ impl SATApp {
                 }
 
                 self.state.set_page_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
         })
     }
@@ -160,16 +156,14 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(0);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             if ui.button(RichText::new("<").size(text_scale)).clicked()
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             ui.add(
@@ -189,8 +183,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_number + 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             if ui.button(RichText::new(">>").size(text_scale)).clicked()
@@ -198,8 +191,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_count - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             ui.checkbox(
@@ -249,32 +241,13 @@ impl SATApp {
                             let mut identifiers = clause.iter().peekable();
 
                             // Large while block just constructs the LayoutJob
-                            while let Some(identifier) = identifiers.next() {
-                                let (row, col, val) = *identifier;
-
-                                let (lead_char, color) = if val > 0 {
-                                    ("", ui.visuals().text_color())
-                                } else {
-                                    ("~", Color32::RED)
-                                };
-
-                                text_job.append(
-                                    &format!("{}{}", lead_char, val.abs()),
-                                    0.0,
-                                    TextFormat {
-                                        font_id: large_font.clone(),
-                                        color,
-                                        ..Default::default()
-                                    },
-                                );
-                                text_job.append(
-                                    &format!("({},{})", row, col),
-                                    0.0,
-                                    TextFormat {
-                                        font_id: small_font.clone(),
-                                        color,
-                                        ..Default::default()
-                                    },
+                            while let Some(cnf_var) = identifiers.next() {
+                                Self::append_var_to_layout_job(
+                                    cnf_var,
+                                    &mut text_job,
+                                    &large_font,
+                                    &small_font,
+                                    ui.visuals().text_color(),
                                 );
 
                                 if identifiers.peek().is_some() {
@@ -336,5 +309,107 @@ impl SATApp {
                     }
                 });
         })
+    }
+
+    /// Draw human readable version of cnf variables according to variable type
+    fn append_var_to_layout_job(
+        variable: &CnfVariable,
+        text_job: &mut LayoutJob,
+        large_font: &FontId,
+        small_font: &FontId,
+        text_color: Color32,
+    ) {
+        match variable {
+            CnfVariable::Decimal { row, col, value } => {
+                let (lead_char, color) = if *value > 0 {
+                    ("", text_color)
+                } else {
+                    ("~", Color32::RED)
+                };
+
+                text_job.append(
+                    &format!("{}{}", lead_char, value.abs()),
+                    0.0,
+                    TextFormat {
+                        font_id: large_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text_job.append(
+                    &format!("({},{})", row, col),
+                    0.0,
+                    TextFormat {
+                        font_id: small_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
+            CnfVariable::Bit {
+                row,
+                col,
+                bit_index,
+                value,
+            } => {
+                let (lead_char, color) = if *value {
+                    ("B", text_color)
+                } else {
+                    ("~B", Color32::RED)
+                };
+
+                text_job.append(
+                    &format!("{}{}", lead_char, bit_index),
+                    0.0,
+                    TextFormat {
+                        font_id: large_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text_job.append(
+                    &format!("({},{})", row, col),
+                    0.0,
+                    TextFormat {
+                        font_id: small_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
+            CnfVariable::Equality {
+                row,
+                col,
+                row2,
+                col2,
+                bit_index,
+                equal,
+            } => {
+                let (lead_char, color) = if *equal {
+                    ("EQ", text_color)
+                } else {
+                    ("~EQ", Color32::RED)
+                };
+
+                text_job.append(
+                    &format!("{}{}", lead_char, bit_index),
+                    0.0,
+                    TextFormat {
+                        font_id: large_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text_job.append(
+                    &format!("({},{});({},{})", row, col, row2, col2),
+                    0.0,
+                    TextFormat {
+                        font_id: small_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
+        }
     }
 }

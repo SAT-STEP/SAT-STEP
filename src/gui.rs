@@ -8,7 +8,7 @@ use egui::Color32;
 use egui::Margin;
 use egui::RichText;
 
-use crate::cnf_var::CnfVariableType;
+use crate::cnf_var::CnfVariable;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, error::GenericError,
     ConstraintList
@@ -21,7 +21,7 @@ pub struct SATApp {
     constraints: ConstraintList,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
-    rendered_constraints: Vec<Vec<CnfVariableType>>,
+    rendered_constraints: Vec<Vec<CnfVariable>>,
     state: AppState,
     current_error: Option<GenericError>,
 }
