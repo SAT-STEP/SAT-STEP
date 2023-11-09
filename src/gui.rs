@@ -21,7 +21,7 @@ use crate::{
 /// Main app struct
 pub struct SATApp {
     sudoku: Vec<Vec<SudokuCell>>,
-    clues: Vec<Vec<Option<i32>>>,
+    clues: Vec<Vec<Option<i32>>>, // TODO: Remove this
     constraints: ConstraintList,
     trail: Trail,
     callback_wrapper: CadicalCallbackWrapper,
@@ -29,20 +29,6 @@ pub struct SATApp {
     rendered_constraints: Vec<Vec<CnfVariable>>,
     state: AppState,
     current_error: Option<GenericError>,
-}
-
-/// Struct representing a cell in the sudoku sudoku_grid
-#[derive(Clone)]
-pub struct SudokuCell {
-    value: Option<i32>,
-    clue: bool,                 // Should the cell be darkened
-    part_of_conflict: bool,     // Should the cell have highlighted borders
-    eq_symbols: Vec<String>,
-    little_numbers: Vec<i32>,
-    top_left: Pos2,
-    bottom_right: Pos2,
-    row: i32,
-    col: i32,
 }
 
 impl SATApp {
@@ -89,6 +75,52 @@ impl Default for SATApp {
             rendered_constraints: Vec::new(),
             state,
             current_error,
+        }
+    }
+}
+
+/// Struct representing a cell in the sudoku sudoku_grid
+#[derive(Clone)]
+pub struct SudokuCell {
+    value: Option<i32>,
+    clue: bool,                 // Should the cell be darkened
+    part_of_conflict: bool,     // Should the cell have highlighted borders
+    eq_symbols: Vec<String>,
+    little_numbers: Vec<i32>,
+    top_left: Pos2,
+    bottom_right: Pos2,
+    row: i32,
+    col: i32,
+}
+
+impl SudokuCell {
+    pub fn new(row: i32, col: i32, value: Option<i32>, clue: bool) -> Self {
+        Self {
+            value,
+            clue,
+            row,
+            col,
+            ..Default::default()
+        }
+    }
+
+    pub fn draw(&self) {
+        todo!()
+    }
+}
+
+impl Default for SudokuCell {
+    fn default() -> Self {
+        Self {
+            value: None,
+            clue: false,
+            part_of_conflict: false,
+            eq_symbols: Vec::new(),
+            little_numbers: Vec::new(),
+            top_left: Pos2::new(0.0, 0.0),
+            bottom_right: Pos2::new(0.0, 0.0),
+            row: 1,
+            col: 1,
         }
     }
 }
