@@ -18,7 +18,7 @@ struct SudokuCell {
     eq_symbols: Vec<String>,
     little_numbers: Vec<i32>,
     top_left: Pos2,
-    size: f32,
+    bottom_right: Pos2,
 }
 
 impl SATApp {
