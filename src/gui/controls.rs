@@ -50,8 +50,7 @@ impl SATApp {
                     let sudoku_result = crate::get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
-                            self.sudoku = sudoku_vec;
-                            self.clues = self.sudoku.clone();
+                            self.sudoku_from_option_values(sudoku_vec);
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
                             self.state.reinit();
@@ -73,10 +72,10 @@ impl SATApp {
             {
                 self.state.editor_active = false;
 
-                let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
+                let solve_result = solve_sudoku(&self.get_option_value_sudoku(), &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
-                        self.sudoku = solved;
+                        self.sudoku_from_option_values(solved);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
                         self.rendered_constraints = self.state.get_filtered();
@@ -103,8 +102,7 @@ impl SATApp {
 
                 match sudoku {
                     Ok(sudoku_vec) => {
-                        self.sudoku = sudoku_vec;
-                        self.clues = self.sudoku.clone();
+                        self.sudoku_from_option_values(sudoku_vec);
                         self.solver = Solver::with_config("plain").unwrap();
                         self.solver
                             .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -125,9 +123,8 @@ impl SATApp {
                                     break;
                                 }
                                 if self.state.selected_cell.is_some() {
-                                    if let Some(cell_state) = self.state.selected_cell {
-                                        self.sudoku[cell_state.0 as usize - 1]
-                                            [cell_state.1 as usize - 1] = Some(n);
+                                    if let Some((row, col)) = self.state.selected_cell {
+                                        self.set_cell(row, col, Some(n));
                                     }
                                 }
                             }
@@ -136,15 +133,13 @@ impl SATApp {
                             key, pressed: true, ..
                         } => {
                             if key == &Key::Backspace {
-                                if let Some(cell_state) = self.state.selected_cell {
-                                    self.sudoku[cell_state.0 as usize - 1]
-                                        [cell_state.1 as usize - 1] = None;
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    self.set_cell(row, col, None);
                                 }
                             }
                         }
                         _ => {}
                     }
-                    self.clues = self.sudoku.clone();
                 }
             }
             if ui
@@ -153,7 +148,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::S))
             {
                 if let Some(save_path) = rfd::FileDialog::new().save_file() {
-                    let sudoku_string = string_from_grid(self.sudoku.clone());
+                    let sudoku_string = string_from_grid(self.get_option_value_sudoku());
                     let save_result = write_sudoku(sudoku_string, &save_path);
                     if let Err(e) = save_result {
                         self.current_error = Some(e);
