@@ -64,13 +64,22 @@ impl SATApp {
         sudoku
     }
 
-    pub fn sudoku_from_option_values(sudoku: Vec<Vec<Option<i32>>>) {
+    pub fn sudoku_from_option_values(&mut self, sudoku: Vec<Vec<Option<i32>>>) {
         let mut new_sudoku: Vec<Vec<SudokuCell>> = Vec::new();
         for (row_index, row) in sudoku.iter().enumerate() {
             let mut new_row = Vec::new();
             for (col_index, col)in row.iter().enumerate() {
                 new_row.push(SudokuCell::new(row_index as i32, col_index as i32, sudoku[row_index][col_index], true));
             }
+        }
+        self.sudoku = new_sudoku;
+    }
+
+    /// Set a value to specific cell using row and column (1-9 indexed)
+    fn set_cell(&mut self, row: i32, col: i32, value: Option<i32>) {
+        self.sudoku[row as usize - 1][col as usize - 1].value = value;
+        if value.is_some() {
+            self.sudoku[row as usize - 1][col as usize - 1].clue = true;
         }
     }
 }
