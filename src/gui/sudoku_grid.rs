@@ -21,64 +21,107 @@ impl SATApp {
     /// Calculate and update position of each SudokuCell
     fn calculate_cell_positions(&mut self) {}
 
-    /// Update little symbols and conflict booleans in SudokuCells
-    fn update_selected_trail(&mut self) {}
-
-    /// Update little symbols in SudokuCells
-    fn update_selected_constraint(&mut self, cell: &mut SudokuCell) {
-        let mut constraints = Vec::new();
-
-        // tätä if-kauheutta tarvitaan, jotta voimme tietää, halutaanko näyttää mitkä little numberit.
-        // klikatun constraintin, klikatun cellin, trailin(?) vai kaikkien literaalien
-
-        // tän if-jutun voi varmaan siirtää new_sudoku_gridiin ja antaa constraintsit parametrinä?
-        if let Some(constraint_index) = self.state.clicked_constraint_index {
-            // little numbers related to clicked constraint
-            constraints = self.rendered_constraints[constraint_index].clone();
-        } else if let Some(conflict_index) = self.state.clicked_conflict_index {
-            // little numbers related to clicked conflict
-            // idk if this belongs to selected_trail
-            if self.state.show_trail {
-                constraints = self.state.trail.clone().unwrap();
-            } else {
-                constraints = self.constraints.borrow()[conflict_index]
-                    .clone()
-                    .iter()
-                    .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
-                    .collect();
+    /// Update conflict booleans and little symbols related to conflicts in SudokuCells
+    fn update_conflict_info(&mut self) {
+        // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
+        if self.state.clicked_constraint_index.is_none() {
+            // This clearing code is possibly temporary, so it's not a separate function for now
+            for row in self.sudoku.iter_mut() {
+                for cell in row.iter_mut() {
+                    cell.part_of_conflict = false;
+                    cell.eq_symbols = Vec::new();
+                    cell.little_numbers = Vec::new();
+                }
             }
-        } else {
-             // all little numbers
-            constraints = self.state.little_number_constraints.clone();
-            if !self.state.show_solved_sudoku {
-                constraints = Vec::new();
+
+            // Find and mark cells affected by the conflict literals
+            if let Some(conflicts) = &self.state.conflict_literals {
+                for conflict in conflicts {
+                    match conflict {
+                        CnfVariable::Bit { row, col, .. } => {
+                            self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
+                        }
+                        CnfVariable::Decimal { row, col, .. } => {
+                            self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
+                        }
+                        CnfVariable::Equality { row, col, row2, col2, .. } => {
+                            self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
+                            self.sudoku[*row2 as usize][*col2 as usize].part_of_conflict = true;
+                        }
+                    }
+                }
+            }
+
+            let mut variables = Vec::new();
+
+            // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
+            if let Some(conflict_index) = self.state.clicked_constraint_index {
+                if self.state.show_trail {
+                    variables = self.state.trail.clone().unwrap();
+                } else {
+                    variables = self.constraints.borrow()[conflict_index]
+                        .clone()
+                        .iter()
+                        .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
+                        .collect();
+                }
+        
+                for variable in variables {
+                    match variable {
+                        CnfVariable::Bit { row, col, .. } => {
+                            self.sudoku[row as usize][col as usize].little_numbers.extend(variable.get_possible_numbers().into_iter())
+                        }
+                        CnfVariable::Decimal { row, col, value } => {
+                            self.sudoku[row as usize][col as usize].little_numbers.push(value)
+                        }
+                        CnfVariable::Equality { row, col, row2, col2, .. } => {
+                            self.sudoku[row as usize][col as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
+                            self.sudoku[row2 as usize][col2 as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
+                        }
+                    }
+                }
             }
         }
+    }
 
-        for constraint in constraints {
-            // to reduce unnecessary iteration:
-            //if constraint.get_row() > cell.row {break}
-            match constraint {
-                CnfVariable::Equality { row, col, row2, col2, .. } => {
-                    if (row == cell.row && col == cell.col)
-                    || (row2 == cell.row && col2 == cell.col) {
-                        cell.eq_symbols.push("?".to_string()) // TODO where to get symbols
-                    }
-                }
-                CnfVariable::Bit { row, col, .. } => {
-                    if row == cell.row && col == cell.col {
-                        cell.little_numbers.extend(constraint.get_possible_numbers().into_iter())
-                    }
-                }
-                CnfVariable::Decimal { row, col, value } => {
-                    if row == cell.row && col == cell.col {
-                        cell.little_numbers.push(value)
-                    }
+    /// Update little symbols from a selected constraint in SudokuCells
+    fn update_selected_constraint(&mut self) {
+        // Only do this if a constraint is not currently selected. That case is handled in update_conflict_info
+        if self.state.clicked_conflict_index.is_none() {
+            // This clearing code is possibly temporary, so it's not a separate function for now
+            for row in self.sudoku.iter_mut() {
+                for cell in row.iter_mut() {
+                    cell.part_of_conflict = false;
+                    cell.eq_symbols = Vec::new();
+                    cell.little_numbers = Vec::new();
                 }
             }
 
-        }
+            let mut variables = Vec::new();
 
+            // Visualize the clicked constraint, if there is one
+            // Otherwise show literals learned so far as little numbers, if we are not showing the solved sudoku
+            if let Some(constraint_index) = self.state.clicked_constraint_index {
+                variables = self.rendered_constraints[constraint_index].clone();
+            } else if !self.state.show_solved_sudoku{
+                variables = self.state.little_number_constraints.clone();
+            }
+    
+            for variable in variables {
+                match variable {
+                    CnfVariable::Bit { row, col, .. } => {
+                        self.sudoku[row as usize][col as usize].little_numbers.extend(variable.get_possible_numbers().into_iter())
+                    }
+                    CnfVariable::Decimal { row, col, value } => {
+                        self.sudoku[row as usize][col as usize].little_numbers.push(value)
+                    }
+                    CnfVariable::Equality { row, col, row2, col2, .. } => {
+                        self.sudoku[row as usize][col as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
+                        self.sudoku[row2 as usize][col2 as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
+                    }
+                }
+            }
+        }
     }
 }
 
