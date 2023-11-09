@@ -19,6 +19,8 @@ struct SudokuCell {
     little_numbers: Vec<i32>,
     top_left: Pos2,
     bottom_right: Pos2,
+    row: i32,
+    col: i32,
 }
 
 impl SATApp {
@@ -32,8 +34,65 @@ impl SATApp {
     fn set_clues(&mut self) {}
     /// Update little symbols and conflict booleans in SudokuCells
     fn update_selected_trail(&mut self) {}
+
     /// Update little symbols in SudokuCells
-    fn update_selected_constraint(&mut self) {}
+    fn update_selected_constraint(&mut self, cell: &mut SudokuCell) {
+        let mut constraints = Vec::new();
+
+        // tätä if-kauheutta tarvitaan, jotta voimme tietää, halutaanko näyttää mitkä little numberit.
+        // klikatun constraintin, klikatun cellin, trailin(?) vai kaikkien literaalien
+
+        // tän if-jutun voi varmaan siirtää new_sudoku_gridiin ja antaa constraintsit parametrinä?
+        if let Some(num) = self.state.clicked_constraint_index {
+            // little numbers related to clicked constraint
+            constraints = self.rendered_constraints[num].clone();
+        } else if let Some(num) = self.state.clicked_conflict_index {
+            // little numbers related to clicked conflict
+            // idk if this belongs to selected_trail
+            if self.state.show_trail {
+                constraints = self.state.trail.clone().unwrap();
+            } else {
+                // all little numbers
+                constraints = self.constraints.borrow()[num]
+                    .clone()
+                    .iter()
+                    .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
+                    .collect();
+            }
+        } else {
+             // set eqs and little numbers
+             constraints = self.state.little_number_constraints.clone();
+            if !self.state.show_solved_sudoku {
+                constraints = Vec::new();
+            }
+        }
+
+        for constraint in constraints {
+            // to reduce unnecessary iteration:
+            //if constraint.get_row() > cell.row {break} 
+            match constraint {
+                CnfVariable::Equality { row, col, row2, col2, .. } => {
+                    if (row == cell.row && col == cell.col)
+                    || (row2 == cell.row && col2 == cell.col) {
+                        cell.eq_symbols.push("?".to_string()) // TODO where to get symbols
+                    }
+                }
+                CnfVariable::Bit { row, col, .. } => {
+                    if row == cell.row && col == cell.col {
+                        cell.little_numbers.extend(constraint.get_possible_numbers().into_iter())
+                    }
+                }
+                CnfVariable::Decimal { row, col, value } => {
+                    if row == cell.row && col == cell.col {
+                        cell.little_numbers.push(value)
+                    }
+                }
+            }
+            
+        }
+
+
+    }
 }
 
 
