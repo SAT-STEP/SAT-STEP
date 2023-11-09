@@ -5,6 +5,7 @@ mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
+use egui::Pos2;
 use egui::containers;
 use egui::Color32;
 use egui::Margin;
@@ -19,7 +20,7 @@ use crate::{
 
 /// Main app struct
 pub struct SATApp {
-    sudoku: Vec<Vec<Option<i32>>>,
+    sudoku: Vec<Vec<SudokuCell>>,
     clues: Vec<Vec<Option<i32>>>,
     constraints: ConstraintList,
     trail: Trail,
@@ -30,8 +31,22 @@ pub struct SATApp {
     current_error: Option<GenericError>,
 }
 
+/// Struct representing a cell in the sudoku sudoku_grid
+#[derive(Clone)]
+pub struct SudokuCell {
+    value: Option<i32>,
+    clue: bool,                 // Should the cell be darkened
+    part_of_conflict: bool,     // Should the cell have highlighted borders
+    eq_symbols: Vec<String>,
+    little_numbers: Vec<i32>,
+    top_left: Pos2,
+    bottom_right: Pos2,
+    row: i32,
+    col: i32,
+}
+
 impl SATApp {
-    pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
+    pub fn new(sudoku: Vec<Vec<SudokuCell>>) -> Self {
         let clues = sudoku.clone();
         let constraints = ConstraintList::new();
         let trail = Trail::new();

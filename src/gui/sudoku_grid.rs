@@ -4,25 +4,13 @@ use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
 use crate::cnf_var::CnfVariable;
 
-use super::{SATApp, constraint_list};
+use super::{SATApp, SudokuCell};
 
 /// Sudokugridin refaktoroinnin tarkoituksena olis kirjottaa koko sudokun piirto alusta lähtien
 /// uusiks. sudoku_grid funktio on kauhea sekasotku, joten fiksataan se.
 ///
 /// Funktion olisi refaktoroinnin jälkeen tarkoitus näyttää about
 /// sudoku.draw()
-struct SudokuCell {
-    value: Option<i32>,
-    clue: bool,                 // Should the cell be darkened
-    part_of_conflict: bool,     // Should the cell have highlighted borders
-    eq_symbols: Vec<String>,
-    little_numbers: Vec<i32>,
-    top_left: Pos2,
-    bottom_right: Pos2,
-    row: i32,
-    col: i32,
-}
-
 impl SATApp {
     /// Draw the actual sudoku grid
     pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {todo!()}
@@ -68,7 +56,7 @@ impl SATApp {
 
         for constraint in constraints {
             // to reduce unnecessary iteration:
-            //if constraint.get_row() > cell.row {break} 
+            //if constraint.get_row() > cell.row {break}
             match constraint {
                 CnfVariable::Equality { row, col, row2, col2, .. } => {
                     if (row == cell.row && col == cell.col)
@@ -87,7 +75,7 @@ impl SATApp {
                     }
                 }
             }
-            
+
         }
 
     }
