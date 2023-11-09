@@ -18,8 +18,17 @@ impl SATApp {
     fn draw_row_col_numbers() {}
     /// Calculate and update position of each SudokuCell
     fn calculate_cell_positions(&mut self) {}
+
     /// Set clue-boolean in all SudokuCells
-    fn set_clues(&mut self) {}
+    fn set_clues(&mut self) {
+        for row in [0..9] {
+            for col in [0..9] {
+                    self.sudoku[row][col].clue = self.clues[row][col].is_some();
+                }
+            }
+        }
+    }
+
     /// Update little symbols and conflict booleans in SudokuCells
     fn update_selected_trail(&mut self) {}
 
