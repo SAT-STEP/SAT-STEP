@@ -6,6 +6,13 @@ use crate::cnf_var::CnfVariable;
 
 use super::{SATApp, SudokuCell};
 
+/// All margins and spacings are relative to the minimum dimension of the window
+/// either directly or via cell size
+const MARGIN_MULTIPLIER: f32 = 0.01; // Of minimum dimension
+const ROW_COL_NUM_FIELD_MULTIPLIER: f32 = 0.7; // Of cell size
+const CELL_SPACING_MULTIPLIER: f32 = 0.05; // Of cell size
+const BLOCK_SPACING_MULTIPLIER: f32 = 0.1; // Of cell size
+
 /// Sudokugridin refaktoroinnin tarkoituksena olis kirjottaa koko sudokun piirto alusta lähtien
 /// uusiks. sudoku_grid funktio on kauhea sekasotku, joten fiksataan se.
 ///
@@ -14,12 +21,34 @@ use super::{SATApp, SudokuCell};
 impl SATApp {
     /// Draw the actual sudoku grid
     pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
-        todo!()
+        let mut minimum_dimension: f32 = cmp::min(height as i32, width as i32) as f32;
+        let margin = minimum_dimension * MARGIN_MULTIPLIER;
+        minimum_dimension -= margin * 2.0;
+
+        let cell_size = minimum_dimension
+            / (9.
+                + ROW_COL_NUM_FIELD_MULTIPLIER
+                + 6. * CELL_SPACING_MULTIPLIER
+                + 2. * BLOCK_SPACING_MULTIPLIER);
+
+        let row_col_num_origin = Pos2::new(
+            (width - minimum_dimension) / 2.0,
+            (height - minimum_dimension) / 2.0,
+        );
+
+        // draw_row_col_numbers(ui, row_col_num_origin, cell_size);
+
+        let grid_origin = row_col_num_origin + Vec2::new(
+            cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
+            cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
+        );
+
+        self.calculate_cell_positions(grid_origin, cell_size);
     }
     /// Draw row and column numbers separately from the grid
     fn draw_row_col_numbers() {}
     /// Calculate and update position of each SudokuCell
-    fn calculate_cell_positions(&mut self) {}
+    fn calculate_cell_positions(&mut self, grid_origin: Pos2, cell_size: f32) {}
 
     /// Update conflict booleans and little symbols related to conflicts in SudokuCells
     fn update_conflict_info(&mut self) {
@@ -44,7 +73,13 @@ impl SATApp {
                         CnfVariable::Decimal { row, col, .. } => {
                             self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
                         }
-                        CnfVariable::Equality { row, col, row2, col2, .. } => {
+                        CnfVariable::Equality {
+                            row,
+                            col,
+                            row2,
+                            col2,
+                            ..
+                        } => {
                             self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
                             self.sudoku[*row2 as usize][*col2 as usize].part_of_conflict = true;
                         }
@@ -65,18 +100,30 @@ impl SATApp {
                         .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
                         .collect();
                 }
-        
+
                 for variable in variables {
                     match variable {
-                        CnfVariable::Bit { row, col, .. } => {
-                            self.sudoku[row as usize][col as usize].little_numbers.extend(variable.get_possible_numbers().into_iter())
-                        }
-                        CnfVariable::Decimal { row, col, value } => {
-                            self.sudoku[row as usize][col as usize].little_numbers.push(value)
-                        }
-                        CnfVariable::Equality { row, col, row2, col2, .. } => {
-                            self.sudoku[row as usize][col as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
-                            self.sudoku[row2 as usize][col2 as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
+                        CnfVariable::Bit { row, col, .. } => self.sudoku[row as usize]
+                            [col as usize]
+                            .little_numbers
+                            .extend(variable.get_possible_numbers().into_iter()),
+                        CnfVariable::Decimal { row, col, value } => self.sudoku[row as usize]
+                            [col as usize]
+                            .little_numbers
+                            .push(value),
+                        CnfVariable::Equality {
+                            row,
+                            col,
+                            row2,
+                            col2,
+                            ..
+                        } => {
+                            self.sudoku[row as usize][col as usize]
+                                .eq_symbols
+                                .push("?".to_string()); // TODO where to get symbols
+                            self.sudoku[row2 as usize][col2 as usize]
+                                .eq_symbols
+                                .push("?".to_string()); // TODO where to get symbols
                         }
                     }
                 }
@@ -103,28 +150,38 @@ impl SATApp {
             // Otherwise show literals learned so far as little numbers, if we are not showing the solved sudoku
             if let Some(constraint_index) = self.state.clicked_constraint_index {
                 variables = self.rendered_constraints[constraint_index].clone();
-            } else if !self.state.show_solved_sudoku{
+            } else if !self.state.show_solved_sudoku {
                 variables = self.state.little_number_constraints.clone();
             }
-    
+
             for variable in variables {
                 match variable {
-                    CnfVariable::Bit { row, col, .. } => {
-                        self.sudoku[row as usize][col as usize].little_numbers.extend(variable.get_possible_numbers().into_iter())
-                    }
-                    CnfVariable::Decimal { row, col, value } => {
-                        self.sudoku[row as usize][col as usize].little_numbers.push(value)
-                    }
-                    CnfVariable::Equality { row, col, row2, col2, .. } => {
-                        self.sudoku[row as usize][col as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
-                        self.sudoku[row2 as usize][col2 as usize].eq_symbols.push("?".to_string()); // TODO where to get symbols
+                    CnfVariable::Bit { row, col, .. } => self.sudoku[row as usize][col as usize]
+                        .little_numbers
+                        .extend(variable.get_possible_numbers().into_iter()),
+                    CnfVariable::Decimal { row, col, value } => self.sudoku[row as usize]
+                        [col as usize]
+                        .little_numbers
+                        .push(value),
+                    CnfVariable::Equality {
+                        row,
+                        col,
+                        row2,
+                        col2,
+                        ..
+                    } => {
+                        self.sudoku[row as usize][col as usize]
+                            .eq_symbols
+                            .push("?".to_string()); // TODO where to get symbols
+                        self.sudoku[row2 as usize][col2 as usize]
+                            .eq_symbols
+                            .push("?".to_string()); // TODO where to get symbols
                     }
                 }
             }
         }
     }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////
 ///                 Old stuff below, new stuff above                    ///
@@ -318,7 +375,9 @@ impl SATApp {
                         }
                         CnfVariable::Equality { .. } => {} // TODO: Draw eq constraints here
                     }
-                    if row0 - 1 == cell_state.row_num as i32 && col0 - 1 == cell_state.col_num as i32 {
+                    if row0 - 1 == cell_state.row_num as i32
+                        && col0 - 1 == cell_state.col_num as i32
+                    {
                         for value in possible_numbers.iter() {
                             let val_string = if *value < 0 {
                                 value.to_string()
@@ -332,7 +391,7 @@ impl SATApp {
                                 val_string,
                                 egui::FontId::new(cell_size * 0.28, egui::FontFamily::Monospace),
                                 Color32::from_rgb(80, 0, 0),
-                                );
+                            );
 
                             top_left.x += cell_size / 3f32;
                             little_num_pos += 1;
