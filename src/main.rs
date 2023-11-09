@@ -1,6 +1,6 @@
 use egui::Vec2;
 
-use sat_step::gui::SATApp;
+use sat_step::gui::{SATApp, SudokuCell};
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
@@ -10,7 +10,7 @@ fn main() -> Result<(), eframe::Error> {
         }),
         ..Default::default()
     };
-    let app = Box::new(SATApp::new(vec![vec![None; 9]; 9]));
+    let app = Box::new(SATApp::new(vec![vec![SudokuCell::default(); 9]; 9]));
 
     eframe::run_native("SAT STEP", options, Box::new(|_cc| app))
 }
