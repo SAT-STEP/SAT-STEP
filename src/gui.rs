@@ -51,6 +51,28 @@ impl SATApp {
             current_error,
         }
     }
+
+    pub fn get_option_value_sudoku(&self) -> Vec<Vec<Option<i32>>> {
+        let mut sudoku = Vec::new();
+        for row in &self.sudoku {
+            let mut row_vec = Vec::new();
+            for cell in row {
+                row_vec.push(cell.value);
+            }
+            sudoku.push(row_vec);
+        }
+        sudoku
+    }
+
+    pub fn sudoku_from_option_values(sudoku: Vec<Vec<Option<i32>>>) {
+        let mut new_sudoku: Vec<Vec<SudokuCell>> = Vec::new();
+        for (row_index, row) in sudoku.iter().enumerate() {
+            let mut new_row = Vec::new();
+            for (col_index, col)in row.iter().enumerate() {
+                new_row.push(SudokuCell::new(row_index as i32, col_index as i32, sudoku[row_index][col_index], true));
+            }
+        }
+    }
 }
 
 /// Trait to create app with default values (no variables yet)
@@ -170,7 +192,7 @@ impl eframe::App for SATApp {
                         }
                     });
                     columns[1].vertical_centered(|ui| {
-                        self.sudoku_grid(ui, height, width);
+                        self.new_sudoku_grid(ui, height, width);
                     });
                 });
             }
