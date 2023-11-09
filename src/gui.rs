@@ -21,7 +21,6 @@ use crate::{
 /// Main app struct
 pub struct SATApp {
     sudoku: Vec<Vec<SudokuCell>>,
-    clues: Vec<Vec<Option<i32>>>, // TODO: Remove this
     constraints: ConstraintList,
     trail: Trail,
     callback_wrapper: CadicalCallbackWrapper,
@@ -43,7 +42,6 @@ impl SATApp {
         let current_error = None;
         Self {
             sudoku,
-            clues,
             constraints,
             trail,
             callback_wrapper,
@@ -67,7 +65,6 @@ impl Default for SATApp {
         let current_error = None;
         Self {
             sudoku: Vec::new(),
-            clues: Vec::new(),
             constraints,
             trail,
             callback_wrapper,
