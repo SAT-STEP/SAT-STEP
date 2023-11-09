@@ -32,7 +32,6 @@ pub struct SATApp {
 
 impl SATApp {
     pub fn new(sudoku: Vec<Vec<SudokuCell>>) -> Self {
-        let clues = sudoku.clone();
         let constraints = ConstraintList::new();
         let trail = Trail::new();
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
@@ -65,14 +64,11 @@ impl SATApp {
     }
 
     pub fn sudoku_from_option_values(&mut self, sudoku: Vec<Vec<Option<i32>>>) {
-        let mut new_sudoku: Vec<Vec<SudokuCell>> = Vec::new();
         for (row_index, row) in sudoku.iter().enumerate() {
-            let mut new_row = Vec::new();
-            for (col_index, col)in row.iter().enumerate() {
-                new_row.push(SudokuCell::new(row_index as i32, col_index as i32, sudoku[row_index][col_index], true));
+            for (col_index, value)in row.iter().enumerate() {
+                self.set_cell(row_index as i32 + 1, col_index as i32 + 1, *value);
             }
         }
-        self.sudoku = new_sudoku;
     }
 
     /// Set a value to specific cell using row and column (1-9 indexed)
@@ -80,6 +76,8 @@ impl SATApp {
         self.sudoku[row as usize - 1][col as usize - 1].value = value;
         if value.is_some() {
             self.sudoku[row as usize - 1][col as usize - 1].clue = true;
+        } else {
+            self.sudoku[row as usize - 1][col as usize - 1].clue = false;
         }
     }
 }
