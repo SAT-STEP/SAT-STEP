@@ -6,7 +6,41 @@ use crate::cnf_var::CnfVariable;
 
 use super::SATApp;
 
-#[derive(Copy, Clone)]
+/// Sudokugridin refaktoroinnin tarkoituksena olis kirjottaa koko sudokun piirto alusta lähtien
+/// uusiks. sudoku_grid funktio on kauhea sekasotku, joten fiksataan se.
+///
+/// Funktion olisi refaktoroinnin jälkeen tarkoitus näyttää about
+/// sudoku.draw()
+struct SudokuCell {
+    value: Option<i32>,
+    clue: bool,                 // Should the cell be darkened
+    part_of_conflict: bool,     // Should the cell have highlighted borders
+    eq_symbols: Vec<String>,
+    little_numbers: Vec<i32>,
+    top_left: Pos2,
+    size: f32,
+}
+
+impl SATApp {
+    /// Draw the actual sudoku grid
+    pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {todo!()}
+    /// Draw row and column numbers separately from the grid
+    fn draw_row_col_numbers() {}
+    /// Calculate and update position of each SudokuCell
+    fn calculate_cell_positions(&mut self) {}
+    /// Set clue-boolean in all SudokuCells
+    fn set_clues(&mut self) {}
+    /// Update little symbols and conflict booleans in SudokuCells
+    fn update_selected_trail(&mut self) {}
+    /// Update little symbols in SudokuCells
+    fn update_selected_constraint(&mut self) {}
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+///                 Old stuff below, new stuff above                    ///
+///////////////////////////////////////////////////////////////////////////
+
 
 struct CellState {
     top_left: Pos2,
