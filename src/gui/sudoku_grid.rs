@@ -1,4 +1,4 @@
-use std::cmp;
+use std::{cmp, collections::HashSet};
 
 use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
@@ -174,38 +174,52 @@ impl SATApp {
         let mut top_left = cell_state.top_left;
         let mut little_num_pos = 0;
         let mut drew_conflict_literal = false;
-        // draw conflict literals
         if cell_state.draw_conflict_literals {
-            // if let Some(conflicts) = self.state.conflict_literals {
-            //     for conflict in conflicts {
-            //         let (row, col, val) = conflict;
-            //         if row - 1 == cell_state.row_num as i32 && col - 1 == cell_state.col_num as i32
-            //         {
-            //             let val_string = if val < 0 {
-            //                 val.to_string()
-            //             } else {
-            //                 format!(" {}", val)
-            //             };
+            if let Some(conflicts) = &self.state.conflict_literals {
+                for conflict in conflicts {
+                    let mut row0 = 0; // not just row because row and col need to be used inside the match
+                    let mut col0 = 0;
+                    let mut possible_numbers: HashSet<i32> = HashSet::new();
+                    match conflict {
+                        CnfVariable::Bit { row, col, .. } => {
+                            row0 = *row;
+                            col0 = *col;
+                            possible_numbers = conflict.get_possible_numbers();
+                        }
+                        CnfVariable::Decimal { row, col, .. } => {
+                            row0 = *row;
+                            col0 = *col;
+                            possible_numbers = conflict.get_possible_numbers();
+                        }
+                        CnfVariable::Equality { .. } => {} // TODO: Draw eq constraints here
+                    }
+                    if row0 - 1 == cell_state.row_num as i32 && col0 - 1 == cell_state.col_num as i32 {
+                        for value in possible_numbers.iter() {
+                            let val_string = if *value < 0 {
+                                value.to_string()
+                            } else {
+                                format!(" {}", value)
+                            };
 
-            //             ui.painter().text(
-            //                 top_left,
-            //                 egui::Align2::LEFT_TOP,
-            //                 val_string,
-            //                 egui::FontId::new(cell_size * 0.28, egui::FontFamily::Monospace),
-            //                 Color32::from_rgb(80, 0, 0),
-            //             );
+                            ui.painter().text(
+                                top_left,
+                                egui::Align2::LEFT_TOP,
+                                val_string,
+                                egui::FontId::new(cell_size * 0.28, egui::FontFamily::Monospace),
+                                Color32::from_rgb(80, 0, 0),
+                                );
 
-            //             drew_conflict_literal = true;
-            //             top_left.x += cell_size / 3f32;
-            //             little_num_pos += 1;
-            //         }
-            //     }
-            // }
+                            top_left.x += cell_size / 3f32;
+                            little_num_pos += 1;
+                        }
+                        drew_conflict_literal = true;
+                    }
+                }
+            }
         }
 
         let mut drew_constraint = false;
         if cell_state.draw_constraints {
-            // draw little numbers
             // (drew_constraint, cell.c_index) = draw_little_numbers(
             //     ui,
             //     top_left,
@@ -251,7 +265,7 @@ impl SATApp {
 // ) -> (bool, usize) {
 //     let mut drew_constraint = false;
 //     let mut little_top_left = top_left;
-
+//
 //     // while on little numbers reference this row and block
 //     while cell.c_index < cell.constraints.len()
 //         && cell.constraints[cell.c_index].0 == (row_num as i32 + 1)
@@ -262,7 +276,7 @@ impl SATApp {
 //             little_top_left.y += cell_size / 3.0;
 //             little_top_left.x = top_left.x;
 //         }
-
+//
 //         // if value of the picked cell is negative, it will be shown in red,
 //         // if not negative, in blue
 //         let c_value = cell.constraints[cell.c_index].2;
@@ -274,7 +288,7 @@ impl SATApp {
 //             // Adding a whitespace makes the positive values also be 2 chars long
 //             c_value_string = format!(" {}", c_value);
 //         }
-
+//
 //         ui.painter().text(
 //             little_top_left,
 //             egui::Align2::LEFT_TOP,
@@ -285,7 +299,7 @@ impl SATApp {
 //         little_top_left.x += cell_size / 3.0;
 //         cell.c_index += 1;
 //         little_num_pos += 1;
-
+//
 //         drew_constraint = true;
 //     }
 //     (drew_constraint, cell.c_index)
