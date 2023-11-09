@@ -13,7 +13,9 @@ use super::{SATApp, SudokuCell};
 /// sudoku.draw()
 impl SATApp {
     /// Draw the actual sudoku grid
-    pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {todo!()}
+    pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
+        todo!()
+    }
     /// Draw row and column numbers separately from the grid
     fn draw_row_col_numbers() {}
     /// Calculate and update position of each SudokuCell
@@ -94,7 +96,7 @@ impl SATApp {
 ///////////////////////////////////////////////////////////////////////////
 ///                 Old stuff below, new stuff above                    ///
 ///////////////////////////////////////////////////////////////////////////
-
+#[cfg(do_not_compile)]
 #[derive(Clone, Copy)]
 struct CellState {
     top_left: Pos2,
@@ -105,12 +107,14 @@ struct CellState {
     draw_conflict_literals: bool,
 }
 
+#[cfg(do_not_compile)]
 struct Cell<'a> {
     val: Option<i32>,
     c_index: usize,
     constraints: &'a Vec<CnfVariable>,
 }
 
+#[cfg(do_not_compile)]
 impl SATApp {
     pub fn sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
         let minimum_dimension = cmp::min(height as i32, width as i32) as f32;
