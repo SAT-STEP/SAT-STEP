@@ -4,7 +4,7 @@ use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
 
 use crate::cnf_var::CnfVariable;
 
-use super::SATApp;
+use super::{SATApp, constraint_list};
 
 /// Sudokugridin refaktoroinnin tarkoituksena olis kirjottaa koko sudokun piirto alusta lähtien
 /// uusiks. sudoku_grid funktio on kauhea sekasotku, joten fiksataan se.
@@ -43,25 +43,24 @@ impl SATApp {
         // klikatun constraintin, klikatun cellin, trailin(?) vai kaikkien literaalien
 
         // tän if-jutun voi varmaan siirtää new_sudoku_gridiin ja antaa constraintsit parametrinä?
-        if let Some(num) = self.state.clicked_constraint_index {
+        if let Some(constraint_index) = self.state.clicked_constraint_index {
             // little numbers related to clicked constraint
-            constraints = self.rendered_constraints[num].clone();
-        } else if let Some(num) = self.state.clicked_conflict_index {
+            constraints = self.rendered_constraints[constraint_index].clone();
+        } else if let Some(conflict_index) = self.state.clicked_conflict_index {
             // little numbers related to clicked conflict
             // idk if this belongs to selected_trail
             if self.state.show_trail {
                 constraints = self.state.trail.clone().unwrap();
             } else {
-                // all little numbers
-                constraints = self.constraints.borrow()[num]
+                constraints = self.constraints.borrow()[conflict_index]
                     .clone()
                     .iter()
                     .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
                     .collect();
             }
         } else {
-             // set eqs and little numbers
-             constraints = self.state.little_number_constraints.clone();
+             // all little numbers
+            constraints = self.state.little_number_constraints.clone();
             if !self.state.show_solved_sudoku {
                 constraints = Vec::new();
             }
@@ -91,7 +90,6 @@ impl SATApp {
             
         }
 
-
     }
 }
 
@@ -100,7 +98,7 @@ impl SATApp {
 ///                 Old stuff below, new stuff above                    ///
 ///////////////////////////////////////////////////////////////////////////
 
-
+#[derive(Clone, Copy)]
 struct CellState {
     top_left: Pos2,
     row_num: usize,
