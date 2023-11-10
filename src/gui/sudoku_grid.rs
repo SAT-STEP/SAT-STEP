@@ -50,19 +50,22 @@ impl SATApp {
     /// Calculate and update position of each SudokuCell
     fn calculate_cell_positions(&mut self, grid_origin: Pos2, cell_size: f32) {}
 
+    /// Prep cells for the update_conflict_info and update_selected_constraint functions
+    fn reset_visualization_info(&mut self) {
+        for row in self.sudoku.iter_mut() {
+            for cell in row.iter_mut() {
+                cell.draw_big_number = cell.value.is_some();
+                cell.part_of_conflict = false;
+                cell.eq_symbols = Vec::new();
+                cell.little_numbers = Vec::new();
+            }
+        }
+    }
+
     /// Update conflict booleans and little symbols related to conflicts in SudokuCells
     fn update_conflict_info(&mut self) {
         // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
         if self.state.clicked_constraint_index.is_none() {
-            // This clearing code is possibly temporary, so it's not a separate function for now
-            for row in self.sudoku.iter_mut() {
-                for cell in row.iter_mut() {
-                    cell.part_of_conflict = false;
-                    cell.eq_symbols = Vec::new();
-                    cell.little_numbers = Vec::new();
-                }
-            }
-
             // Find and mark cells affected by the conflict literals
             if let Some(conflicts) = &self.state.conflict_literals {
                 for conflict in conflicts {
@@ -103,14 +106,15 @@ impl SATApp {
 
                 for variable in variables {
                     match variable {
-                        CnfVariable::Bit { row, col, .. } => self.sudoku[row as usize]
-                            [col as usize]
-                            .little_numbers
-                            .extend(variable.get_possible_numbers().into_iter()),
-                        CnfVariable::Decimal { row, col, value } => self.sudoku[row as usize]
-                            [col as usize]
-                            .little_numbers
-                            .push(value),
+                        CnfVariable::Bit { row, col, .. } => {
+                            self.sudoku[row as usize][col as usize].little_numbers
+                            .extend(variable.get_possible_numbers().into_iter());
+                            self.sudoku[row as usize][col as usize].draw_big_number = false;
+                        },
+                        CnfVariable::Decimal { row, col, value } => {
+                            self.sudoku[row as usize][col as usize].little_numbers.push(value);
+                            self.sudoku[row as usize][col as usize].draw_big_number = false;
+                        },
                         CnfVariable::Equality {
                             row,
                             col,
@@ -135,15 +139,6 @@ impl SATApp {
     fn update_selected_constraint(&mut self) {
         // Only do this if a constraint is not currently selected. That case is handled in update_conflict_info
         if self.state.clicked_conflict_index.is_none() {
-            // This clearing code is possibly temporary, so it's not a separate function for now
-            for row in self.sudoku.iter_mut() {
-                for cell in row.iter_mut() {
-                    cell.part_of_conflict = false;
-                    cell.eq_symbols = Vec::new();
-                    cell.little_numbers = Vec::new();
-                }
-            }
-
             let mut variables = Vec::new();
 
             // Visualize the clicked constraint, if there is one
@@ -156,13 +151,15 @@ impl SATApp {
 
             for variable in variables {
                 match variable {
-                    CnfVariable::Bit { row, col, .. } => self.sudoku[row as usize][col as usize]
-                        .little_numbers
-                        .extend(variable.get_possible_numbers().into_iter()),
-                    CnfVariable::Decimal { row, col, value } => self.sudoku[row as usize]
-                        [col as usize]
-                        .little_numbers
-                        .push(value),
+                    CnfVariable::Bit { row, col, .. } => {
+                        self.sudoku[row as usize][col as usize].little_numbers
+                        .extend(variable.get_possible_numbers().into_iter());
+                        self.sudoku[row as usize][col as usize].draw_big_number = false;
+                    },
+                    CnfVariable::Decimal { row, col, value } => {
+                        self.sudoku[row as usize][col as usize].little_numbers.push(value);
+                        self.sudoku[row as usize][col as usize].draw_big_number = false;
+                    },
                     CnfVariable::Equality {
                         row,
                         col,
@@ -176,6 +173,8 @@ impl SATApp {
                         self.sudoku[row2 as usize][col2 as usize]
                             .eq_symbols
                             .push("?".to_string()); // TODO where to get symbols
+                        self.sudoku[row as usize][col as usize].draw_big_number = false;
+                        self.sudoku[row2 as usize][col2 as usize].draw_big_number = false;
                     }
                 }
             }

@@ -109,6 +109,7 @@ impl Default for SATApp {
 #[derive(Clone)]
 pub struct SudokuCell {
     value: Option<i32>,
+    draw_big_number: bool,
     clue: bool,                 // Should the cell be darkened
     part_of_conflict: bool,     // Should the cell have highlighted borders
     eq_symbols: Vec<String>,
@@ -139,6 +140,7 @@ impl Default for SudokuCell {
     fn default() -> Self {
         Self {
             value: None,
+            draw_big_number: false,
             clue: false,
             part_of_conflict: false,
             eq_symbols: Vec::new(),
