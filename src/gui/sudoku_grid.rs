@@ -152,7 +152,7 @@ impl SATApp {
                             let symbol = eq_symbols.next().unwrap();
                             self.sudoku[row as usize][col as usize]
                                 .eq_symbols
-                                .push(symbol);
+                                .push(symbol.clone());
                             self.sudoku[row2 as usize][col2 as usize]
                                 .eq_symbols
                                 .push(symbol);
@@ -201,7 +201,7 @@ impl SATApp {
                         let symbol = eq_symbols.next().unwrap();
                         self.sudoku[row as usize][col as usize]
                             .eq_symbols
-                            .push(symbol);
+                            .push(symbol.clone());
                         self.sudoku[row2 as usize][col2 as usize]
                             .eq_symbols
                             .push(symbol);
