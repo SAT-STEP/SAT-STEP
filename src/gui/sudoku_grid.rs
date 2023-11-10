@@ -104,6 +104,9 @@ impl SATApp {
                         .collect();
                 }
 
+                let mut eq_symbols = (b'A'..=b'Z')
+                .map(|c| String::from_utf8(vec![c]).unwrap()).collect::<Vec<String>>().into_iter();
+
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
@@ -122,12 +125,13 @@ impl SATApp {
                             col2,
                             ..
                         } => {
+                            let symbol = eq_symbols.next().unwrap();
                             self.sudoku[row as usize][col as usize]
                                 .eq_symbols
-                                .push("?".to_string()); // TODO where to get symbols
+                                .push(symbol);
                             self.sudoku[row2 as usize][col2 as usize]
                                 .eq_symbols
-                                .push("?".to_string()); // TODO where to get symbols
+                                .push(symbol);
                         }
                     }
                 }
@@ -149,6 +153,9 @@ impl SATApp {
                 variables = self.state.little_number_constraints.clone();
             }
 
+            let mut eq_symbols = (b'A'..=b'Z')
+            .map(|c| String::from_utf8(vec![c]).unwrap()).collect::<Vec<String>>().into_iter();
+
             for variable in variables {
                 match variable {
                     CnfVariable::Bit { row, col, .. } => {
@@ -167,12 +174,13 @@ impl SATApp {
                         col2,
                         ..
                     } => {
+                        let symbol = eq_symbols.next().unwrap();
                         self.sudoku[row as usize][col as usize]
                             .eq_symbols
-                            .push("?".to_string()); // TODO where to get symbols
+                            .push(symbol);
                         self.sudoku[row2 as usize][col2 as usize]
                             .eq_symbols
-                            .push("?".to_string()); // TODO where to get symbols
+                            .push(symbol);
                         self.sudoku[row as usize][col as usize].draw_big_number = false;
                         self.sudoku[row2 as usize][col2 as usize].draw_big_number = false;
                     }
