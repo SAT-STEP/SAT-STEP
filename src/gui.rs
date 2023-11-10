@@ -208,8 +208,10 @@ impl SudokuCell {
         littles.sort();
         littles.dedup();
 
-        let font_id = egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
-        let space_font_id = egui::FontId::new(size * EMPTY_ROW_MULTIPLIER, egui::FontFamily::Monospace);
+        let font_id =
+            egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
+        let space_font_id =
+            egui::FontId::new(size * EMPTY_ROW_MULTIPLIER, egui::FontFamily::Monospace);
 
         for (i, val) in littles.iter().enumerate() {
             if i % 3 == 0 && i > 0 {
@@ -219,24 +221,35 @@ impl SudokuCell {
                     TextFormat {
                         font_id: space_font_id.clone(),
                         ..Default::default()
-                });
+                    },
+                );
             }
-            let text = if *val > 0 { format!(" {}", *val) } else { (*val).to_string() };
+            let text = if *val > 0 {
+                format!(" {}", *val)
+            } else {
+                (*val).to_string()
+            };
             text_job.append(
                 &text,
                 0.0,
                 TextFormat {
                     font_id: font_id.clone(),
-                    color: if *val > 0 { Color32::BLUE } else { Color32::RED },
+                    color: if *val > 0 {
+                        Color32::BLUE
+                    } else {
+                        Color32::RED
+                    },
                     ..Default::default()
-            });
+                },
+            );
             text_job.append(
                 &" ".to_string(),
                 0.0,
                 TextFormat {
                     font_id: space_font_id.clone(),
                     ..Default::default()
-            });
+                },
+            );
         }
     }
 }

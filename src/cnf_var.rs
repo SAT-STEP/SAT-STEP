@@ -97,9 +97,11 @@ impl CnfVariable {
     /// Used in drawing little numbers.
     pub fn get_possible_numbers(&self) -> HashSet<i32> {
         match self {
-            Self::Equality {.. } => HashSet::new(),
-            Self::Decimal {value, .. } => HashSet::from([*value]),
-            Self::Bit {bit_index, value, ..} => {
+            Self::Equality { .. } => HashSet::new(),
+            Self::Decimal { value, .. } => HashSet::from([*value]),
+            Self::Bit {
+                bit_index, value, ..
+            } => {
                 let mut possibilities: HashSet<i32> = HashSet::new();
                 for i in 0..9 {
                     if (i & (1 << bit_index) > 0) == *value {
@@ -118,22 +120,46 @@ mod tests {
 
     #[test]
     fn test_get_possible_numbers_decimal() {
-        let variable = CnfVariable::Decimal { row: 1, col: 1, value: 3 };
+        let variable = CnfVariable::Decimal {
+            row: 1,
+            col: 1,
+            value: 3,
+        };
         assert_eq!(variable.get_possible_numbers(), HashSet::from([3]));
     }
 
     #[test]
     fn test_get_possible_numbers_eq() {
-        let variable = CnfVariable::Equality { row: 1, col: 1, row2: 1, col2: 2, bit_index: 0, equal: true };
+        let variable = CnfVariable::Equality {
+            row: 1,
+            col: 1,
+            row2: 1,
+            col2: 2,
+            bit_index: 0,
+            equal: true,
+        };
         assert_eq!(variable.get_possible_numbers(), HashSet::new());
     }
 
     #[test]
     fn test_get_possible_numbers_bit() {
-        let variable = CnfVariable::Bit { row: 1, col: 1, bit_index: 2, value: true };
-        let variable2 = CnfVariable::Bit { row: 1, col: 1, bit_index: 1, value: false };
+        let variable = CnfVariable::Bit {
+            row: 1,
+            col: 1,
+            bit_index: 2,
+            value: true,
+        };
+        let variable2 = CnfVariable::Bit {
+            row: 1,
+            col: 1,
+            bit_index: 1,
+            value: false,
+        };
 
         assert_eq!(variable.get_possible_numbers(), HashSet::from([5, 6, 7, 8]));
-        assert_eq!(variable2.get_possible_numbers(), HashSet::from([1, 2, 5, 6, 9]));
+        assert_eq!(
+            variable2.get_possible_numbers(),
+            HashSet::from([1, 2, 5, 6, 9])
+        );
     }
 }

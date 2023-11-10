@@ -14,11 +14,6 @@ const ROW_COL_NUM_SIZE_MULTIPLIER: f32 = 0.4; // Of cell size
 const CELL_SPACING_MULTIPLIER: f32 = 0.05; // Of cell size
 const BLOCK_SPACING_MULTIPLIER: f32 = 0.1; // Of cell size
 
-/// Sudokugridin refaktoroinnin tarkoituksena olis kirjottaa koko sudokun piirto alusta lähtien
-/// uusiks. sudoku_grid funktio on kauhea sekasotku, joten fiksataan se.
-///
-/// Funktion olisi refaktoroinnin jälkeen tarkoitus näyttää about
-/// sudoku.draw()
 impl SATApp {
     /// Draw the actual sudoku grid
     pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) {
@@ -41,7 +36,6 @@ impl SATApp {
         self.draw_row_numbers(ui, row_col_num_origin, cell_size);
         self.draw_col_numbers(ui, row_col_num_origin, cell_size);
 
-
         let grid_origin = row_col_num_origin
             + Vec2::new(
                 cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
@@ -61,7 +55,10 @@ impl SATApp {
                 editor_label_origin,
                 egui::Align2::LEFT_TOP,
                 "N",
-                egui::FontId::new(cell_size * ROW_COL_NUM_FIELD_MULTIPLIER, egui::FontFamily::Monospace),
+                egui::FontId::new(
+                    cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
+                    egui::FontFamily::Monospace,
+                ),
                 Color32::GRAY,
             );
         }
@@ -154,7 +151,8 @@ impl SATApp {
     fn reset_visualization_info(&mut self) {
         for row in self.sudoku.iter_mut() {
             for cell in row.iter_mut() {
-                cell.draw_big_number = cell.value.is_some() && (self.state.show_solved_sudoku || cell.clue);
+                cell.draw_big_number =
+                    cell.value.is_some() && (self.state.show_solved_sudoku || cell.clue);
                 cell.part_of_conflict = false;
                 cell.eq_symbols = Vec::new();
                 cell.little_numbers = Vec::new();
