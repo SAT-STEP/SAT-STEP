@@ -5,7 +5,7 @@ mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
-use egui::{Pos2, Rect, Ui};
+use egui::{Pos2, Vec2, Rect, Ui};
 use egui::containers;
 use egui::Color32;
 use egui::Margin;
@@ -135,28 +135,45 @@ impl SudokuCell {
         let rect = Rect::from_two_pos(self.top_left, self.bottom_right);
         let rect_action = ui.allocate_rect(rect, egui::Sense::click());
 
-        // if self.state.selected_cell
-        //     == Some((cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1))
-        // {
-        //     ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE)};
-        if self.clue {
+        if rect_action.clicked() // doesn't works. selected_cell: Option<(i32, i32)> needed
+        {
+            ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE)
+        } else if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
+        let size = self.bottom_right.x - self.top_left.x;
+        let center = self.top_left + Vec2::new(size / 2.0, size / 2.0);
+        
 
-        // let size = self.bottom_right / 2.0;
-        // if let Some(val) = self.value && self.draw_big_number {
-        //     let center = self.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-        //         ui.painter().text(
-        //             center,
-        //             egui::Align2::CENTER_CENTER,
-        //             self.value.to_string(),
-        //             egui::FontId::new(cell_size * 0.6, egui::FontFamily::Monospace),
-        //             Color32::BLACK,
-        //         );
-        //     return;
-        // }
+        if self.draw_big_number {
+            if let Some(val) = self.value {
+                    ui.painter().text(
+                        center,
+                        egui::Align2::CENTER_CENTER,
+                        val.to_string(),
+                        egui::FontId::new(size * 0.6, egui::FontFamily::Monospace),
+                        Color32::BLACK,
+                    );
+                return;
+            }
+        } else {
+            let mut littles = self.little_numbers.clone();
+            littles.sort();
+            littles.dedup();
+            let mut to_draw = self.eq_symbols.clone();
+            to_draw.extend(littles.into_iter().map(|x| x.to_string()));
+            let string_to_draw: String = to_draw.into_iter().collect();
+
+            ui.painter().text(
+                center,
+                egui::Align2::CENTER_CENTER,
+                string_to_draw,
+                egui::FontId::new(size * 0.2, egui::FontFamily::Monospace),
+                Color32::BLACK,
+            );
+        }
         
     }
 }
