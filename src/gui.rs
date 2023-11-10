@@ -5,7 +5,7 @@ mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
-use egui::Pos2;
+use egui::{Pos2, Rect, Ui};
 use egui::containers;
 use egui::Color32;
 use egui::Margin;
@@ -109,7 +109,7 @@ impl Default for SATApp {
 #[derive(Clone)]
 pub struct SudokuCell {
     value: Option<i32>,
-    draw_big_number: bool,
+    draw_big_number: bool,      // Should the solved sudoku cell value be shown
     clue: bool,                 // Should the cell be darkened
     part_of_conflict: bool,     // Should the cell have highlighted borders
     eq_symbols: Vec<String>,
@@ -131,8 +131,33 @@ impl SudokuCell {
         }
     }
 
-    pub fn draw(&self) {
-        todo!()
+    pub fn draw(&self, ui: &mut Ui) {
+        let rect = Rect::from_two_pos(self.top_left, self.bottom_right);
+        let rect_action = ui.allocate_rect(rect, egui::Sense::click());
+
+        // if self.state.selected_cell
+        //     == Some((cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1))
+        // {
+        //     ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE)};
+        if self.clue {
+            ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
+        } else {
+            ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
+        }
+
+        // let size = self.bottom_right / 2.0;
+        // if let Some(val) = self.value && self.draw_big_number {
+        //     let center = self.top_left + Vec2::new(cell_size / 2.0, cell_size / 2.0);
+        //         ui.painter().text(
+        //             center,
+        //             egui::Align2::CENTER_CENTER,
+        //             self.value.to_string(),
+        //             egui::FontId::new(cell_size * 0.6, egui::FontFamily::Monospace),
+        //             Color32::BLACK,
+        //         );
+        //     return;
+        // }
+        
     }
 }
 
