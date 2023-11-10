@@ -20,7 +20,7 @@ const BLOCK_SPACING_MULTIPLIER: f32 = 0.1; // Of cell size
 /// sudoku.draw()
 impl SATApp {
     /// Draw the actual sudoku grid
-    pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) -> Response {
+    pub fn new_sudoku_grid(&mut self, ui: &mut Ui, height: f32, width: f32) {
         let mut minimum_dimension: f32 = cmp::min(height as i32, width as i32) as f32;
         let margin = minimum_dimension * MARGIN_MULTIPLIER;
         minimum_dimension -= margin * 2.0;
@@ -43,12 +43,34 @@ impl SATApp {
             cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
         );
 
-        self.calculate_cell_positions(grid_origin, cell_size);
+        self.update_conflict_info();
+        self.update_selected_constraint();
+        self.reset_visualization_info();
+
+        self.draw_cells(grid_origin, cell_size);
     }
     /// Draw row and column numbers separately from the grid
     fn draw_row_col_numbers() {}
+
     /// Calculate and update position of each SudokuCell
-    fn calculate_cell_positions(&mut self, grid_origin: Pos2, cell_size: f32) {}
+    fn draw_cells(&mut self, grid_origin: Pos2, cell_size: f32) {
+        for row in 0..9 {
+            for col in 0..9 {
+                let cell_top_left: Pos2 = grid_origin + Vec2::new(
+                    col as f32 * cell_size + (col % 3) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                        + (col / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
+                    row as f32 * cell_size + (row % 3) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                        + (row / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
+                );
+                let cell_bot_right: Pos2 = cell_top_left + Vec2::new(cell_size, cell_size);
+
+                self.sudoku[row][col].top_left = cell_top_left;
+                self.sudoku[row][col].bottom_right = cell_bot_right;
+
+                self.sudoku[row][col].draw();
+            }
+        }
+    }
 
     /// Prep cells for the update_conflict_info and update_selected_constraint functions
     fn reset_visualization_info(&mut self) {
