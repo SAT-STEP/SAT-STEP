@@ -97,10 +97,10 @@ impl SATApp {
                 for conflict in conflicts {
                     match conflict {
                         CnfVariable::Bit { row, col, .. } => {
-                            self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
                         }
                         CnfVariable::Decimal { row, col, .. } => {
-                            self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
                         }
                         CnfVariable::Equality {
                             row,
@@ -109,8 +109,8 @@ impl SATApp {
                             col2,
                             ..
                         } => {
-                            self.sudoku[*row as usize][*col as usize].part_of_conflict = true;
-                            self.sudoku[*row2 as usize][*col2 as usize].part_of_conflict = true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
+                            self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict = true;
                         }
                     }
                 }
@@ -134,13 +134,13 @@ impl SATApp {
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
-                            self.sudoku[row as usize][col as usize].little_numbers
+                            self.sudoku[row as usize - 1][col as usize - 1].little_numbers
                             .extend(variable.get_possible_numbers().into_iter());
-                            self.sudoku[row as usize][col as usize].draw_big_number = false;
+                            self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                         },
                         CnfVariable::Decimal { row, col, value } => {
-                            self.sudoku[row as usize][col as usize].little_numbers.push(value);
-                            self.sudoku[row as usize][col as usize].draw_big_number = false;
+                            self.sudoku[row as usize - 1][col as usize - 1].little_numbers.push(value);
+                            self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                         },
                         CnfVariable::Equality {
                             row,
@@ -150,10 +150,10 @@ impl SATApp {
                             ..
                         } => {
                             let symbol = eq_symbols.next().unwrap();
-                            self.sudoku[row as usize][col as usize]
+                            self.sudoku[row as usize - 1][col as usize - 1]
                                 .eq_symbols
                                 .push(symbol.clone());
-                            self.sudoku[row2 as usize][col2 as usize]
+                            self.sudoku[row2 as usize - 1][col2 as usize - 1]
                                 .eq_symbols
                                 .push(symbol);
                         }
@@ -183,13 +183,13 @@ impl SATApp {
             for variable in variables {
                 match variable {
                     CnfVariable::Bit { row, col, .. } => {
-                        self.sudoku[row as usize][col as usize].little_numbers
+                        self.sudoku[row as usize - 1][col as usize - 1].little_numbers
                         .extend(variable.get_possible_numbers().into_iter());
-                        self.sudoku[row as usize][col as usize].draw_big_number = false;
+                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                     },
                     CnfVariable::Decimal { row, col, value } => {
-                        self.sudoku[row as usize][col as usize].little_numbers.push(value);
-                        self.sudoku[row as usize][col as usize].draw_big_number = false;
+                        self.sudoku[row as usize - 1][col as usize - 1].little_numbers.push(value);
+                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                     },
                     CnfVariable::Equality {
                         row,
@@ -199,14 +199,14 @@ impl SATApp {
                         ..
                     } => {
                         let symbol = eq_symbols.next().unwrap();
-                        self.sudoku[row as usize][col as usize]
+                        self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols
                             .push(symbol.clone());
-                        self.sudoku[row2 as usize][col2 as usize]
+                        self.sudoku[row2 as usize - 1][col2 as usize - 1]
                             .eq_symbols
                             .push(symbol);
-                        self.sudoku[row as usize][col as usize].draw_big_number = false;
-                        self.sudoku[row2 as usize][col2 as usize].draw_big_number = false;
+                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                        self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
                     }
                 }
             }
