@@ -1,15 +1,16 @@
-use std::{cmp, collections::HashSet};
+use std::cmp;
 
-use egui::{Color32, Pos2, Rect, Response, Ui, Vec2};
+use egui::{Color32, Pos2, Ui, Vec2};
 
 use crate::cnf_var::CnfVariable;
 
-use super::{SATApp, SudokuCell};
+use super::SATApp;
 
 /// All margins and spacings are relative to the minimum dimension of the window
 /// either directly or via cell size
 const MARGIN_MULTIPLIER: f32 = 0.01; // Of minimum dimension
 const ROW_COL_NUM_FIELD_MULTIPLIER: f32 = 0.7; // Of cell size
+const ROW_COL_NUM_SIZE_MULTIPLIER: f32 = 0.4; // Of cell size
 const CELL_SPACING_MULTIPLIER: f32 = 0.05; // Of cell size
 const BLOCK_SPACING_MULTIPLIER: f32 = 0.1; // Of cell size
 
@@ -36,12 +37,14 @@ impl SATApp {
             (height - minimum_dimension) / 2.0,
         );
 
-        // draw_row_col_numbers(ui, row_col_num_origin, cell_size);
+        self.draw_row_numbers(ui, row_col_num_origin, cell_size);
+        self.draw_col_numbers(ui, row_col_num_origin, cell_size);
 
-        let grid_origin = row_col_num_origin + Vec2::new(
-            cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
-            cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
-        );
+        let grid_origin = row_col_num_origin
+            + Vec2::new(
+                cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
+                cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
+            );
 
         self.update_conflict_info();
         self.update_selected_constraint();
@@ -50,21 +53,75 @@ impl SATApp {
         self.draw_cells(ui, grid_origin, cell_size);
     }
 
-    /// Draw row and column numbers separately from the grid
-    fn draw_row_col_numbers() {}
+    fn draw_row_numbers(&mut self, ui: &mut Ui, row_col_num_origin: Pos2, cell_size: f32) {
+        let first_center: Pos2 = Pos2::new(
+            row_col_num_origin.x + (cell_size * ROW_COL_NUM_FIELD_MULTIPLIER / 2.0),
+            row_col_num_origin.y + cell_size * ROW_COL_NUM_FIELD_MULTIPLIER + cell_size / 2.,
+        );
+
+        for row in 0..9 {
+            let center = first_center
+                + Vec2::new(
+                    0.,
+                    row as f32 * cell_size
+                        + (row - (row / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                        + (row / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
+                );
+
+            ui.painter().text(
+                center,
+                egui::Align2::CENTER_CENTER,
+                (row + 1).to_string(),
+                egui::FontId::new(
+                    cell_size * ROW_COL_NUM_SIZE_MULTIPLIER,
+                    egui::FontFamily::Monospace,
+                ),
+                Color32::DARK_GRAY,
+            );
+        }
+    }
+
+    fn draw_col_numbers(&mut self, ui: &mut Ui, row_col_num_origin: Pos2, cell_size: f32) {
+        let first_center: Pos2 = Pos2::new(
+            row_col_num_origin.x + cell_size * ROW_COL_NUM_FIELD_MULTIPLIER + cell_size / 2.,
+            row_col_num_origin.y + (cell_size * ROW_COL_NUM_FIELD_MULTIPLIER / 2.0),
+        );
+
+        for col in 0..9 {
+            let center = first_center
+                + Vec2::new(
+                    col as f32 * cell_size
+                        + (col - (col / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                        + (col / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
+                    0.,
+                );
+
+            ui.painter().text(
+                center,
+                egui::Align2::CENTER_CENTER,
+                (col + 1).to_string(),
+                egui::FontId::new(
+                    cell_size * ROW_COL_NUM_SIZE_MULTIPLIER,
+                    egui::FontFamily::Monospace,
+                ),
+                Color32::DARK_GRAY,
+            );
+        }
+    }
 
     /// Calculate and update position of each SudokuCell
     fn draw_cells(&mut self, ui: &mut Ui, grid_origin: Pos2, cell_size: f32) {
         for row in 0..9 {
             for col in 0..9 {
-                let cell_top_left: Pos2 = grid_origin + Vec2::new(
-                    col as f32 * cell_size
-                        + (col - (col / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
-                        + (col / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
-                    row as f32 * cell_size
-                        + (row - (row / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
-                        + (row / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
-                );
+                let cell_top_left: Pos2 = grid_origin
+                    + Vec2::new(
+                        col as f32 * cell_size
+                            + (col - (col / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                            + (col / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
+                        row as f32 * cell_size
+                            + (row - (row / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                            + (row / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
+                    );
 
                 let cell_bot_right: Pos2 = cell_top_left + Vec2::new(cell_size, cell_size);
 
@@ -97,10 +154,12 @@ impl SATApp {
                 for conflict in conflicts {
                     match conflict {
                         CnfVariable::Bit { row, col, .. } => {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
+                                true;
                         }
                         CnfVariable::Decimal { row, col, .. } => {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
+                                true;
                         }
                         CnfVariable::Equality {
                             row,
@@ -109,8 +168,10 @@ impl SATApp {
                             col2,
                             ..
                         } => {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
-                            self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict = true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
+                                true;
+                            self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict =
+                                true;
                         }
                     }
                 }
@@ -129,19 +190,24 @@ impl SATApp {
                 };
 
                 let mut eq_symbols = (b'A'..=b'Z')
-                .map(|c| String::from_utf8(vec![c]).unwrap()).collect::<Vec<String>>().into_iter();
+                    .map(|c| String::from_utf8(vec![c]).unwrap())
+                    .collect::<Vec<String>>()
+                    .into_iter();
 
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
-                            self.sudoku[row as usize - 1][col as usize - 1].little_numbers
-                            .extend(variable.get_possible_numbers().into_iter());
+                            self.sudoku[row as usize - 1][col as usize - 1]
+                                .little_numbers
+                                .extend(variable.get_possible_numbers().into_iter());
                             self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                        },
+                        }
                         CnfVariable::Decimal { row, col, value } => {
-                            self.sudoku[row as usize - 1][col as usize - 1].little_numbers.push(value);
+                            self.sudoku[row as usize - 1][col as usize - 1]
+                                .little_numbers
+                                .push(value);
                             self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                        },
+                        }
                         CnfVariable::Equality {
                             row,
                             col,
@@ -178,19 +244,24 @@ impl SATApp {
             }
 
             let mut eq_symbols = (b'A'..=b'Z')
-            .map(|c| String::from_utf8(vec![c]).unwrap()).collect::<Vec<String>>().into_iter();
+                .map(|c| String::from_utf8(vec![c]).unwrap())
+                .collect::<Vec<String>>()
+                .into_iter();
 
             for variable in variables {
                 match variable {
                     CnfVariable::Bit { row, col, .. } => {
-                        self.sudoku[row as usize - 1][col as usize - 1].little_numbers
-                        .extend(variable.get_possible_numbers().into_iter());
+                        self.sudoku[row as usize - 1][col as usize - 1]
+                            .little_numbers
+                            .extend(variable.get_possible_numbers().into_iter());
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                    },
+                    }
                     CnfVariable::Decimal { row, col, value } => {
-                        self.sudoku[row as usize - 1][col as usize - 1].little_numbers.push(value);
+                        self.sudoku[row as usize - 1][col as usize - 1]
+                            .little_numbers
+                            .push(value);
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                    },
+                    }
                     CnfVariable::Equality {
                         row,
                         col,
