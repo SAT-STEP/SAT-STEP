@@ -44,7 +44,8 @@ impl ListFilter {
         self.create_cell_map(encoding);
     }
 
-    fn create_cell_map(&mut self, encoding: &EncodingType) {
+    // TODO: Fix for binary encoding
+    fn create_cell_map(&mut self, _encoding: &EncodingType) {
         for row in 1..=9 {
             for col in 1..=9 {
                 self.cell_constraints.insert((row, col), HashSet::new());
