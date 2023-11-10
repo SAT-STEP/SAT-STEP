@@ -2,7 +2,11 @@ use cadical::Solver;
 use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use super::SATApp;
-use crate::{solve_sudoku, string_from_grid, write_sudoku, GenericError};
+
+use crate::{
+    cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, string_from_grid, write_sudoku,
+    GenericError,
+};
 
 impl SATApp {
     /// Constraint list GUI element
@@ -52,9 +56,14 @@ impl SATApp {
                         Ok(sudoku_vec) => {
                             self.sudoku_from_option_values(sudoku_vec, true);
                             self.constraints.clear();
+                            self.trail.clear();
                             self.rendered_constraints = Vec::new();
                             self.state.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
+                            self.callback_wrapper = CadicalCallbackWrapper::new(
+                                self.constraints.clone(),
+                                self.trail.clone(),
+                            );
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
                         }
