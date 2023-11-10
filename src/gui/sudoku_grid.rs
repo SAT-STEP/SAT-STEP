@@ -37,8 +37,10 @@ impl SATApp {
             (height - minimum_dimension) / 2.0,
         );
 
+        self.draw_editor_label(ui, row_col_num_origin, cell_size);
         self.draw_row_numbers(ui, row_col_num_origin, cell_size);
         self.draw_col_numbers(ui, row_col_num_origin, cell_size);
+
 
         let grid_origin = row_col_num_origin
             + Vec2::new(
@@ -51,6 +53,18 @@ impl SATApp {
         self.update_selected_constraint();
 
         self.draw_cells(ui, grid_origin, cell_size);
+    }
+
+    fn draw_editor_label(&mut self, ui: &mut Ui, editor_label_origin: Pos2, cell_size: f32) {
+        if self.state.editor_active {
+            ui.painter().text(
+                editor_label_origin,
+                egui::Align2::LEFT_TOP,
+                "N",
+                egui::FontId::new(cell_size * ROW_COL_NUM_FIELD_MULTIPLIER, egui::FontFamily::Monospace),
+                Color32::GRAY,
+            );
+        }
     }
 
     fn draw_row_numbers(&mut self, ui: &mut Ui, row_col_num_origin: Pos2, cell_size: f32) {
@@ -590,39 +604,3 @@ impl SATApp {
 //     }
 //     (drew_constraint, cell.c_index)
 // }
-
-fn draw_col_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, col_num: usize) {
-    let center = Pos2::new(top_left.x, top_left.y - cell_size * 0.8)
-        + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-    ui.painter().text(
-        center,
-        egui::Align2::CENTER_CENTER,
-        (col_num + 1).to_string(),
-        egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
-        Color32::DARK_GRAY,
-    );
-}
-
-fn draw_row_number(ui: &mut Ui, top_left: Pos2, cell_size: f32, row_num: usize) {
-    let center = Pos2::new(top_left.x + 0.2 * cell_size, top_left.y)
-        + Vec2::new(cell_size / 2.0, cell_size / 2.0);
-    ui.painter().text(
-        center,
-        egui::Align2::CENTER_CENTER,
-        (row_num + 1).to_string(),
-        egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
-        Color32::DARK_GRAY,
-    );
-}
-
-fn recording_label(ui: &mut Ui, width: f32, height: f32, cell_size: f32, recording: bool) {
-    if recording {
-        ui.painter().text(
-            Pos2::from((width + cell_size, height - cell_size * 0.9)),
-            egui::Align2::LEFT_CENTER,
-            "input mode on",
-            egui::FontId::new(cell_size * 0.4, egui::FontFamily::Monospace),
-            Color32::GRAY,
-        );
-    }
-}
