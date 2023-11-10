@@ -4,7 +4,7 @@ use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 use super::SATApp;
 use crate::{
     cnf_converter::create_tuples_from_constraints, solve_sudoku, string_from_grid, write_sudoku,
-    GenericError,
+    GenericError, cadical_wrapper::CadicalCallbackWrapper,
 };
 
 impl SATApp {
@@ -56,9 +56,14 @@ impl SATApp {
                             self.sudoku = sudoku_vec;
                             self.clues = self.sudoku.clone();
                             self.constraints.clear();
+                            self.trail.clear();
                             self.rendered_constraints = Vec::new();
                             self.state.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
+                            self.callback_wrapper = CadicalCallbackWrapper::new(
+                                self.constraints.clone(), 
+                                self.trail.clone()
+                            );
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
                         }
