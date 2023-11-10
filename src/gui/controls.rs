@@ -50,7 +50,7 @@ impl SATApp {
                     let sudoku_result = crate::get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
-                            self.sudoku_from_option_values(sudoku_vec);
+                            self.sudoku_from_option_values(sudoku_vec, true);
                             self.constraints.clear();
                             self.rendered_constraints = Vec::new();
                             self.state.reinit();
@@ -75,7 +75,7 @@ impl SATApp {
                 let solve_result = solve_sudoku(&self.get_option_value_sudoku(), &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
-                        self.sudoku_from_option_values(solved);
+                        self.sudoku_from_option_values(solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
                         self.rendered_constraints = self.state.get_filtered();
@@ -102,7 +102,7 @@ impl SATApp {
 
                 match sudoku {
                     Ok(sudoku_vec) => {
-                        self.sudoku_from_option_values(sudoku_vec);
+                        self.sudoku_from_option_values(sudoku_vec, true);
                         self.solver = Solver::with_config("plain").unwrap();
                         self.solver
                             .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -124,7 +124,7 @@ impl SATApp {
                                 }
                                 if self.state.selected_cell.is_some() {
                                     if let Some((row, col)) = self.state.selected_cell {
-                                        self.set_cell(row, col, Some(n));
+                                        self.set_cell(row, col, Some(n), true);
                                     }
                                 }
                             }
@@ -134,7 +134,7 @@ impl SATApp {
                         } => {
                             if key == &Key::Backspace {
                                 if let Some((row, col)) = self.state.selected_cell {
-                                    self.set_cell(row, col, None);
+                                    self.set_cell(row, col, None, false);
                                 }
                             }
                         }

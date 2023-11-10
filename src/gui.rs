@@ -63,19 +63,21 @@ impl SATApp {
         sudoku
     }
 
-    pub fn sudoku_from_option_values(&mut self, sudoku: Vec<Vec<Option<i32>>>) {
+    pub fn sudoku_from_option_values(&mut self, sudoku: Vec<Vec<Option<i32>>>, add_new_clues: bool) {
         for (row_index, row) in sudoku.iter().enumerate() {
             for (col_index, value)in row.iter().enumerate() {
-                self.set_cell(row_index as i32 + 1, col_index as i32 + 1, *value);
+                self.set_cell(row_index as i32 + 1, col_index as i32 + 1, *value, add_new_clues);
             }
         }
     }
 
     /// Set a value to specific cell using row and column (1-9 indexed)
-    fn set_cell(&mut self, row: i32, col: i32, value: Option<i32>) {
+    fn set_cell(&mut self, row: i32, col: i32, value: Option<i32>, add_new_clue: bool) {
         self.sudoku[row as usize - 1][col as usize - 1].value = value;
         if value.is_some() {
-            self.sudoku[row as usize - 1][col as usize - 1].clue = true;
+            if add_new_clue {
+                self.sudoku[row as usize - 1][col as usize - 1].clue = true;
+            }
         } else {
             self.sudoku[row as usize - 1][col as usize - 1].clue = false;
         }
