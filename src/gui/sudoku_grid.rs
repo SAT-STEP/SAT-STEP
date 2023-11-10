@@ -195,7 +195,7 @@ impl SATApp {
             }
 
             // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
-            if let Some(conflict_index) = self.state.clicked_constraint_index {
+            if let Some(conflict_index) = self.state.clicked_conflict_index {
                 let variables = if self.state.show_trail {
                     self.state.trail.clone().unwrap()
                 } else {
