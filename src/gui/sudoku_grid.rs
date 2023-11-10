@@ -55,7 +55,6 @@ impl SATApp {
 
     /// Calculate and update position of each SudokuCell
     fn draw_cells(&mut self, ui: &mut Ui, grid_origin: Pos2, cell_size: f32) {
-        println!("{}, {}", cell_size * CELL_SPACING_MULTIPLIER, cell_size * BLOCK_SPACING_MULTIPLIER);
         for row in 0..9 {
             for col in 0..9 {
                 let cell_top_left: Pos2 = grid_origin + Vec2::new(
