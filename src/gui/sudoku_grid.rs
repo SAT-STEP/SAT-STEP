@@ -32,7 +32,7 @@ impl SATApp {
                 + 2. * BLOCK_SPACING_MULTIPLIER);
 
         let row_col_num_origin = Pos2::new(
-            (width - minimum_dimension) / 2.0,
+            width + (width - minimum_dimension) / 2.0,
             (height - minimum_dimension) / 2.0,
         );
 
@@ -47,27 +47,32 @@ impl SATApp {
         self.update_selected_constraint();
         self.reset_visualization_info();
 
-        self.draw_cells(grid_origin, cell_size);
+        self.draw_cells(ui, grid_origin, cell_size);
     }
+
     /// Draw row and column numbers separately from the grid
     fn draw_row_col_numbers() {}
 
     /// Calculate and update position of each SudokuCell
-    fn draw_cells(&mut self, grid_origin: Pos2, cell_size: f32) {
+    fn draw_cells(&mut self, ui: &mut Ui, grid_origin: Pos2, cell_size: f32) {
+        println!("{}, {}", cell_size * CELL_SPACING_MULTIPLIER, cell_size * BLOCK_SPACING_MULTIPLIER);
         for row in 0..9 {
             for col in 0..9 {
                 let cell_top_left: Pos2 = grid_origin + Vec2::new(
-                    col as f32 * cell_size + (col % 3) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                    col as f32 * cell_size
+                        + (col - (col / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
                         + (col / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
-                    row as f32 * cell_size + (row % 3) as f32 * cell_size * CELL_SPACING_MULTIPLIER
+                    row as f32 * cell_size
+                        + (row - (row / 3)) as f32 * cell_size * CELL_SPACING_MULTIPLIER
                         + (row / 3) as f32 * cell_size * BLOCK_SPACING_MULTIPLIER,
                 );
+
                 let cell_bot_right: Pos2 = cell_top_left + Vec2::new(cell_size, cell_size);
 
                 self.sudoku[row][col].top_left = cell_top_left;
                 self.sudoku[row][col].bottom_right = cell_bot_right;
 
-                self.sudoku[row][col].draw();
+                self.sudoku[row][col].draw(ui);
             }
         }
     }
@@ -112,19 +117,17 @@ impl SATApp {
                 }
             }
 
-            let mut variables = Vec::new();
-
             // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
             if let Some(conflict_index) = self.state.clicked_constraint_index {
-                if self.state.show_trail {
-                    variables = self.state.trail.clone().unwrap();
+                let variables = if self.state.show_trail {
+                    self.state.trail.clone().unwrap()
                 } else {
-                    variables = self.constraints.borrow()[conflict_index]
+                    self.constraints.borrow()[conflict_index]
                         .clone()
                         .iter()
                         .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
-                        .collect();
-                }
+                        .collect()
+                };
 
                 let mut eq_symbols = (b'A'..=b'Z')
                 .map(|c| String::from_utf8(vec![c]).unwrap()).collect::<Vec<String>>().into_iter();
