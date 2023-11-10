@@ -142,7 +142,10 @@ impl SATApp {
                 self.sudoku[row][col].top_left = cell_top_left;
                 self.sudoku[row][col].bottom_right = cell_bot_right;
 
-                self.sudoku[row][col].draw(ui, &mut self.state.selected_cell);
+                // Draw returns true if a cell selection was changed
+                if self.sudoku[row][col].draw(ui, &mut self.state) {
+                    self.rendered_constraints = self.state.get_filtered();
+                }
             }
         }
     }

@@ -135,26 +135,26 @@ impl SudokuCell {
         }
     }
 
-    pub fn draw(&self, ui: &mut Ui, selected_cell: &mut Option<(i32, i32)>) {
+    /// Draws the cell and returns true if a click was detected on the cell
+    pub fn draw(&self, ui: &mut Ui, app_state: &mut AppState) -> bool {
         let rect = Rect::from_two_pos(self.top_left, self.bottom_right);
         let rect_action = ui.allocate_rect(rect, egui::Sense::click());
     
-        // May or may not work as intended
-        if rect_action.clicked() {
-            if *selected_cell == Some((self.row, self.col)) {
-                //self.state.clear_cell();
-                
+        // Filter constraint list by cell
+        // Would be cleaner to do all the click handling in one place, but this way the click is
+        // handled BEFORE drawing the cell
+        let selection_changed = rect_action.clicked();
+        if selection_changed {
+            if app_state.selected_cell == Some((self.row as i32, self.col as i32)) {
+                app_state.clear_cell();
             } else {
-            // self.state
-            //     .select_cell(cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1);
+                app_state.select_cell(self.row as i32, self.col as i32);
             }
-            // refresh constraints here ?????????? so they're either all, or of the selected cell?
         }
     
-        if Some((self.row, self.col) ) == *selected_cell{
-            ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE)
-            
-        }if self.clue {
+        if Some((self.row, self.col) ) == app_state.selected_cell {
+            ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
+        } else if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
@@ -189,7 +189,8 @@ impl SudokuCell {
             );
             ui.painter().galley(self.top_left, galley2);
         }
-        
+
+        selection_changed
     }
 
     /// Convert own fields `little_numbers` and `eq_symbols` into a string that is ready to draw
