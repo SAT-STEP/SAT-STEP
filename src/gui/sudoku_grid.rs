@@ -46,9 +46,9 @@ impl SATApp {
                 cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
             );
 
+        self.reset_visualization_info();
         self.update_conflict_info();
         self.update_selected_constraint();
-        self.reset_visualization_info();
 
         self.draw_cells(ui, grid_origin, cell_size);
     }
@@ -137,7 +137,7 @@ impl SATApp {
     fn reset_visualization_info(&mut self) {
         for row in self.sudoku.iter_mut() {
             for cell in row.iter_mut() {
-                cell.draw_big_number = cell.value.is_some();
+                cell.draw_big_number = cell.value.is_some() && (self.state.show_solved_sudoku || cell.clue);
                 cell.part_of_conflict = false;
                 cell.eq_symbols = Vec::new();
                 cell.little_numbers = Vec::new();
