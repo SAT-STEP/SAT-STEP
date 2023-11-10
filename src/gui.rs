@@ -5,13 +5,12 @@ mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
-use egui::{Pos2, Vec2, Rect, Ui, TextStyle, FontId};
-use egui::
-    text::{LayoutJob, TextFormat};
 use egui::containers;
+use egui::text::{LayoutJob, TextFormat};
 use egui::Color32;
 use egui::Margin;
 use egui::RichText;
+use egui::{FontId, Pos2, Rect, TextStyle, Ui, Vec2};
 
 use crate::cnf_var::CnfVariable;
 use crate::Trail;
@@ -65,10 +64,19 @@ impl SATApp {
         sudoku
     }
 
-    pub fn sudoku_from_option_values(&mut self, sudoku: Vec<Vec<Option<i32>>>, add_new_clues: bool) {
+    pub fn sudoku_from_option_values(
+        &mut self,
+        sudoku: Vec<Vec<Option<i32>>>,
+        add_new_clues: bool,
+    ) {
         for (row_index, row) in sudoku.iter().enumerate() {
-            for (col_index, value)in row.iter().enumerate() {
-                self.set_cell(row_index as i32 + 1, col_index as i32 + 1, *value, add_new_clues);
+            for (col_index, value) in row.iter().enumerate() {
+                self.set_cell(
+                    row_index as i32 + 1,
+                    col_index as i32 + 1,
+                    *value,
+                    add_new_clues,
+                );
             }
         }
     }
@@ -109,13 +117,17 @@ impl Default for SATApp {
     }
 }
 
+const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
+const LITTLE_NUMBER_MULTIPLIER: f32 = 0.2; // Of cell size
+const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.6; // Of cell size
+
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
 pub struct SudokuCell {
     value: Option<i32>,
-    draw_big_number: bool,      // Should the solved sudoku cell value be shown
-    clue: bool,                 // Should the cell be darkened
-    part_of_conflict: bool,     // Should the cell have highlighted borders
+    draw_big_number: bool,  // Should the solved sudoku cell value be shown
+    clue: bool,             // Should the cell be darkened
+    part_of_conflict: bool, // Should the cell have highlighted borders
     eq_symbols: Vec<String>,
     little_numbers: Vec<i32>,
     top_left: Pos2,
@@ -139,7 +151,7 @@ impl SudokuCell {
     pub fn draw(&self, ui: &mut Ui, app_state: &mut AppState) -> bool {
         let rect = Rect::from_two_pos(self.top_left, self.bottom_right);
         let rect_action = ui.allocate_rect(rect, egui::Sense::click());
-    
+
         // Filter constraint list by cell
         // Would be cleaner to do all the click handling in one place, but this way the click is
         // handled BEFORE drawing the cell
@@ -151,73 +163,81 @@ impl SudokuCell {
                 app_state.select_cell(self.row as i32, self.col as i32);
             }
         }
-    
-        if Some((self.row, self.col) ) == app_state.selected_cell {
+
+        if Some((self.row, self.col)) == app_state.selected_cell {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
         } else if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
-    
+
         let size = self.bottom_right.x - self.top_left.x;
         let center = self.top_left + Vec2::new(size / 2.0, size / 2.0);
 
         if self.draw_big_number {
             if let Some(val) = self.value {
-                    ui.painter().text(
-                        center,
-                        egui::Align2::CENTER_CENTER,
-                        val.to_string(),
-                        egui::FontId::new(size * 0.6, egui::FontFamily::Monospace),
-                        Color32::BLACK,
-                    );
+                ui.painter().text(
+                    center,
+                    egui::Align2::CENTER_CENTER,
+                    val.to_string(),
+                    egui::FontId::new(size * BIG_NUMBER_MULTIPLIER, egui::FontFamily::Monospace),
+                    Color32::BLACK,
+                );
             }
         } else {
             let mut text_job = LayoutJob::default();
-            let string_to_draw = self.prepare_little_symbols(text_job);
-            
-            
-            //let galley = ui.fonts(|f| f.layout_job(text_job));
-            
 
-            let galley2 = ui.painter().layout(
-                string_to_draw,
-                egui::FontId::new(size / 3.0, egui::FontFamily::Monospace),
-                Color32::BLACK,
-                size,
-            );
-            ui.painter().galley(self.top_left, galley2);
+            self.prepare_little_symbols(&mut text_job, size);
+
+            let galley = ui.fonts(|f| f.layout_job(text_job));
+
+            // TODO: Fix this for binary encoding
+            ui.painter().galley(self.top_left, galley);
         }
 
         selection_changed
     }
 
-    /// Convert own fields `little_numbers` and `eq_symbols` into a string that is ready to draw
-    fn prepare_little_symbols(&self, text_job: LayoutJob) -> String {
+    // TODO: Fix this for binary encoding
+    // TODO: Improve this? This is good enough for now, but was done quickly to get a PR made
+    /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
+    fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
         let mut littles = self.little_numbers.clone();
+
         littles.sort();
         littles.dedup();
-        let mut to_draw = self.eq_symbols.clone();
-        to_draw.extend(littles.into_iter().map(|x| x.to_string()));
-        to_draw = to_draw.iter().map(|x| x.to_owned() + " ").collect();
-        
-        to_draw.into_iter().collect()
 
-        // Maybe use text_job to apply different colors to diffrent symbols. TODO
-        // let font_id = TextStyle::Body.resolve(ui.style());
-        // let little_font = FontId::new(size/3.0, font_id.family.clone());
-        //
-        // text_job.append(
-        //     &string_to_draw,
-        //     0.2, 
-        //     TextFormat {
-        //         font_id: little_font.clone(),
-        //         color: Color32::RED,
-        //         ..Default::default()
-        // },);
+        let font_id = egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
+        let space_font_id = egui::FontId::new(size * EMPTY_ROW_MULTIPLIER, egui::FontFamily::Monospace);
 
-        // text_job
+        for (i, val) in littles.iter().enumerate() {
+            if i % 3 == 0 && i > 0 {
+                text_job.append(
+                    &"\n\n".to_string(),
+                    0.0,
+                    TextFormat {
+                        font_id: space_font_id.clone(),
+                        ..Default::default()
+                });
+            }
+            let text = if *val > 0 { format!(" {}", *val) } else { (*val).to_string() };
+            text_job.append(
+                &text,
+                0.0,
+                TextFormat {
+                    font_id: font_id.clone(),
+                    color: if *val > 0 { Color32::BLUE } else { Color32::RED },
+                    ..Default::default()
+            });
+            text_job.append(
+                &" ".to_string(),
+                0.0,
+                TextFormat {
+                    font_id: space_font_id.clone(),
+                    ..Default::default()
+            });
+        }
     }
 }
 
