@@ -5,7 +5,9 @@ mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
-use egui::{Pos2, Vec2, Rect, Ui};
+use egui::{Pos2, Vec2, Rect, Ui, TextStyle, FontId};
+use egui::
+    text::{LayoutJob, TextFormat};
 use egui::containers;
 use egui::Color32;
 use egui::Margin;
@@ -133,21 +135,33 @@ impl SudokuCell {
         }
     }
 
-    pub fn draw(&self, ui: &mut Ui) {
+    pub fn draw(&self, ui: &mut Ui, selected_cell: &mut Option<(i32, i32)>) {
         let rect = Rect::from_two_pos(self.top_left, self.bottom_right);
         let rect_action = ui.allocate_rect(rect, egui::Sense::click());
-
-        if rect_action.clicked() // doesn't works. selected_cell: Option<(i32, i32)> needed
-        {
+    
+        // May or may not work as intended
+        if rect_action.clicked() {
+            if *selected_cell == Some((self.row, self.col)) {
+                //self.state.clear_cell();
+                
+            } else {
+            // self.state
+            //     .select_cell(cell_state.row_num as i32 + 1, cell_state.col_num as i32 + 1);
+            }
+            // refresh constraints here ?????????? so they're either all, or of the selected cell?
+        }
+    
+        if Some((self.row, self.col) ) == *selected_cell{
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE)
-        } else if self.clue {
+            
+        }if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
+    
         let size = self.bottom_right.x - self.top_left.x;
         let center = self.top_left + Vec2::new(size / 2.0, size / 2.0);
-        
 
         if self.draw_big_number {
             if let Some(val) = self.value {
@@ -158,25 +172,51 @@ impl SudokuCell {
                         egui::FontId::new(size * 0.6, egui::FontFamily::Monospace),
                         Color32::BLACK,
                     );
-                return;
             }
         } else {
-            let mut littles = self.little_numbers.clone();
-            littles.sort();
-            littles.dedup();
-            let mut to_draw = self.eq_symbols.clone();
-            to_draw.extend(littles.into_iter().map(|x| x.to_string()));
-            let string_to_draw: String = to_draw.into_iter().collect();
+            let mut text_job = LayoutJob::default();
+            let string_to_draw = self.prepare_little_symbols(text_job);
+            
+            
+            //let galley = ui.fonts(|f| f.layout_job(text_job));
+            
 
-            ui.painter().text(
-                center,
-                egui::Align2::CENTER_CENTER,
+            let galley2 = ui.painter().layout(
                 string_to_draw,
-                egui::FontId::new(size * 0.2, egui::FontFamily::Monospace),
+                egui::FontId::new(size / 3.0, egui::FontFamily::Monospace),
                 Color32::BLACK,
+                size,
             );
+            ui.painter().galley(self.top_left, galley2);
         }
         
+    }
+
+    /// Convert own fields `little_numbers` and `eq_symbols` into a string that is ready to draw
+    fn prepare_little_symbols(&self, text_job: LayoutJob) -> String {
+        let mut littles = self.little_numbers.clone();
+        littles.sort();
+        littles.dedup();
+        let mut to_draw = self.eq_symbols.clone();
+        to_draw.extend(littles.into_iter().map(|x| x.to_string()));
+        to_draw = to_draw.iter().map(|x| x.to_owned() + " ").collect();
+        
+        to_draw.into_iter().collect()
+
+        // Maybe use text_job to apply different colors to diffrent symbols. TODO
+        // let font_id = TextStyle::Body.resolve(ui.style());
+        // let little_font = FontId::new(size/3.0, font_id.family.clone());
+        //
+        // text_job.append(
+        //     &string_to_draw,
+        //     0.2, 
+        //     TextFormat {
+        //         font_id: little_font.clone(),
+        //         color: Color32::RED,
+        //         ..Default::default()
+        // },);
+
+        // text_job
     }
 }
 
