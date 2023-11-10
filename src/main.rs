@@ -1,6 +1,6 @@
 use egui::Vec2;
 
-use sat_step::gui::{SATApp, SudokuCell};
+use sat_step::gui::{sudoku_cell::SudokuCell, SATApp};
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {

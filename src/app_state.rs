@@ -31,7 +31,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(constraints: ConstraintList) -> Self {
         let mut filter = ListFilter::new(constraints.clone());
-        let mut encoding = EncodingType::Decimal;
+        let encoding = EncodingType::Decimal;
         filter.reinit(&encoding);
         Self {
             filter,
