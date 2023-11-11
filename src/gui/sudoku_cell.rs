@@ -1,7 +1,7 @@
 use crate::app_state::AppState;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, Pos2, Rect, Ui, Vec2,
+    Color32, Pos2, Rect, Ui, Vec2, Stroke,
 };
 
 const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
@@ -61,6 +61,11 @@ impl SudokuCell {
 
         let size = self.bottom_right.x - self.top_left.x;
         let center = self.top_left + Vec2::new(size / 2.0, size / 2.0);
+
+        if self.part_of_conflict {
+            let stroke = Stroke::new(2.0, Color32::YELLOW);
+            ui.painter().rect_stroke(rect, 0.0, stroke)
+        }
 
         if self.draw_big_number {
             if let Some(val) = self.value {
