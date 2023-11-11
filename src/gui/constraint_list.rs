@@ -5,10 +5,22 @@ use egui::{
 use std::ops::Add;
 
 use crate::cnf_var::CnfVariable;
+use crate::gui::ControllableObj;
 
 use super::SATApp;
 
 struct ConstraintList {clauses: Vec<Vec<CnfVariable>>}
+
+impl ControllableObj for ConstraintList {
+    fn new (clauses: Vec<Vec<CnfVariable>>) -> Self {
+        ConstraintList {clauses}
+    }
+    fn display(&self){
+        
+    }
+
+    
+}
 
 impl SATApp {
     /// Constraint list GUI element
@@ -87,13 +99,15 @@ impl SATApp {
 
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
+                    
+                    let clauses_binding = self.rendered_constraints.clone();
+                    let mut clauses = ConstraintList{ clauses: clauses_binding };
 
-                    let clauses_binding = &self.rendered_constraints;
-                    let mut clauses = clauses_binding.iter().skip(first_item);
+                    let mut clause_iter = clauses.clauses.iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
-                        if let Some(clause) = clauses.next() {
+                        if let Some(clause) = clause_iter.next() {
                             // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();

@@ -10,6 +10,7 @@ use egui::containers;
 use egui::Color32;
 use egui::Margin;
 use egui::RichText;
+use egui::text::LayoutJob;
 
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable,
@@ -156,6 +157,12 @@ impl eframe::App for SATApp {
                     columns[0].vertical_centered(|ui| {
                         self.controls(ui, width, ctx);
                         self.constraint_list(ui, ctx, width);
+                        if !self.state.show_trail_view {
+                            self.controls(ui, width, ctx);
+                            self.constraint_list(ui, ctx, width);
+                        } else {
+                            self.trail_panel(ui, ctx, width);
+                        }
                     });
                     columns[1].vertical_centered(|ui| {
                         self.new_sudoku_grid(ui, height, width);
@@ -166,3 +173,7 @@ impl eframe::App for SATApp {
     }
 }
 
+trait ControllableObj {
+    fn new(clauses: Vec<Vec<CnfVariable>>) -> Self;
+    fn display(&self);
+}
