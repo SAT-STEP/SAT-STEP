@@ -8,6 +8,7 @@ use crate::cnf_var::CnfVariable;
 
 use super::SATApp;
 
+struct ConstraintList {clauses: Vec<Vec<CnfVariable>>}
 
 impl SATApp {
     /// Constraint list GUI element

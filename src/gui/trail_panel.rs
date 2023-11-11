@@ -14,6 +14,37 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
         self.buttons(ui, text_scale, ctx);
 
+        ui.horizontal_wrapped(|ui| {
+            ui.add(Label::new(RichText::new("Show trail").size(text_scale)));
+
+            let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
+            let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+            if response.clicked() {
+                self.state.show_trail = !self.state.show_trail;
+                self.state.show_conflict_literals = !self.state.show_conflict_literals;
+                response.mark_changed();
+            }
+            response.widget_info(|| {
+                egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
+            });
+
+            let how_on = ui
+                .ctx()
+                .animate_bool(response.id, self.state.show_conflict_literals);
+            let visuals = ui.style().interact_selectable(&response, true);
+            let rect = rect.expand(visuals.expansion);
+            let radius = 0.5 * rect.height();
+            ui.painter()
+                .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
+            let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
+            let center = egui::pos2(circle_x, rect.center().y);
+            ui.painter()
+                .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
+
+            ui.add(Label::new(
+                RichText::new("Show conflict literals and learned constraints").size(text_scale),
+            ));
+        });
 
         ui.vertical(|ui| {
             ScrollArea::both()
