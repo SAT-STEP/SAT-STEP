@@ -1,6 +1,9 @@
-use crate::{
-    cnf_converter::identifier_to_tuple, filtering::ListFilter, parse_numeric_input, ConstraintList,
-};
+use crate::{cnf_var::CnfVariable, filtering::ListFilter, parse_numeric_input, ConstraintList};
+
+pub enum EncodingType {
+    Decimal,
+    Binary,
+}
 
 pub struct AppState {
     filter: ListFilter,
@@ -8,18 +11,19 @@ pub struct AppState {
     pub max_length_input: String,
     pub selected_cell: Option<(i32, i32)>,
     pub clicked_constraint_index: Option<usize>,
-    pub conflict_literals: Option<[(i32, i32, i32); 2]>,
+    pub conflict_literals: Option<[CnfVariable; 2]>,
     pub clicked_conflict_index: Option<usize>,
-    pub trail: Option<Vec<(i32, i32, i32)>>,
+    pub trail: Option<Vec<CnfVariable>>,
     pub page_number: i32,
     pub page_count: i32,
     pub page_length: usize,
     pub page_length_input: String,
     pub filtered_length: usize,
     pub show_solved_sudoku: bool,
+    pub little_number_constraints: Vec<CnfVariable>,
+    pub encoding: EncodingType,
     pub show_conflict_literals: bool,
     pub show_trail: bool,
-    pub little_number_constraints: Vec<(i32, i32, i32)>,
     pub show_trail_view: bool,
     pub editor_active: bool,
 }
@@ -27,7 +31,8 @@ pub struct AppState {
 impl AppState {
     pub fn new(constraints: ConstraintList) -> Self {
         let mut filter = ListFilter::new(constraints.clone());
-        filter.reinit();
+        let encoding = EncodingType::Decimal;
+        filter.reinit(&encoding);
         Self {
             filter,
             max_length: None,
@@ -46,12 +51,13 @@ impl AppState {
             show_conflict_literals: false,
             show_trail: true,
             little_number_constraints: Vec::new(),
+            encoding,
             show_trail_view: false,
             editor_active: false,
         }
     }
 
-    pub fn get_filtered(&mut self) -> Vec<Vec<i32>> {
+    pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariable>> {
         let (list, length) = self
             .filter
             .get_filtered(self.page_number as usize, self.page_length);
@@ -60,12 +66,22 @@ impl AppState {
 
         self.update_little_number_constraints();
 
-        list
+        let enum_constraints = list
+            .iter()
+            .map(|constraint| {
+                constraint
+                    .iter()
+                    .map(|&x| CnfVariable::from_cnf(x, &self.encoding))
+                    .collect()
+            })
+            .collect();
+
+        enum_constraints
     }
 
     pub fn reinit(&mut self) {
         self.clear_filters();
-        self.filter.reinit();
+        self.filter.reinit(&self.encoding);
 
         self.page_number = 0;
         self.page_count = 0;
@@ -147,9 +163,13 @@ impl AppState {
     }
 
     pub fn update_little_number_constraints(&mut self) {
-        self.little_number_constraints = self
+        let constraints = self
             .filter
             .get_little_number_constraints(self.page_number as usize, self.page_length);
+        self.little_number_constraints = constraints
+            .iter()
+            .map(|&x| CnfVariable::from_cnf(x, &self.encoding))
+            .collect();
     }
 
     pub fn clear_trail(&mut self) {
@@ -158,15 +178,17 @@ impl AppState {
         self.trail = None;
     }
 
-    pub fn set_trail(&mut self, index: usize, conflict_literals: (i32, i32), trail: Vec<i32>) {
+    pub fn set_trail(
+        &mut self,
+        index: usize,
+        conflict_literals: (CnfVariable, CnfVariable),
+        trail: Vec<CnfVariable>,
+    ) {
         self.clear_filters();
 
         self.clicked_conflict_index = Some(index);
-        self.conflict_literals = Some([
-            identifier_to_tuple(conflict_literals.0),
-            identifier_to_tuple(conflict_literals.1),
-        ]);
-        self.trail = Some(trail.iter().map(|x| identifier_to_tuple(*x)).collect());
+        self.conflict_literals = Some([conflict_literals.0, conflict_literals.1]);
+        self.trail = Some(trail);
     }
 
     pub fn quit(&mut self) {

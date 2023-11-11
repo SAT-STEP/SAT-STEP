@@ -1,64 +1,5 @@
+use crate::{cadical_wrapper::CadicalCallbackWrapper, error::GenericError};
 use cadical::Solver;
-use egui::{
-    text::{LayoutJob, TextFormat},
-    Color32, FontId,
-};
-
-use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable, error::GenericError};
-
-pub struct DecimalVar {
-    pub row: i32,
-    pub col: i32,
-    pub val: i32,
-}
-
-impl CnfVariable for DecimalVar {
-    fn new(identifier: i32) -> DecimalVar {
-        let (row, col, val) = identifier_to_tuple(identifier);
-        DecimalVar { row, col, val }
-    }
-
-    fn human_readable(
-        &self,
-        text_job: &mut LayoutJob,
-        large_font: FontId,
-        small_font: FontId,
-        text_color: Color32,
-    ) {
-        let (lead_char, color) = if self.val > 0 {
-            ("", text_color)
-        } else {
-            ("~", Color32::RED)
-        };
-
-        text_job.append(
-            &format!("{}{}", lead_char, self.val.abs()),
-            0.0,
-            TextFormat {
-                font_id: large_font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
-        text_job.append(
-            &format!("({},{})", self.row, self.col),
-            0.0,
-            TextFormat {
-                font_id: small_font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
-    }
-
-    fn to_cnf(&self) -> i32 {
-        if self.val > 0 {
-            cnf_identifier(self.row, self.col, self.val)
-        } else {
-            -cnf_identifier(self.row, self.col, self.val.abs())
-        }
-    }
-}
 
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
@@ -162,18 +103,6 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
         (identifier % 81) / 9 + 1,
         negation_multiplier * (identifier % 9 + 1),
     )
-}
-
-pub fn create_tuples_from_constraints(constraints: Vec<Vec<i32>>) -> Vec<Vec<(i32, i32, i32)>> {
-    let mut tuples = Vec::new();
-    for constraint in constraints.iter() {
-        let mut temp = Vec::with_capacity(constraint.len());
-        for value in constraint {
-            temp.push(identifier_to_tuple(*value));
-        }
-        tuples.push(temp);
-    }
-    tuples
 }
 
 pub fn clues_from_string(
@@ -284,20 +213,6 @@ mod tests {
             (6, 2, -8),
             identifier_to_tuple(-1 * cnf_identifier(6, 2, 8))
         );
-    }
-
-    #[test]
-    fn test_create_tuples_from_constraints() {
-        let constraints = vec![vec![1, 2, 3], vec![10, 11, 12]];
-        let tuples = create_tuples_from_constraints(constraints);
-
-        assert_eq!((1, 1, 1), tuples[0][0]);
-        assert_eq!((1, 1, 2), tuples[0][1]);
-        assert_eq!((1, 1, 3), tuples[0][2]);
-
-        assert_eq!((1, 2, 1), tuples[1][0]);
-        assert_eq!((1, 2, 2), tuples[1][1]);
-        assert_eq!((1, 2, 3), tuples[1][2]);
     }
 
     #[test]

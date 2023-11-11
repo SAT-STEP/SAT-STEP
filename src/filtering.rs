@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{cnf_converter::identifier_to_tuple, ConstraintList};
+use crate::{app_state::EncodingType, cnf_converter::identifier_to_tuple, ConstraintList};
 
 pub struct ListFilter {
     constraints: ConstraintList,
@@ -40,11 +40,12 @@ impl ListFilter {
     }
 
     // Kept in case there is a need to reinit more things in future
-    pub fn reinit(&mut self) {
-        self.create_cell_map();
+    pub fn reinit(&mut self, encoding: &EncodingType) {
+        self.create_cell_map(encoding);
     }
 
-    fn create_cell_map(&mut self) {
+    // TODO: Fix for binary encoding
+    fn create_cell_map(&mut self, _encoding: &EncodingType) {
         for row in 1..=9 {
             for col in 1..=9 {
                 self.cell_constraints.insert((row, col), HashSet::new());
@@ -89,7 +90,7 @@ impl ListFilter {
         &self,
         page_number: usize,
         page_length: usize,
-    ) -> Vec<(i32, i32, i32)> {
+    ) -> Vec<i32> {
         let all_filtered_indexes = self.get_filtered_index_list();
         let stop: usize =
             std::cmp::min(all_filtered_indexes.len(), (page_number + 1) * page_length);
@@ -99,7 +100,7 @@ impl ListFilter {
 
         for index in index_list {
             if all_constraints[index].len() == 1 {
-                little_number_constraints.push(identifier_to_tuple(all_constraints[index][0]));
+                little_number_constraints.push(all_constraints[index][0]);
             }
         }
         little_number_constraints
@@ -159,7 +160,7 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
-        filter.reinit();
+        filter.reinit(&EncodingType::Decimal);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);
@@ -185,7 +186,7 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints);
-        filter.reinit();
+        filter.reinit(&EncodingType::Decimal);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);

@@ -2,9 +2,10 @@ use cadical::Solver;
 use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use super::SATApp;
+
 use crate::{
-    cadical_wrapper::CadicalCallbackWrapper, cnf_converter::create_tuples_from_constraints,
-    solve_sudoku, string_from_grid, write_sudoku, GenericError,
+    cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, string_from_grid, write_sudoku,
+    GenericError,
 };
 
 impl SATApp {
@@ -53,8 +54,7 @@ impl SATApp {
                     let sudoku_result = crate::get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
-                            self.sudoku = sudoku_vec;
-                            self.clues = self.sudoku.clone();
+                            self.sudoku_from_option_values(sudoku_vec, true);
                             self.constraints.clear();
                             self.trail.clear();
                             self.rendered_constraints = Vec::new();
@@ -81,14 +81,13 @@ impl SATApp {
             {
                 self.state.editor_active = false;
 
-                let solve_result = solve_sudoku(&self.sudoku, &mut self.solver);
+                let solve_result = solve_sudoku(&self.get_option_value_sudoku(), &mut self.solver);
                 match solve_result {
                     Ok(solved) => {
-                        self.sudoku = solved;
+                        self.sudoku_from_option_values(solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
-                        self.rendered_constraints =
-                            create_tuples_from_constraints(self.state.get_filtered());
+                        self.rendered_constraints = self.state.get_filtered();
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -112,8 +111,7 @@ impl SATApp {
 
                 match sudoku {
                     Ok(sudoku_vec) => {
-                        self.sudoku = sudoku_vec;
-                        self.clues = self.sudoku.clone();
+                        self.sudoku_from_option_values(sudoku_vec, true);
                         self.solver = Solver::with_config("plain").unwrap();
                         self.solver
                             .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -134,9 +132,8 @@ impl SATApp {
                                     break;
                                 }
                                 if self.state.selected_cell.is_some() {
-                                    if let Some(cell_state) = self.state.selected_cell {
-                                        self.sudoku[cell_state.0 as usize - 1]
-                                            [cell_state.1 as usize - 1] = Some(n);
+                                    if let Some((row, col)) = self.state.selected_cell {
+                                        self.set_cell(row, col, Some(n), true);
                                     }
                                 }
                             }
@@ -145,15 +142,13 @@ impl SATApp {
                             key, pressed: true, ..
                         } => {
                             if key == &Key::Backspace {
-                                if let Some(cell_state) = self.state.selected_cell {
-                                    self.sudoku[cell_state.0 as usize - 1]
-                                        [cell_state.1 as usize - 1] = None;
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    self.set_cell(row, col, None, false);
                                 }
                             }
                         }
                         _ => {}
                     }
-                    self.clues = self.sudoku.clone();
                 }
             }
             if ui
@@ -162,7 +157,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::S))
             {
                 if let Some(save_path) = rfd::FileDialog::new().save_file() {
-                    let sudoku_string = string_from_grid(self.sudoku.clone());
+                    let sudoku_string = string_from_grid(self.get_option_value_sudoku());
                     let save_result = write_sudoku(sudoku_string, &save_path);
                     if let Err(e) = save_result {
                         self.current_error = Some(e);
@@ -210,8 +205,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 self.state.filter_by_max_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
             if ui
                 .button(RichText::new("Clear - C").size(text_scale))
@@ -219,8 +213,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::C))
             {
                 self.state.clear_filters();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
         })
     }
@@ -259,8 +252,7 @@ impl SATApp {
                 }
 
                 self.state.set_page_length();
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
         })
     }
@@ -277,8 +269,7 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(0);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             if (ui.button(RichText::new("<").size(text_scale)).clicked()
@@ -286,8 +277,7 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             ui.add(
@@ -308,8 +298,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_number + 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             if (ui.button(RichText::new(">>").size(text_scale)).clicked()
@@ -318,8 +307,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_count - 1);
-                self.rendered_constraints =
-                    create_tuples_from_constraints(self.state.get_filtered());
+                self.rendered_constraints = self.state.get_filtered();
             }
 
             ui.checkbox(
