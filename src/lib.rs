@@ -20,6 +20,7 @@ use cnf_converter::{get_cell_value, sudoku_to_cnf};
 // use binary_cnf::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 
+
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);

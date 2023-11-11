@@ -8,6 +8,7 @@ use crate::cnf_var::CnfVariable;
 
 use super::SATApp;
 
+
 impl SATApp {
     /// Constraint list GUI element
     pub fn constraint_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
