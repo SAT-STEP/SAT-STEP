@@ -1,7 +1,7 @@
 use crate::app_state::AppState;
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, Pos2, Rect, Ui, Vec2, Stroke,
+    Color32, Pos2, Rect, Stroke, Ui, Vec2,
 };
 
 const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
