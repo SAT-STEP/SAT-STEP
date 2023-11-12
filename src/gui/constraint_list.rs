@@ -11,7 +11,7 @@ use crate::Trail;
 use super::SATApp;
 
 struct ConstraintList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
-struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String, trail: Trail, literals: (i32, i32)}
+struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String, trail: Trail, literals: Some<(i32, i32)>}
 
 impl ControllableObj for ConstraintList {
     fn clicked(&self,  state: &mut AppState, i: usize){
@@ -39,7 +39,7 @@ impl ControllableObj for ConflictList {
     fn set_literal(&mut self, literal: (i32, i32)) {
         self.literals = literal;
     }
-    fn get_literals(&self) -> Option<(i32, i32)> {Some(self.literals)}  
+    fn get_literals(&self) -> Option<(i32, i32)> {self.literals}
     fn clicked(&self,  state: &mut AppState, i: usize){
         let old_index = state.clicked_conflict_index;
         state.clear_filters();
@@ -157,14 +157,18 @@ impl SATApp {
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
                     
                     let clauses_binding = self.rendered_constraints.clone();
-                    let mut clauses = ConstraintList{ clauses: clauses_binding, combiner: "v".to_string() };
-
+                    if self.state.show_trail_view {
+                        for conflict in self.trail.conflict_literals
+                        let mut clauses = ConflictList{ clauses: self.conflict_literals.clone(), combiner: "^".to_string() , trail:self.trail, literals:None};
+                    }
+                    else{
+                        let mut clauses = ConstraintList{ clauses: clauses_binding, combiner: "v".to_string() };
+                    }
                     let mut clause_iter = clauses.clauses.iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
                         if let Some(clause) = clause_iter.next() {
-
                             clauses.set_literal(&clause);
                             // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
