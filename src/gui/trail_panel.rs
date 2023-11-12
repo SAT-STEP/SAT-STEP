@@ -7,6 +7,7 @@ use egui::{
 
 use crate::cnf_var::CnfVariable;
 
+
 use super::SATApp;
 
 impl SATApp {

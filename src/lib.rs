@@ -104,6 +104,8 @@ impl Trail {
     }
 }
 
+
+
 impl Default for Trail {
     fn default() -> Self {
         Self::new()

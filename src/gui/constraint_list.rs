@@ -10,6 +10,7 @@ use crate::gui::{ControllableObj, AppState};
 use super::SATApp;
 
 struct ConstraintList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
+struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
 
 impl ControllableObj for ConstraintList {
     fn new (clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self {
@@ -34,6 +35,49 @@ impl ControllableObj for ConstraintList {
     }
 
     
+}
+
+impl ControllableObj for ConflictList {
+    fn new (clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self {
+        ConstraintList {clauses, combiner}
+    }
+    fn clicked(&self,  state: &mut AppState, i: usize){
+        let old_index = state.clicked_conflict_index;
+        self.state.clear_filters();
+        self.rendered_constraints = state.get_filtered();
+
+        match old_index {
+            Some(index) => {
+                if index != i {
+                    let trail = self.clauses.trail_at_index(i);
+                    let enum_trail = trail
+                        .iter()
+                        .map(|&x| {
+                            CnfVariable::from_cnf(x, &state.encoding)
+                        })
+                        .collect();
+                    state.set_trail(
+                        i,
+                        (cnf_var1, cnf_var2),
+                        enum_trail,
+                    );
+                }
+            }
+            None => {
+                let trail = self.clauses.trail_at_index(i);
+                let enum_trail = trail
+                    .iter()
+                    .map(|&x| {
+                        CnfVariable::from_cnf(x, &state.encoding)
+                    })
+                    .collect();
+                state.set_trail(i, (cnf_var1, cnf_var2), enum_trail);
+            }
+        }
+    }
+    fn get_clicked(&self, state: &AppState) -> Option<usize> {
+        state.clicked_conflict_index
+    }
 }
 
 impl SATApp {
