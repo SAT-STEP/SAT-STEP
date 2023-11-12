@@ -5,7 +5,7 @@ use egui::{
 use std::ops::Add;
 
 use crate::cnf_var::CnfVariable;
-use crate::gui::ControllableObj;
+use crate::gui::{ControllableObj, AppState};
 
 use super::SATApp;
 
@@ -15,8 +15,22 @@ impl ControllableObj for ConstraintList {
     fn new (clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self {
         ConstraintList {clauses, combiner}
     }
-    fn display(&self){
-        
+    fn clicked(&self,  state: &mut AppState, i: usize){
+        state.clear_trail();
+        match state.clicked_constraint_index {
+            Some(index) => {
+                // clicking constraint again clears little numbers
+                if index == i {
+                    state.clicked_constraint_index = None;
+                } else {
+                    state.clicked_constraint_index = Some(i);
+                }
+            }
+            None => state.clicked_constraint_index = Some(i),
+        }
+    }
+    fn get_clicked(&self, state: &AppState) -> Option<usize> {
+        state.clicked_constraint_index 
     }
 
     
@@ -153,21 +167,11 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                self.state.clear_trail();
-                                match self.state.clicked_constraint_index {
-                                    Some(index) => {
-                                        // clicking constraint again clears little numbers
-                                        if index == i {
-                                            self.state.clicked_constraint_index = None;
-                                        } else {
-                                            self.state.clicked_constraint_index = Some(i);
-                                        }
-                                    }
-                                    None => self.state.clicked_constraint_index = Some(i),
-                                }
+                                clauses.clicked(&mut self.state,i);
+
                             }
 
-                            if let Some(clicked_index) = self.state.clicked_constraint_index {
+                            if let Some(clicked_index) = clauses.get_clicked(&self.state) {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
                                         rect_action.rect,

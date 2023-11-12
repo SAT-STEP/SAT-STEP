@@ -10,7 +10,6 @@ use egui::containers;
 use egui::Color32;
 use egui::Margin;
 use egui::RichText;
-use egui::text::LayoutJob;
 
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable,
@@ -169,5 +168,6 @@ impl eframe::App for SATApp {
 
 trait ControllableObj {
     fn new(clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self;
-    fn display(&self);
+    fn clicked(&self, state: &mut AppState, i: usize);
+    fn get_clicked(&self, state: &AppState) -> Option<usize>;
 }
