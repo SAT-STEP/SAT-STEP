@@ -165,16 +165,7 @@ impl SATApp {
                                 }
                             }
 
-                            if let Some(clicked_index) = self.state.clicked_conflict_index {
-                                if clicked_index == i {
-                                    ui.painter().rect_filled(
-                                        rect_action.rect,
-                                        0.0,
-                                        Color32::YELLOW,
-                                    );
-                                }
-                            }
-
+                            
                             // Text itself
                             ui.painter().galley(egui::pos2(x, y), galley);
                         }
