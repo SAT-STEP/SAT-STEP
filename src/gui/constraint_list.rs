@@ -6,16 +6,14 @@ use std::ops::Add;
 
 use crate::cnf_var::CnfVariable;
 use crate::gui::{ControllableObj, AppState};
+use crate::Trail;
 
 use super::SATApp;
 
 struct ConstraintList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
-struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
+struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String, trail: Trail, literals: (i32, i32)}
 
 impl ControllableObj for ConstraintList {
-    fn new (clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self {
-        ConstraintList {clauses, combiner}
-    }
     fn clicked(&self,  state: &mut AppState, i: usize){
         state.clear_trail();
         match state.clicked_constraint_index {
@@ -32,24 +30,24 @@ impl ControllableObj for ConstraintList {
     }
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_constraint_index 
-    }
-
-    
+    } 
+    fn set_literal(&mut self, literal: (i32, i32)) {}
+    fn get_literals(&self) -> Option<(i32, i32)> {None}  
 }
 
 impl ControllableObj for ConflictList {
-    fn new (clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self {
-        ConstraintList {clauses, combiner}
+    fn set_literal(&mut self, literal: (i32, i32)) {
+        self.literals = literal;
     }
+    fn get_literals(&self) -> Option<(i32, i32)> {Some(self.literals)}  
     fn clicked(&self,  state: &mut AppState, i: usize){
         let old_index = state.clicked_conflict_index;
-        self.state.clear_filters();
-        self.rendered_constraints = state.get_filtered();
-
+        state.clear_filters();
+        let rendered_constraints = state.get_filtered();
         match old_index {
             Some(index) => {
                 if index != i {
-                    let trail = self.clauses.trail_at_index(i);
+                    let trail = self.trail.trail_at_index(i);
                     let enum_trail = trail
                         .iter()
                         .map(|&x| {
@@ -64,7 +62,7 @@ impl ControllableObj for ConflictList {
                 }
             }
             None => {
-                let trail = self.clauses.trail_at_index(i);
+                let trail = self.trail.trail_at_index(i);
                 let enum_trail = trail
                     .iter()
                     .map(|&x| {
@@ -166,6 +164,8 @@ impl SATApp {
                     // Create element for each constraint
                     for i in first_item..last_item {
                         if let Some(clause) = clause_iter.next() {
+
+                            clauses.set_literal(&clause);
                             // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();

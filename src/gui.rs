@@ -167,7 +167,8 @@ impl eframe::App for SATApp {
 }
 
 trait ControllableObj {
-    fn new(clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self;
     fn clicked(&self, state: &mut AppState, i: usize);
     fn get_clicked(&self, state: &AppState) -> Option<usize>;
+    fn set_literal(&mut self, literal: (i32, i32));
+    fn get_literals(&self) -> Option<(i32, i32)>;
 }
