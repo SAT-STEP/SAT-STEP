@@ -9,11 +9,11 @@ use crate::gui::ControllableObj;
 
 use super::SATApp;
 
-struct ConstraintList {clauses: Vec<Vec<CnfVariable>>}
+struct ConstraintList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
 
 impl ControllableObj for ConstraintList {
-    fn new (clauses: Vec<Vec<CnfVariable>>) -> Self {
-        ConstraintList {clauses}
+    fn new (clauses: Vec<Vec<CnfVariable>>, combiner: String) -> Self {
+        ConstraintList {clauses, combiner}
     }
     fn display(&self){
         
@@ -101,7 +101,7 @@ impl SATApp {
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
                     
                     let clauses_binding = self.rendered_constraints.clone();
-                    let mut clauses = ConstraintList{ clauses: clauses_binding };
+                    let mut clauses = ConstraintList{ clauses: clauses_binding, combiner: "v".to_string() };
 
                     let mut clause_iter = clauses.clauses.iter().skip(first_item);
 
@@ -125,7 +125,7 @@ impl SATApp {
 
                                 if identifiers.peek().is_some() {
                                     text_job.append(
-                                        " v ",
+                                        &clauses.combiner,
                                         0.0,
                                         TextFormat {
                                             font_id: large_font.clone(),
