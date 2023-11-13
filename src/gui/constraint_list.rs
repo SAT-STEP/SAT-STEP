@@ -11,7 +11,7 @@ use crate::Trail;
 use super::SATApp;
 
 struct ConstraintList {clauses: Vec<Vec<CnfVariable>>, combiner: String}
-struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String, trail: Trail, literals: Some<(i32, i32)>}
+struct ConflictList {clauses: Vec<Vec<CnfVariable>>, combiner: String, trail: Trail, literals: Option<Vec<CnfVariable>>}
 
 impl ControllableObj for ConstraintList {
     fn clicked(&self,  state: &mut AppState, i: usize){
@@ -31,15 +31,19 @@ impl ControllableObj for ConstraintList {
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_constraint_index 
     } 
-    fn set_literal(&mut self, literal: (i32, i32)) {}
-    fn get_literals(&self) -> Option<(i32, i32)> {None}  
+    fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>) {}
+    fn get_literals(&self) -> Option<Vec<CnfVariable>> {None}
+    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses}
+    fn combiner(&self) -> String {self.combiner}
 }
 
 impl ControllableObj for ConflictList {
-    fn set_literal(&mut self, literal: (i32, i32)) {
+    fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>) {
         self.literals = literal;
     }
-    fn get_literals(&self) -> Option<(i32, i32)> {self.literals}
+    fn get_literals(&self) -> Option<Vec<CnfVariable>> {self.literals}
+    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses}
+    fn combiner(&self) -> String {self.combiner}
     fn clicked(&self,  state: &mut AppState, i: usize){
         let old_index = state.clicked_conflict_index;
         state.clear_filters();
@@ -157,26 +161,28 @@ impl SATApp {
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
                     
                     let clauses_binding = self.rendered_constraints.clone();
+
+                    let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
+                        clauses: clauses_binding, 
+                        combiner: "v".to_string()
+                    });
+                    // as Box<dyn ControllableObj>;
+
                     if self.state.show_trail_view {
-                        let mut clauses = ConflictList{ 
+                        clauses = Box::new(ConflictList{ 
                             clauses: self.trail.as_cnf(&self.state.encoding), 
                             combiner: "^".to_string() , 
                             trail:self.trail, 
                             literals:None
-                        };
+                        });
                     }
-                    else{
-                        let mut clauses = ConstraintList {
-                            clauses: clauses_binding, 
-                            combiner: "v".to_string() 
-                        };
-                    }
-                    let mut clause_iter = clauses.clauses.iter().skip(first_item);
+
+                    let mut clause_iter = clauses.clauses().iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
                         if let Some(clause) = clause_iter.next() {
-                            clauses.set_literal(&clause);
+                            clauses.set_literal(Option::from(clause.clone()));
                             // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();
@@ -194,7 +200,7 @@ impl SATApp {
 
                                 if identifiers.peek().is_some() {
                                     text_job.append(
-                                        &clauses.combiner,
+                                        &clauses.combiner(),
                                         0.0,
                                         TextFormat {
                                             font_id: large_font.clone(),
