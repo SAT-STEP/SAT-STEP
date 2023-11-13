@@ -58,11 +58,13 @@ impl ControllableObj for ConflictList {
                             CnfVariable::from_cnf(x, &state.encoding)
                         })
                         .collect();
-                    state.set_trail(
-                        i,
-                        (cnf_var1, cnf_var2),
-                        enum_trail,
-                    );
+                    if let Some(vars) = self.literals  {
+                        state.set_trail(
+                            i,
+                            (*vars[0], *vars[1]),
+                            enum_trail,
+                        );
+                    }
                 }
             }
             None => {
@@ -73,7 +75,9 @@ impl ControllableObj for ConflictList {
                         CnfVariable::from_cnf(x, &state.encoding)
                     })
                     .collect();
-                state.set_trail(i, (cnf_var1, cnf_var2), enum_trail);
+                if let Some(vars) = self.literals {
+                    state.set_trail(i, (*vars[0], *vars[1]), enum_trail);
+                }
             }
         }
     }
@@ -177,7 +181,7 @@ impl SATApp {
                         });
                     }
 
-                    let mut clause_iter = clauses.clauses().iter().skip(first_item);
+                    let mut clause_iter = clauses.clauses().clone().iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
