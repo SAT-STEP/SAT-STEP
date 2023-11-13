@@ -204,10 +204,13 @@ impl SATApp {
                         .collect()
                 };
 
-                let mut eq_symbols = (b'A'..=b'Z')
-                    .map(|c| String::from_utf8(vec![c]).unwrap())
-                    .collect::<Vec<String>>()
-                    .into_iter();
+                // let mut eq_symbols = (b'a'..=b'z').chain(b'A'..=b'Z')
+                //     .map(|c| String::from_utf8(vec![c]).unwrap())
+                //     .collect::<Vec<String>>()
+                //     .into_iter();
+
+                let eq_symbols2 = (1..=10000).collect::<Vec<i32>>();
+                let mut eq_symbols = eq_symbols2.iter().map(|x| x.to_string()).into_iter();
 
                 for variable in variables {
                     match variable {
