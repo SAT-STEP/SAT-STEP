@@ -12,14 +12,16 @@ mod tests;
 
 use std::{cell::RefCell, fs, num::ParseIntError, path::Path, rc::Rc};
 
+use crate::app_state::EncodingType;
+
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf_converter::{clues_from_string, string_from_grid};
 use cnf_converter::{get_cell_value, sudoku_to_cnf};
+use cnf_var::CnfVariable;
 // use binary_cnf::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
-
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]
@@ -79,6 +81,16 @@ impl Trail {
             conflict_literals: Rc::new(RefCell::new(Vec::new())),
             trail: Rc::new(RefCell::new(Vec::new())),
         }
+    }
+
+    pub fn as_cnf(&mut self, encoding:&EncodingType) -> Vec<Vec<CnfVariable>> {
+        (*self.conflict_literals.borrow()).clone().into_iter().map(|tup| {
+            let (literal1_identifier, literal2_identifier) = tup;
+            Vec::from([
+                CnfVariable::from_cnf(literal1_identifier, &encoding), 
+                CnfVariable::from_cnf(literal2_identifier, &encoding)
+                ])
+        }).collect()
     }
 
     pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {

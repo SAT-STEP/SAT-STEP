@@ -158,11 +158,18 @@ impl SATApp {
                     
                     let clauses_binding = self.rendered_constraints.clone();
                     if self.state.show_trail_view {
-                        for conflict in self.trail.conflict_literals
-                        let mut clauses = ConflictList{ clauses: self.conflict_literals.clone(), combiner: "^".to_string() , trail:self.trail, literals:None};
+                        let mut clauses = ConflictList{ 
+                            clauses: self.trail.as_cnf(&self.state.encoding), 
+                            combiner: "^".to_string() , 
+                            trail:self.trail, 
+                            literals:None
+                        };
                     }
                     else{
-                        let mut clauses = ConstraintList{ clauses: clauses_binding, combiner: "v".to_string() };
+                        let mut clauses = ConstraintList {
+                            clauses: clauses_binding, 
+                            combiner: "v".to_string() 
+                        };
                     }
                     let mut clause_iter = clauses.clauses.iter().skip(first_item);
 
