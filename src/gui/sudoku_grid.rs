@@ -204,14 +204,6 @@ impl SATApp {
                         .collect()
                 };
 
-                // let mut eq_symbols = (b'a'..=b'z').chain(b'A'..=b'Z')
-                //     .map(|c| String::from_utf8(vec![c]).unwrap())
-                //     .collect::<Vec<String>>()
-                //     .into_iter();
-
-                let eq_symbols2 = (1..=10000).collect::<Vec<i32>>();
-                let mut eq_symbols = eq_symbols2.iter().map(|x| x.to_string()).into_iter();
-
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
@@ -226,20 +218,8 @@ impl SATApp {
                                 .push(value);
                             self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                         }
-                        CnfVariable::Equality {
-                            row,
-                            col,
-                            row2,
-                            col2,
-                            ..
-                        } => {
-                            let symbol = eq_symbols.next().unwrap();
-                            self.sudoku[row as usize - 1][col as usize - 1]
-                                .eq_symbols
-                                .push(symbol.clone());
-                            self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                                .eq_symbols
-                                .push(symbol);
+                        CnfVariable::Equality {..} => {
+                            continue;
                         }
                     }
                 }
