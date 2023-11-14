@@ -242,6 +242,8 @@ impl SATApp {
                                 self.sudoku[row2 as usize - 1][col2 as usize - 1]
                                     .eq_symbols
                                     .push(symbol);
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                                self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
                             }
                         }
                     }
