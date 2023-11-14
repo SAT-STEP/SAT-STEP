@@ -31,19 +31,19 @@ impl ControllableObj for ConstraintList {
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_constraint_index 
     } 
-    fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>) {}
+    fn set_literal(&mut self, _literal: Option<Vec<CnfVariable>>) {}
     fn get_literals(&self) -> Option<Vec<CnfVariable>> {None}
-    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses}
-    fn combiner(&self) -> String {self.combiner}
+    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
+    fn combiner(&self) -> String {self.combiner.clone()}
 }
 
 impl ControllableObj for ConflictList {
     fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>) {
         self.literals = literal;
     }
-    fn get_literals(&self) -> Option<Vec<CnfVariable>> {self.literals}
-    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses}
-    fn combiner(&self) -> String {self.combiner}
+    fn get_literals(&self) -> Option<Vec<CnfVariable>> {self.literals.clone()}
+    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
+    fn combiner(&self) -> String {self.combiner.clone()}
     fn clicked(&self,  state: &mut AppState, i: usize){
         let old_index = state.clicked_conflict_index;
         state.clear_filters();
@@ -58,10 +58,10 @@ impl ControllableObj for ConflictList {
                             CnfVariable::from_cnf(x, &state.encoding)
                         })
                         .collect();
-                    if let Some(vars) = self.literals  {
+                    if let Some(vars) = self.literals.clone() {
                         state.set_trail(
                             i,
-                            (*vars[0], *vars[1]),
+                            (vars[0].clone(), vars[1].clone()),
                             enum_trail,
                         );
                     }
@@ -75,8 +75,8 @@ impl ControllableObj for ConflictList {
                         CnfVariable::from_cnf(x, &state.encoding)
                     })
                     .collect();
-                if let Some(vars) = self.literals {
-                    state.set_trail(i, (*vars[0], *vars[1]), enum_trail);
+                if let Some(vars) = self.literals.clone() {
+                    state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
                 }
             }
         }
@@ -176,12 +176,12 @@ impl SATApp {
                         clauses = Box::new(ConflictList{ 
                             clauses: self.trail.as_cnf(&self.state.encoding), 
                             combiner: "^".to_string() , 
-                            trail:self.trail, 
+                            trail:self.trail.clone(), 
                             literals:None
                         });
                     }
-
-                    let mut clause_iter = clauses.clauses().clone().iter().skip(first_item);
+                    let binding = clauses.clauses();
+                    let mut clause_iter = binding.iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
