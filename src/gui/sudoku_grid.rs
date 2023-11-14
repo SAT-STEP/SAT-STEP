@@ -231,11 +231,8 @@ impl SATApp {
                             ..
                         } => {
                             if !self.state.show_trail {
-                                let mut symbol = String::from("?");
-                                if eq_symbols.len() > 0 {
-                                    symbol = eq_symbols.next().unwrap();
-                                }
-                                
+                                let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+                        
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .eq_symbols
                                     .push(symbol.clone());
@@ -292,10 +289,8 @@ impl SATApp {
                         col2,
                         ..
                     } => {
-                        let mut symbol = String::from("?");
-                        if eq_symbols.len() > 0 {
-                            symbol = eq_symbols.next().unwrap();
-                        }
+                        let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols
                             .push(symbol.clone());
