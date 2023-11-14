@@ -5,8 +5,8 @@ use egui::{
 };
 
 const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
-const LITTLE_NUMBER_MULTIPLIER: f32 = 0.2; // Of cell size
-const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.6; // Of cell size
+const LITTLE_NUMBER_MULTIPLIER: f32 = 0.225; // Of cell size
+const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.3; // Of cell size
 
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
@@ -84,21 +84,26 @@ impl SudokuCell {
 
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
-            // TODO: Fix this for binary encoding
             ui.painter().galley(self.top_left, galley);
         }
 
         selection_changed
     }
 
-    // TODO: Fix this for binary encoding
-    // TODO: Improve this? This is good enough for now, but was done quickly to get a PR made
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
     fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
-        let mut littles = self.little_numbers.clone();
+        let mut nums: Vec<String> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
+        let mut littles = self.eq_symbols.clone();
 
-        littles.sort();
-        littles.dedup();
+        nums.sort();
+        nums.dedup();
+
+        littles.append(&mut nums);
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
@@ -108,7 +113,7 @@ impl SudokuCell {
         for (i, val) in littles.iter().enumerate() {
             if i % 3 == 0 && i > 0 {
                 text_job.append(
-                    "\n\n",
+                    "\n",
                     0.0,
                     TextFormat {
                         font_id: space_font_id.clone(),
@@ -116,7 +121,7 @@ impl SudokuCell {
                     },
                 );
             }
-            let text = if *val > 0 {
+            let text = if val.len() == 1 {
                 format!(" {}", *val)
             } else {
                 (*val).to_string()
@@ -126,7 +131,9 @@ impl SudokuCell {
                 0.0,
                 TextFormat {
                     font_id: font_id.clone(),
-                    color: if *val > 0 {
+                    color: if val.parse::<i32>().is_err() {
+                        Color32::YELLOW
+                    } else if val.parse::<i32>().unwrap() > 0 {
                         Color32::BLUE
                     } else {
                         Color32::RED

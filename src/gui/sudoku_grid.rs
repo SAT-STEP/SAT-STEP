@@ -205,6 +205,7 @@ impl SATApp {
                 };
 
                 let mut eq_symbols = (b'A'..=b'Z')
+                    .chain(b'a'..=b'z')
                     .map(|c| String::from_utf8(vec![c]).unwrap())
                     .collect::<Vec<String>>()
                     .into_iter();
@@ -230,13 +231,20 @@ impl SATApp {
                             col2,
                             ..
                         } => {
-                            let symbol = eq_symbols.next().unwrap();
-                            self.sudoku[row as usize - 1][col as usize - 1]
-                                .eq_symbols
-                                .push(symbol.clone());
-                            self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                                .eq_symbols
-                                .push(symbol);
+                            if !self.state.show_trail {
+                                let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+
+                                self.sudoku[row as usize - 1][col as usize - 1]
+                                    .eq_symbols
+                                    .push(symbol.clone());
+                                self.sudoku[row2 as usize - 1][col2 as usize - 1]
+                                    .eq_symbols
+                                    .push(symbol);
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
+                                    false;
+                                self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number =
+                                    false;
+                            }
                         }
                     }
                 }
@@ -259,6 +267,7 @@ impl SATApp {
             }
 
             let mut eq_symbols = (b'A'..=b'Z')
+                .chain(b'a'..=b'z')
                 .map(|c| String::from_utf8(vec![c]).unwrap())
                 .collect::<Vec<String>>()
                 .into_iter();
@@ -284,7 +293,8 @@ impl SATApp {
                         col2,
                         ..
                     } => {
-                        let symbol = eq_symbols.next().unwrap();
+                        let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols
                             .push(symbol.clone());
