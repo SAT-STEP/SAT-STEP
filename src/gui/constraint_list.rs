@@ -35,6 +35,16 @@ impl ControllableObj for ConstraintList {
     fn get_literals(&self) -> Option<Vec<CnfVariable>> {None}
     fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
     fn combiner(&self) -> String {self.combiner.clone()}
+    fn move_up(&self, state: &mut AppState) {
+        let current: usize = state.clicked_constraint_index.unwrap_or(0);
+        state.clicked_constraint_index = Some(current - 1 as usize);
+
+    }
+    fn move_down(&self, state: &mut AppState) {
+        let current: usize = state.clicked_constraint_index.unwrap_or(0);
+        state.clicked_constraint_index = Some(current + 1 as usize);
+
+    }
 }
 
 impl ControllableObj for ConflictList {
@@ -45,10 +55,12 @@ impl ControllableObj for ConflictList {
     fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
     fn combiner(&self) -> String {self.combiner.clone()}
     fn clicked(&self,  state: &mut AppState, i: usize){
+        println!("ind: {:?}", i);
         let old_index = state.clicked_conflict_index;
         state.clear_filters();
         match old_index {
             Some(index) => {
+                println!("{:?}", state.clicked_conflict_index);
                 if index != i {
                     let trail = self.trail.trail_at_index(i);
                     let enum_trail = trail
@@ -58,6 +70,7 @@ impl ControllableObj for ConflictList {
                         })
                         .collect();
                     if let Some(vars) = self.literals.clone() {
+                        println!("pass");
                         state.set_trail(
                             i,
                             (vars[0].clone(), vars[1].clone()),
@@ -82,6 +95,15 @@ impl ControllableObj for ConflictList {
     }
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_conflict_index
+    }
+    fn move_up(&self, state: &mut AppState) {
+        let current: usize = state.clicked_conflict_index.unwrap_or(0);
+        state.clicked_conflict_index = Some(current - 1 as usize);
+
+    }
+    fn move_down(&self, state: &mut AppState) {
+        let current: usize = state.clicked_conflict_index.unwrap_or(0);
+        state.clicked_conflict_index = Some(current + 1 as usize);
     }
 }
 
@@ -250,8 +272,7 @@ impl SATApp {
                     }
 
                     // Index of the row that has been clicked on the particular page, between 0 and page length minus 1
-                    let mut current_constraint_row: usize =
-                        self.state.clicked_constraint_index.unwrap_or(0);
+                    let current_row: usize = clauses.get_clicked(&self.state).unwrap_or(0);
 
                     // Number of the rows on the current page, which might be less on the last page than on other pages
                     let mut current_page_length: usize = self.state.page_length;
@@ -267,18 +288,17 @@ impl SATApp {
 
                     let mut scroll_delta = Vec2::ZERO;
 
-                    if self.state.clicked_constraint_index.is_some() {
+                    if clauses.get_clicked(&self.state).is_some() {
                         // Actions when a constraint row is clicked with the ArrowDown button
                         if ctx.input(|i| i.key_pressed(Key::ArrowDown))
-                            && current_constraint_row < self.state.filtered_length - 1
-                            && current_constraint_row % self.state.page_length
+                            && current_row < self.state.filtered_length - 1
+                            && current_row % self.state.page_length
                                 < self.state.page_length - 1
-                            && current_constraint_row < current_page_length
+                            && current_row < current_page_length
                         {
-                            current_constraint_row += 1;
-                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            clauses.move_down(&mut self.state);
                             // Check how far down the visible list currently and keep in view
-                            if current_constraint_row > last_item - 5 {
+                            if current_row > last_item - 5 {
                                 // Scroll down with the selection
                                 scroll_delta.y -= row_height;
                             }
@@ -286,10 +306,9 @@ impl SATApp {
 
                         // Actions when a constraint row is clicked with the ArrowUp button
                         if ctx.input(|i| i.key_pressed(Key::ArrowUp))
-                            && (current_constraint_row > 0)
+                            && (current_row > 0)
                         {
-                            current_constraint_row -= 1;
-                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            clauses.move_up(&mut self.state);
                             // Scroll up with the selection
                             scroll_delta.y += row_height;
                         }

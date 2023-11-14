@@ -171,6 +171,7 @@ impl SATApp {
                 RichText::new("Show learned constraints")
             };
             if ui.button(show_trail_text.size(text_scale)).clicked() {
+                self.state.clicked_constraint_index = None;
                 self.state.show_trail_view = !self.state.show_trail_view;
             }
             if self.state.show_trail_view {
