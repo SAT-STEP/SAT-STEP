@@ -47,7 +47,6 @@ impl ControllableObj for ConflictList {
     fn clicked(&self,  state: &mut AppState, i: usize){
         let old_index = state.clicked_conflict_index;
         state.clear_filters();
-        let rendered_constraints = state.get_filtered();
         match old_index {
             Some(index) => {
                 if index != i {
@@ -176,7 +175,7 @@ impl SATApp {
                         clauses = Box::new(ConflictList{ 
                             clauses: self.trail.as_cnf(&self.state.encoding), 
                             combiner: "^".to_string() , 
-                            trail:self.trail.clone(), 
+                            trail: self.trail.clone(), 
                             literals:None
                         });
                     }
@@ -233,7 +232,7 @@ impl SATApp {
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
                                 clauses.clicked(&mut self.state,i);
-
+                                self.rendered_constraints = self.state.get_filtered();
                             }
 
                             if let Some(clicked_index) = clauses.get_clicked(&self.state) {
