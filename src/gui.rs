@@ -171,7 +171,7 @@ trait ControllableObj {
     fn get_clicked(&self, state: &AppState) -> Option<usize>;
     fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>);
     fn get_literals(&self) -> Option<Vec<CnfVariable>>;
-    fn clauses(&self) -> Vec<Vec<CnfVariable>>;
+    fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>>;
     fn combiner(&self) -> String;
     fn move_up(&self, state: &mut AppState);
     fn move_down(&self, state: &mut AppState);

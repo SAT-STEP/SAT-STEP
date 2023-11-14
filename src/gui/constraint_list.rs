@@ -33,7 +33,7 @@ impl ControllableObj for ConstraintList {
     } 
     fn set_literal(&mut self, _literal: Option<Vec<CnfVariable>>) {}
     fn get_literals(&self) -> Option<Vec<CnfVariable>> {None}
-    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
+    fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
     fn combiner(&self) -> String {self.combiner.clone()}
     fn move_up(&self, state: &mut AppState) {
         let current: usize = state.clicked_constraint_index.unwrap_or(0);
@@ -52,7 +52,16 @@ impl ControllableObj for ConflictList {
         self.literals = literal;
     }
     fn get_literals(&self) -> Option<Vec<CnfVariable>> {self.literals.clone()}
-    fn clauses(&self) -> Vec<Vec<CnfVariable>> {self.clauses.clone()}
+    fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>> {
+        let start = ((state.page_number) as usize * state.page_length) as usize;
+        let end = ((state.page_number+1) as usize *state.page_length) as usize;
+        println!("{}",std::cmp::min(start, self.clauses.len()));
+        println!("{}",std::cmp::min(end, self.clauses.len()));
+
+        self.clauses.clone()[
+             std::cmp::min(start, self.clauses.len()) .. std::cmp::min(end, self.clauses.len())
+        ].to_vec()
+    }
     fn combiner(&self) -> String {self.combiner.clone()}
     fn clicked(&self,  state: &mut AppState, i: usize){
         println!("ind: {:?}", i);
@@ -201,7 +210,7 @@ impl SATApp {
                             literals:None
                         });
                     }
-                    let binding = clauses.clauses();
+                    let binding = clauses.clauses(&self.state);
                     let mut clause_iter = binding.iter().skip(first_item);
 
                     // Create element for each constraint
