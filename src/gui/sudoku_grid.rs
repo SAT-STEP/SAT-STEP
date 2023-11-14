@@ -204,6 +204,11 @@ impl SATApp {
                         .collect()
                 };
 
+                let mut eq_symbols = (b'A'..=b'Z').chain(b'a'..=b'z')
+                    .map(|c| String::from_utf8(vec![c]).unwrap())
+                    .collect::<Vec<String>>()
+                    .into_iter();
+
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
@@ -218,8 +223,26 @@ impl SATApp {
                                 .push(value);
                             self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                         }
-                        CnfVariable::Equality {..} => {
-                            continue;
+                        CnfVariable::Equality {
+                            row,
+                            col,
+                            row2,
+                            col2,
+                            ..
+                        } => {
+                            if !self.state.show_trail {
+                                let mut symbol = String::from("?");
+                                if eq_symbols.len() > 0 {
+                                    symbol = eq_symbols.next().unwrap();
+                                }
+                                
+                                self.sudoku[row as usize - 1][col as usize - 1]
+                                    .eq_symbols
+                                    .push(symbol.clone());
+                                self.sudoku[row2 as usize - 1][col2 as usize - 1]
+                                    .eq_symbols
+                                    .push(symbol);
+                            }
                         }
                     }
                 }
@@ -241,7 +264,7 @@ impl SATApp {
                 variables = self.state.little_number_constraints.clone();
             }
 
-            let mut eq_symbols = (b'A'..=b'Z')
+            let mut eq_symbols = (b'A'..=b'Z').chain(b'a'..=b'z')
                 .map(|c| String::from_utf8(vec![c]).unwrap())
                 .collect::<Vec<String>>()
                 .into_iter();
@@ -267,7 +290,10 @@ impl SATApp {
                         col2,
                         ..
                     } => {
-                        let symbol = eq_symbols.next().unwrap();
+                        let mut symbol = String::from("?");
+                        if eq_symbols.len() > 0 {
+                            symbol = eq_symbols.next().unwrap();
+                        }
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols
                             .push(symbol.clone());
