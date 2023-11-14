@@ -100,7 +100,6 @@ impl SudokuCell {
             .collect();
         let mut littles = self.eq_symbols.clone();
 
-        //eqs.sort();
         nums.sort();
         nums.dedup();
 
