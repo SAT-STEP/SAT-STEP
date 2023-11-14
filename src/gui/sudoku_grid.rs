@@ -204,7 +204,8 @@ impl SATApp {
                         .collect()
                 };
 
-                let mut eq_symbols = (b'A'..=b'Z').chain(b'a'..=b'z')
+                let mut eq_symbols = (b'A'..=b'Z')
+                    .chain(b'a'..=b'z')
                     .map(|c| String::from_utf8(vec![c]).unwrap())
                     .collect::<Vec<String>>()
                     .into_iter();
@@ -232,15 +233,17 @@ impl SATApp {
                         } => {
                             if !self.state.show_trail {
                                 let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
-                        
+
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .eq_symbols
                                     .push(symbol.clone());
                                 self.sudoku[row2 as usize - 1][col2 as usize - 1]
                                     .eq_symbols
                                     .push(symbol);
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                                self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
+                                    false;
+                                self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number =
+                                    false;
                             }
                         }
                     }
@@ -263,7 +266,8 @@ impl SATApp {
                 variables = self.state.little_number_constraints.clone();
             }
 
-            let mut eq_symbols = (b'A'..=b'Z').chain(b'a'..=b'z')
+            let mut eq_symbols = (b'A'..=b'Z')
+                .chain(b'a'..=b'z')
                 .map(|c| String::from_utf8(vec![c]).unwrap())
                 .collect::<Vec<String>>()
                 .into_iter();

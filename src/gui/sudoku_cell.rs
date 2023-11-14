@@ -82,21 +82,22 @@ impl SudokuCell {
 
             self.prepare_little_symbols(&mut text_job, size);
 
-
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
-            // TODO: Fix this for binary encoding
             ui.painter().galley(self.top_left, galley);
         }
 
         selection_changed
     }
 
-    // TODO: Fix this for binary encoding
-    // TODO: Improve this? This is good enough for now, but was done quickly to get a PR made
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
     fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
-        let mut nums: Vec<String> = self.little_numbers.clone().iter().map(|x| x.to_string()).collect();
+        let mut nums: Vec<String> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
         let mut littles = self.eq_symbols.clone();
 
         //eqs.sort();
@@ -104,7 +105,6 @@ impl SudokuCell {
         nums.dedup();
 
         littles.append(&mut nums);
-
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
