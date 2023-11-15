@@ -12,12 +12,11 @@ mod tests;
 
 use std::{cell::RefCell, fs, num::ParseIntError, path::Path, rc::Rc};
 
+use app_state::EncodingType;
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf_converter::{clues_from_string, string_from_grid};
-use cnf_converter::{get_cell_value, sudoku_to_cnf};
-// use binary_cnf::{get_cell_value, sudoku_to_cnf};
 use error::GenericError;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
@@ -112,9 +111,10 @@ impl Default for Trail {
 pub fn solve_sudoku(
     sudoku_clues: &[Vec<Option<i32>>],
     solver: &mut Solver<CadicalCallbackWrapper>,
+    encoding: &EncodingType,
 ) -> Result<Vec<Vec<Option<i32>>>, String> {
     let mut solved: Vec<Vec<Option<i32>>> = Vec::new();
-    let cnf_clauses = sudoku_to_cnf(sudoku_clues);
+    let cnf_clauses = encoding.sudoku_to_cnf(sudoku_clues);
 
     for clause in cnf_clauses {
         solver.add_clause(clause);
@@ -124,7 +124,7 @@ pub fn solve_sudoku(
         for row in 1..=9 {
             let mut row_values = Vec::with_capacity(9);
             for col in 1..=9 {
-                let value = get_cell_value(solver, row, col);
+                let value = encoding.get_cell_value(solver, row, col);
                 row_values.push(Some(value));
             }
             solved.push(row_values);

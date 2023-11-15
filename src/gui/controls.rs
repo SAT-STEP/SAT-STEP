@@ -4,12 +4,12 @@ use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 use super::SATApp;
 
 use crate::{
-    cadical_wrapper::CadicalCallbackWrapper, solve_sudoku, string_from_grid, write_sudoku,
-    GenericError,
+    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, solve_sudoku,
+    string_from_grid, write_sudoku, GenericError,
 };
 
 impl SATApp {
-    /// Constraint list GUI element
+    /// Controls GUI element
     pub fn controls(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
@@ -20,6 +20,9 @@ impl SATApp {
             .spacing([0.0, text_scale * 0.5])
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
+                ui.end_row();
+
+                self.encoding_selection(ui, text_scale);
                 ui.end_row();
 
                 self.filters(ui, text_scale, ctx);
@@ -81,7 +84,11 @@ impl SATApp {
             {
                 self.state.editor_active = false;
 
-                let solve_result = solve_sudoku(&self.get_option_value_sudoku(), &mut self.solver);
+                let solve_result = solve_sudoku(
+                    &self.get_option_value_sudoku(),
+                    &mut self.solver,
+                    &self.state.encoding,
+                );
                 match solve_result {
                     Ok(solved) => {
                         self.sudoku_from_option_values(solved, false);
@@ -174,6 +181,52 @@ impl SATApp {
                 self.state.show_trail_view = !self.state.show_trail_view;
             }
         })
+    }
+
+    /// Row for CNF encoding related inputs
+    fn encoding_selection(&mut self, ui: &mut Ui, text_scale: f32) {
+        let old_encoding = self.state.encoding;
+
+        ui.horizontal(|ui| {
+            egui::ComboBox::from_id_source(0)
+                .selected_text(
+                    RichText::new(format!("{:?} based CNF encoding", self.state.encoding))
+                        .size(text_scale),
+                )
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(
+                        &mut self.state.encoding,
+                        EncodingType::Decimal,
+                        "Decimal based CNF encoding",
+                    );
+                    ui.selectable_value(
+                        &mut self.state.encoding,
+                        EncodingType::Binary,
+                        "(WIP) Binary based CNF encoding",
+                    );
+                });
+        });
+
+        if old_encoding != self.state.encoding {
+            self.constraints.clear();
+            self.trail.clear();
+            self.rendered_constraints.clear();
+            self.state.reinit();
+            self.solver = Solver::with_config("plain").unwrap();
+            self.callback_wrapper =
+                CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
+            self.solver
+                .set_callbacks(Some(self.callback_wrapper.clone()));
+
+            // We want to keep the sudoku, but return it to an unsolved state
+            for row in self.sudoku.iter_mut() {
+                for cell in row.iter_mut() {
+                    if !cell.clue {
+                        cell.value = None;
+                    }
+                }
+            }
+        }
     }
 
     // Row for filtering functionality
