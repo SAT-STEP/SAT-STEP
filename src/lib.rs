@@ -5,6 +5,7 @@ mod cnf_converter;
 mod cnf_var;
 mod error;
 mod filtering;
+mod ctrl_obj;
 pub mod gui;
 
 #[cfg(test)]
