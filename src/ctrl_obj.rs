@@ -114,11 +114,11 @@ impl ControllableObj for ConflictList {
     }
     fn move_up(&self, state: &mut AppState) {
         let current: usize = state.clicked_conflict_index.unwrap_or(0);
-        state.clicked_conflict_index = Some(current - 1 as usize);
+        self.clicked(state,  current - 1 as usize);
 
     }
     fn move_down(&self, state: &mut AppState) {
         let current: usize = state.clicked_conflict_index.unwrap_or(0);
-        state.clicked_conflict_index = Some(current + 1 as usize);
+        self.clicked(state,  current + 1 as usize);
     }
 }
