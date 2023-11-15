@@ -73,6 +73,7 @@ impl ControllableObj for ConflictList {
     fn combiner(&self) -> String {self.combiner.clone()}
     fn clicked(&self,  state: &mut AppState, i: usize){
         let old_index = state.clicked_conflict_index;
+        let old_page = state.page_number;
         state.clear_filters();
         match old_index {
             Some(index) => {
@@ -106,6 +107,7 @@ impl ControllableObj for ConflictList {
                 }
             }
         }
+        state.page_number = old_page;
     }
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_conflict_index

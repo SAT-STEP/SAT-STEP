@@ -2,7 +2,6 @@ mod constraint_list;
 mod controls;
 pub mod sudoku_cell;
 mod sudoku_grid;
-mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
