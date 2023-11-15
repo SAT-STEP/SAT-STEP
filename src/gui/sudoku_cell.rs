@@ -17,6 +17,7 @@ pub struct SudokuCell {
     pub draw_big_number: bool, // Should the solved sudoku cell value be shown
     pub clue: bool,            // Should the cell be darkened
     pub part_of_conflict: bool, // Should the cell have highlighted borders
+    pub fixed: bool,
     pub eq_symbols: Vec<String>,
     pub little_numbers: Vec<i32>,
     pub top_left: Pos2,
@@ -55,6 +56,9 @@ impl SudokuCell {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
         } else if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
+        } else if self.fixed {
+            ui.painter()
+                .rect_filled(rect, 0.0, Color32::from_rgb(128, 128, 128));
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
@@ -166,6 +170,7 @@ impl Default for SudokuCell {
             bottom_right: Pos2::new(0.0, 0.0),
             row: 1,
             col: 1,
+            fixed: false,
         }
     }
 }
