@@ -5,10 +5,9 @@ use egui::{
 use std::ops::Add;
 
 use crate::cnf_var::CnfVariable;
-use crate::ctrl_obj::{ControllableObj,ConflictList,ConstraintList};
+use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
 
 use super::SATApp;
-
 
 impl SATApp {
     /// Constraint list GUI element
@@ -87,21 +86,21 @@ impl SATApp {
 
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
-                    
+
                     let clauses_binding = self.rendered_constraints.clone();
 
                     let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
-                        clauses: clauses_binding, 
-                        combiner: "v".to_string()
+                        clauses: clauses_binding,
+                        combiner: "v".to_string(),
                     });
                     // as Box<dyn ControllableObj>;
 
                     if self.state.show_trail_view {
-                        clauses = Box::new(ConflictList{ 
-                            clauses: self.trail.as_cnf(&self.state.encoding), 
-                            combiner: "^".to_string() , 
-                            trail: self.trail.clone(), 
-                            literals:None
+                        clauses = Box::new(ConflictList {
+                            clauses: self.trail.as_cnf(&self.state.encoding),
+                            combiner: "^".to_string(),
+                            trail: self.trail.clone(),
+                            literals: None,
                         });
                     }
                     let binding = clauses.clauses(&self.state);
@@ -156,7 +155,7 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                clauses.clicked(&mut self.state,i);
+                                clauses.clicked(&mut self.state, i);
                                 self.rendered_constraints = self.state.get_filtered();
                             }
 
@@ -195,8 +194,7 @@ impl SATApp {
                         // Actions when a constraint row is clicked with the ArrowDown button
                         if ctx.input(|i| i.key_pressed(Key::ArrowDown))
                             && current_row < self.state.filtered_length - 1
-                            && current_row % self.state.page_length
-                                < self.state.page_length - 1
+                            && current_row % self.state.page_length < self.state.page_length - 1
                             && current_row < current_page_length
                         {
                             clauses.move_down(&mut self.state);
@@ -208,9 +206,7 @@ impl SATApp {
                         }
 
                         // Actions when a constraint row is clicked with the ArrowUp button
-                        if ctx.input(|i| i.key_pressed(Key::ArrowUp))
-                            && (current_row > 0)
-                        {
+                        if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_row > 0) {
                             clauses.move_up(&mut self.state);
                             // Scroll up with the selection
                             scroll_delta.y += row_height;

@@ -3,9 +3,9 @@ mod binary_cnf;
 mod cadical_wrapper;
 mod cnf_converter;
 mod cnf_var;
+mod ctrl_obj;
 mod error;
 mod filtering;
-mod ctrl_obj;
 pub mod gui;
 
 #[cfg(test)]
@@ -84,14 +84,18 @@ impl Trail {
         }
     }
 
-    pub fn as_cnf(&mut self, encoding:&EncodingType) -> Vec<Vec<CnfVariable>> {
-        (*self.conflict_literals.borrow()).clone().into_iter().map(|tup| {
-            let (literal1_identifier, literal2_identifier) = tup;
-            Vec::from([
-                CnfVariable::from_cnf(literal1_identifier, &encoding), 
-                CnfVariable::from_cnf(literal2_identifier, &encoding)
+    pub fn as_cnf(&mut self, encoding: &EncodingType) -> Vec<Vec<CnfVariable>> {
+        (*self.conflict_literals.borrow())
+            .clone()
+            .into_iter()
+            .map(|tup| {
+                let (literal1_identifier, literal2_identifier) = tup;
+                Vec::from([
+                    CnfVariable::from_cnf(literal1_identifier, encoding),
+                    CnfVariable::from_cnf(literal2_identifier, encoding),
                 ])
-        }).collect()
+            })
+            .collect()
     }
 
     pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
@@ -116,8 +120,6 @@ impl Trail {
         self.trail.borrow().is_empty()
     }
 }
-
-
 
 impl Default for Trail {
     fn default() -> Self {

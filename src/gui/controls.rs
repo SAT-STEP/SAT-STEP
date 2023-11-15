@@ -178,14 +178,19 @@ impl SATApp {
                 ui.add(Label::new(RichText::new("Show trail").size(text_scale)));
 
                 let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
-                let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+                let (rect, mut response) =
+                    ui.allocate_exact_size(desired_size, egui::Sense::click());
                 if response.clicked() {
                     self.state.show_trail = !self.state.show_trail;
                     self.state.show_conflict_literals = !self.state.show_conflict_literals;
                     response.mark_changed();
                 }
                 response.widget_info(|| {
-                    egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
+                    egui::WidgetInfo::selected(
+                        egui::WidgetType::Checkbox,
+                        self.state.show_trail,
+                        "",
+                    )
                 });
 
                 let how_on = ui
@@ -202,7 +207,8 @@ impl SATApp {
                     .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
 
                 ui.add(Label::new(
-                    RichText::new("Show conflict literals and learned constraints").size(text_scale),
+                    RichText::new("Show conflict literals and learned constraints")
+                        .size(text_scale),
                 ));
             }
         })
