@@ -4,8 +4,8 @@ use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 use super::SATApp;
 
 use crate::{
-    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, solve_sudoku,
-    string_from_grid, write_sudoku, GenericError,
+    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, string_from_grid,
+    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError,
 };
 
 impl SATApp {
@@ -54,7 +54,7 @@ impl SATApp {
                     .add_filter("text", &["txt"])
                     .pick_file()
                 {
-                    let sudoku_result = crate::get_sudoku(file_path.display().to_string());
+                    let sudoku_result = get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
                             self.sudoku_from_option_values(sudoku_vec, true);

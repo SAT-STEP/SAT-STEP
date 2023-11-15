@@ -1,6 +1,7 @@
 use crate::{
-    binary_cnf, cnf_converter, cnf_var::CnfVariable, filtering::ListFilter, parse_numeric_input,
-    CadicalCallbackWrapper, ConstraintList, Solver,
+    cnf::{binary_encoding, decimal_encoding, CnfVariable},
+    filtering::ListFilter,
+    parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -12,8 +13,8 @@ pub enum EncodingType {
 impl EncodingType {
     pub fn sudoku_to_cnf(&self, clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
         match self {
-            EncodingType::Decimal => cnf_converter::sudoku_to_cnf(clues),
-            EncodingType::Binary => binary_cnf::sudoku_to_cnf(clues),
+            EncodingType::Decimal => decimal_encoding::sudoku_to_cnf(clues),
+            EncodingType::Binary => binary_encoding::sudoku_to_cnf(clues),
         }
     }
 
@@ -24,8 +25,8 @@ impl EncodingType {
         col: i32,
     ) -> i32 {
         match self {
-            EncodingType::Decimal => cnf_converter::get_cell_value(solver, row, col),
-            EncodingType::Binary => binary_cnf::get_cell_value(solver, row, col),
+            EncodingType::Decimal => decimal_encoding::get_cell_value(solver, row, col),
+            EncodingType::Binary => binary_encoding::get_cell_value(solver, row, col),
         }
     }
 }
