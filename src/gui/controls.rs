@@ -202,7 +202,7 @@ impl SATApp {
                     ui.selectable_value(
                         &mut self.state.encoding,
                         EncodingType::Binary,
-                        "(WIP) Binary based CNF encoding",
+                        "Binary based CNF encoding",
                     );
                 });
         });
