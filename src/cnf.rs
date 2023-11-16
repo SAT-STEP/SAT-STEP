@@ -123,9 +123,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_cnf_bit() {
-        
-    }
+    fn test_from_cnf_bit() {}
 
     #[test]
     fn test_to_cnf_bit() {
@@ -135,19 +133,29 @@ mod tests {
         let value = true;
         let variable = CnfVariable::Bit {
             row,
-            col, bit_index, value
+            col,
+            bit_index,
+            value,
         };
 
-        assert_eq!(variable.to_cnf(), (row - 1) * 4 * 9 + (col - 1) * 4 + bit_index + 1);
+        assert_eq!(
+            variable.to_cnf(),
+            (row - 1) * 4 * 9 + (col - 1) * 4 + bit_index + 1
+        );
 
         let value = false;
 
         let variable = CnfVariable::Bit {
             row,
-            col, bit_index, value
+            col,
+            bit_index,
+            value,
         };
 
-        assert_eq!(variable.to_cnf(), -((row - 1) * 4 * 9 + (col - 1) * 4 + bit_index + 1))
+        assert_eq!(
+            variable.to_cnf(),
+            -((row - 1) * 4 * 9 + (col - 1) * 4 + bit_index + 1)
+        )
     }
 
     #[test]
