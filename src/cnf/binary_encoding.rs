@@ -192,7 +192,67 @@ pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, 
 mod tests {
     use std::collections::HashSet;
 
+    use crate::{cadical_wrapper, solve_sudoku, cnf_converter::clues_from_string};
+
     use super::*;
+
+    #[test]
+    fn test_cnf_converter_respects_clues() {
+        use crate::cnf_converter::clues_from_string;
+
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n";
+
+        let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
+        let clauses = sudoku_to_cnf(&clues);
+
+        let result = vec![
+            clauses[clauses.len() - 4][0],
+            clauses[clauses.len() - 3][0],
+            clauses[clauses.len() - 2][0],
+            clauses[clauses.len() - 1][0]];
+
+        let expected = vec![
+            cnf_identifier(9, 6, 0), // we have 6 as the clue, inside the converter this is 5,
+            -cnf_identifier(9, 6, 1), // so in binary 0101
+            cnf_identifier(9, 6, 2),
+            -cnf_identifier(9, 6, 3)];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_get_cell_value() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n".to_string();
+
+        let sudoku = clues_from_string(test_sudoku, ".").unwrap();
+
+        use crate::{solve_sudoku, ConstraintList, Trail};
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        solve_sudoku(&sudoku, &mut solver).unwrap();
+
+        let cell_value = get_cell_value(&solver, 0, 0);
+
+        assert_eq!(cell_value, 1)
+    }
 
     #[test]
     fn no_overlapping_identifiers() {

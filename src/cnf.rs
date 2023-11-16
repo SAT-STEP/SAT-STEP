@@ -123,6 +123,34 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_from_cnf_bit() {
+        
+    }
+
+    #[test]
+    fn test_to_cnf_bit() {
+        let row = 1;
+        let col = 1;
+        let bit_index = 1;
+        let value = true;
+        let variable = CnfVariable::Bit {
+            row,
+            col, bit_index, value
+        };
+
+        assert_eq!(variable.to_cnf(), (row - 1) * 4 * 9 + (col - 1) * 4 + bit_index + 1);
+
+        let value = false;
+
+        let variable = CnfVariable::Bit {
+            row,
+            col, bit_index, value
+        };
+
+        assert_eq!(variable.to_cnf(), -((row - 1) * 4 * 9 + (col - 1) * 4 + bit_index + 1))
+    }
+
+    #[test]
     fn test_get_possible_numbers_decimal() {
         let variable = CnfVariable::Decimal {
             row: 1,
