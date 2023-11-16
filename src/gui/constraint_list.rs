@@ -4,7 +4,7 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::cnf_var::CnfVariable;
+use crate::cnf::CnfVariable;
 
 use super::SATApp;
 

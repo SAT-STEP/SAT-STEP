@@ -1,8 +1,9 @@
+pub mod binary_encoding;
+pub mod decimal_encoding;
+
 use std::collections::HashSet;
 
 use crate::app_state::EncodingType;
-use crate::binary_cnf;
-use crate::cnf_converter;
 
 /// Enum that (hopefully) fixes everything
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
@@ -34,7 +35,7 @@ impl CnfVariable {
             EncodingType::Binary => {
                 if identifier.abs() > 9 * 9 * 4 {
                     let (row, col, row2, col2, bit_index, equal) =
-                        binary_cnf::eq_identifier_to_tuple(identifier);
+                        binary_encoding::eq_identifier_to_tuple(identifier);
                     Self::Equality {
                         row,
                         col,
@@ -44,7 +45,8 @@ impl CnfVariable {
                         equal,
                     }
                 } else {
-                    let (row, col, bit_index, value) = binary_cnf::identifier_to_tuple(identifier);
+                    let (row, col, bit_index, value) =
+                        binary_encoding::identifier_to_tuple(identifier);
                     Self::Bit {
                         row,
                         col,
@@ -54,7 +56,7 @@ impl CnfVariable {
                 }
             }
             EncodingType::Decimal => {
-                let (row, col, value) = cnf_converter::identifier_to_tuple(identifier);
+                let (row, col, value) = decimal_encoding::identifier_to_tuple(identifier);
                 Self::Decimal { row, col, value }
             }
         }
@@ -62,7 +64,9 @@ impl CnfVariable {
 
     pub fn to_cnf(&self) -> i32 {
         match self {
-            Self::Decimal { row, col, value } => cnf_converter::cnf_identifier(*row, *col, *value),
+            Self::Decimal { row, col, value } => {
+                decimal_encoding::cnf_identifier(*row, *col, *value)
+            }
             Self::Bit {
                 row,
                 col,
@@ -70,9 +74,9 @@ impl CnfVariable {
                 value,
             } => {
                 if *value {
-                    binary_cnf::cnf_identifier(*row, *col, *bit_index)
+                    binary_encoding::cnf_identifier(*row, *col, *bit_index)
                 } else {
-                    -binary_cnf::cnf_identifier(*row, *col, *bit_index)
+                    -binary_encoding::cnf_identifier(*row, *col, *bit_index)
                 }
             }
             Self::Equality {
@@ -84,9 +88,9 @@ impl CnfVariable {
                 equal,
             } => {
                 if *equal {
-                    binary_cnf::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
+                    binary_encoding::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
                 } else {
-                    -binary_cnf::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
+                    -binary_encoding::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
                 }
             }
         }

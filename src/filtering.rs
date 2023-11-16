@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{app_state::EncodingType, cnf_converter::identifier_to_tuple, ConstraintList};
+use crate::{app_state::EncodingType, cnf::decimal_encoding::identifier_to_tuple, ConstraintList};
 
 pub struct ListFilter {
     constraints: ConstraintList,

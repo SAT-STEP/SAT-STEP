@@ -1,7 +1,6 @@
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 
-#[allow(dead_code)]
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
@@ -98,7 +97,6 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
 }
 
 /// Initialize variables that indicate 2 cells have same bits in some position
-#[allow(dead_code)]
 fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
@@ -131,7 +129,6 @@ fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     clauses
 }
 
-#[allow(dead_code)] // allowed since binary encoding isn't used yet
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value: i32 = 1;
     for bit in 0..4 {
@@ -160,8 +157,6 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
         + 1
 }
 
-/// These do not work for the new encoding YET, which is why they are not used YET
-#[allow(dead_code)]
 #[inline(always)]
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     // Reverse CNF-identifier creation
@@ -177,7 +172,6 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     )
 }
 
-#[allow(dead_code)]
 pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool) {
     // Reverse CNF-identifier creation for equality constraints
     // Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
@@ -192,21 +186,6 @@ pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, 
         (identifier % 4),
         equal,
     )
-}
-
-#[allow(dead_code)]
-pub fn create_tuples_from_constraints(
-    constraints: Vec<Vec<i32>>,
-) -> Vec<Vec<(i32, i32, i32, bool)>> {
-    let mut tuples = Vec::new();
-    for constraint in constraints.iter() {
-        let mut temp = Vec::with_capacity(constraint.len());
-        for value in constraint {
-            temp.push(identifier_to_tuple(*value));
-        }
-        tuples.push(temp);
-    }
-    tuples
 }
 
 #[cfg(test)]
