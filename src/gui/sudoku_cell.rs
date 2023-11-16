@@ -1,4 +1,4 @@
-use crate::app_state::AppState;
+use crate::{app_state::AppState, cnf::CnfVariable};
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, Pos2, Rect, Stroke, Ui, Vec2,
@@ -17,7 +17,7 @@ pub struct SudokuCell {
     pub draw_big_number: bool, // Should the solved sudoku cell value be shown
     pub clue: bool,            // Should the cell be darkened
     pub part_of_conflict: bool, // Should the cell have highlighted borders
-    pub eq_symbols: Vec<String>,
+    pub eq_symbols: Vec<(String, CnfVariable)>,
     pub little_numbers: Vec<i32>,
     pub top_left: Pos2,
     pub bottom_right: Pos2,
@@ -85,9 +85,19 @@ impl SudokuCell {
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
             ui.painter().galley(self.top_left, galley);
+            if !self.eq_symbols.is_empty() {
+                rect_action.on_hover_ui(|ui| {
+                    self.eq_tooltip(ui)
+                });
+            }
         }
 
         selection_changed
+    }
+
+    /// Draw tooltip explaining eq constraints on hover
+    fn eq_tooltip(&self, ui: &mut Ui) {
+        ui.label("Equality constraint, yay");
     }
 
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
@@ -98,7 +108,7 @@ impl SudokuCell {
             .iter()
             .map(|x| x.to_string())
             .collect();
-        let mut littles = self.eq_symbols.clone();
+        let mut littles: Vec<String> = self.eq_symbols.iter().map(|tuple| tuple.0.clone()).collect();
 
         nums.sort();
         nums.dedup();

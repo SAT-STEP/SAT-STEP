@@ -236,10 +236,10 @@ impl SATApp {
 
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .eq_symbols
-                                    .push(symbol.clone());
+                                    .push((symbol.clone(), variable.clone()));
                                 self.sudoku[row2 as usize - 1][col2 as usize - 1]
                                     .eq_symbols
-                                    .push(symbol);
+                                    .push((symbol, variable));
                                 self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
                                     false;
                                 self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number =
@@ -297,10 +297,10 @@ impl SATApp {
 
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols
-                            .push(symbol.clone());
+                            .push((symbol.clone(), variable.clone()));
                         self.sudoku[row2 as usize - 1][col2 as usize - 1]
                             .eq_symbols
-                            .push(symbol);
+                            .push((symbol, variable));
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                         self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
                     }
