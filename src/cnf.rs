@@ -123,6 +123,76 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_to_cnf_and_back_bit() {
+        let variable = CnfVariable::Bit {
+            row: 1,
+            col: 2,
+            bit_index: 3,
+            value: true,
+        };
+        let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable, variable2);
+
+        let variable3 = CnfVariable::Bit {
+            row: 9,
+            col: 9,
+            bit_index: 3,
+            value: false,
+        };
+        let variable4 = CnfVariable::from_cnf(variable3.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable3, variable4);
+    }
+
+    #[test]
+    fn test_to_cnf_and_back_eq() {
+        let variable = CnfVariable::Equality {
+            row: 1,
+            col: 2,
+            row2: 3,
+            col2: 4,
+            bit_index: 0,
+            equal: true,
+        };
+        let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable, variable2);
+
+        let variable3 = CnfVariable::Equality {
+            row: 8,
+            col: 9,
+            row2: 9,
+            col2: 9,
+            bit_index: 3,
+            equal: false,
+        };
+        let variable4 = CnfVariable::from_cnf(variable3.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable3, variable4);
+    }
+
+    #[test]
+    fn test_to_cnf_and_back_decimal() {
+        let variable = CnfVariable::Decimal {
+            row: 1,
+            col: 2,
+            value: 3,
+        };
+        let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &EncodingType::Decimal);
+        assert_eq!(variable, variable2);
+
+        let variable3 = CnfVariable::Decimal {
+            row: 9,
+            col: 9,
+            value: 9,
+        };
+        let variable4 = CnfVariable::from_cnf(-variable3.to_cnf(), &EncodingType::Decimal);
+        let variable5 = CnfVariable::Decimal {
+            row: 9,
+            col: 9,
+            value: -9,
+        };
+        assert_eq!(variable4, variable5);
+    }
+
+    #[test]
     fn test_get_possible_numbers_decimal() {
         let variable = CnfVariable::Decimal {
             row: 1,

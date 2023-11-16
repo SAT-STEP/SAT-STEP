@@ -53,7 +53,7 @@ pub fn clues_from_string(
 ) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
     // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
-    if buf.len() < 9 {
+    if buf.lines().collect::<Vec<&str>>().len() < 9 {
         return Err(GenericError {
             msg: "Invalid sudoku format!".to_owned(),
         });
@@ -476,5 +476,53 @@ mod tests {
                  .........\n";
 
         assert_eq!(output_string, test_string)
+    }
+
+    #[test]
+    fn test_invalid_string_to_sudoku() {
+        // Not enough cols
+        let sudoku = "...".to_string();
+        let result = clues_from_string(sudoku, ".");
+        assert!(result.is_err());
+
+        // Second type of error (not enough rows)
+        let sudoku2 = ".........\n".to_string();
+        let result2 = clues_from_string(sudoku2, ".");
+        println!("{result2:?}");
+        assert!(result2.is_err());
+
+        // Third type of error (not numbers)
+        let sudoku3 = "tlnaoeut.\n\
+                 .........\n\
+                 ...2.....\n\
+                 tetete...\n\
+                 .......3.\n\
+                 .........\n\
+                 .........\n\
+                 .....4...\n\
+                 .........\n";
+        let result3 = clues_from_string(sudoku3.to_string(), ".");
+        assert!(result3.is_err());
+    }
+
+    #[test]
+    fn test_solve_sudoku_fails() {
+        let sudoku_string = ".........\n\
+                 .........\n\
+                 ...22....\n\
+                 .........\n\
+                 .......3.\n\
+                 .........\n\
+                 .........\n\
+                 .....4...\n\
+                 .........\n"
+            .to_string();
+        let sudoku = clues_from_string(sudoku_string, ".").unwrap();
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        let solved = solve_sudoku(&sudoku, &mut solver, &EncodingType::Decimal);
+        assert!(solved.is_err());
     }
 }

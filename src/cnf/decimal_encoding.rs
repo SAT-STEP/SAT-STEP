@@ -106,18 +106,23 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
 }
 
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
+    let mut value = -1;
     for val in 1..=9 {
         if solver.value(cnf_identifier(row, col, val)).unwrap() {
-            return val;
+            value = val;
+            break;
         }
     }
-    -1
+    value
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::clues_from_string;
+    use crate::{
+        clues_from_string, cnf::EncodingType, sudoku::solve_sudoku, CadicalCallbackWrapper,
+        ConstraintList, Trail,
+    };
 
     #[test]
     fn test_cnf_converter_respects_clues() {
@@ -146,5 +151,30 @@ mod tests {
             (6, 2, -8),
             identifier_to_tuple(-1 * cnf_identifier(6, 2, 8))
         );
+    }
+
+    #[test]
+    fn test_get_cell_value() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n"
+            .to_string();
+
+        let sudoku = clues_from_string(test_sudoku, ".").unwrap();
+
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        solve_sudoku(&sudoku, &mut solver, &EncodingType::Decimal).unwrap();
+
+        let cell_value2 = get_cell_value(&solver, 1, 3);
+        assert_eq!(cell_value2, 3)
     }
 }
