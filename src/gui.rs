@@ -11,6 +11,7 @@ use egui::Color32;
 use egui::Margin;
 use egui::RichText;
 
+use crate::cnf::decimal_encoding::cnf_identifier;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
     error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
@@ -81,12 +82,16 @@ impl SATApp {
     /// Set a value to specific cell using row and column (1-9 indexed)
     fn set_cell(&mut self, row: i32, col: i32, value: Option<i32>, add_new_clue: bool) {
         self.sudoku[row as usize - 1][col as usize - 1].value = value;
-        if value.is_some() {
+        if let Some(val) = value {
             if add_new_clue {
                 self.sudoku[row as usize - 1][col as usize - 1].clue = true;
             }
+            if self.solver.fixed(cnf_identifier(row, col, val)) == 1 {
+                self.sudoku[row as usize - 1][col as usize - 1].fixed = true;
+            }
         } else {
             self.sudoku[row as usize - 1][col as usize - 1].clue = false;
+            self.sudoku[row as usize - 1][col as usize - 1].fixed = false;
         }
     }
 }
