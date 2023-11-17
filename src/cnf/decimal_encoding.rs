@@ -1,4 +1,4 @@
-use crate::{cadical_wrapper::CadicalCallbackWrapper, error::GenericError};
+use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
@@ -105,86 +105,24 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     )
 }
 
-pub fn clues_from_string(
-    buf: String,
-    empty_value: &str,
-) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
-    // Creates 2d Vec from string to represent clues found in sudoku
-    let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
-    if buf.len() < 9 {
-        return Err(GenericError {
-            msg: "Invalid sudoku format!".to_owned(),
-        });
-    }
-    for line in buf.lines() {
-        let mut row_buf = Vec::with_capacity(9);
-        for val in line.split("") {
-            if val == empty_value {
-                row_buf.push(None)
-            }
-            if let Ok(val) = val.parse() {
-                row_buf.push(Some(val));
-            }
-        }
-        if row_buf.len() != 9 {
-            return Err(GenericError {
-                msg: "Invalid sudoku format!".to_owned(),
-            });
-        }
-        clues.push(row_buf);
-    }
-
-    Ok(clues)
-}
-
-pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
-    let mut return_string = String::new();
-    for row in grid.iter().take(9) {
-        for col in row.iter().take(9) {
-            match col {
-                Some(v) => {
-                    return_string.push_str(&v.to_string());
-                }
-                None => {
-                    return_string.push('.');
-                }
-            }
-        }
-        return_string.push('\n');
-    }
-    return_string
-}
-
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
+    let mut value = -1;
     for val in 1..=9 {
         if solver.value(cnf_identifier(row, col, val)).unwrap() {
-            return val;
+            value = val;
+            break;
         }
     }
-    -1
+    value
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{clues_from_string, *};
-
-    #[test]
-    fn test_string_to_clues() {
-        let test_sudoku = "..3......\n\
-                 1........\n\
-                 .........\n\
-                 .........\n\
-                 ..8......\n\
-                 .........\n\
-                 ......2..\n\
-                 .........\n\
-                 .....6...\n";
-
-        let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
-        assert_eq!(clues[0][2], Some(3));
-        assert_eq!(clues[1][0], Some(1));
-        assert_eq!(clues[4][2], Some(8));
-    }
+    use super::*;
+    use crate::{
+        clues_from_string, cnf::EncodingType, sudoku::solve_sudoku, CadicalCallbackWrapper,
+        ConstraintList, Trail,
+    };
 
     #[test]
     fn test_cnf_converter_respects_clues() {
@@ -216,46 +154,27 @@ mod tests {
     }
 
     #[test]
-    fn test_string_from_grid() {
-        let mut test_vec = vec![vec![<Option<i32>>::None; 9]; 9];
-        test_vec[0][0] = Some(1);
-        test_vec[1][1] = Some(2);
-        test_vec[2][2] = Some(3);
-        test_vec[3][3] = Some(4);
-        let output_string = string_from_grid(test_vec);
+    fn test_get_cell_value() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n"
+            .to_string();
 
-        let test_string = "1........\n\
-                 .2.......\n\
-                 ..3......\n\
-                 ...4.....\n\
-                 .........\n\
-                 .........\n\
-                 .........\n\
-                 .........\n\
-                 .........\n";
+        let sudoku = clues_from_string(test_sudoku, ".").unwrap();
 
-        assert_eq!(output_string, test_string)
-    }
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
 
-    #[test]
-    fn test_string_from_grid_second() {
-        let mut test_vec = vec![vec![<Option<i32>>::None; 9]; 9];
-        test_vec[0][5] = Some(1);
-        test_vec[2][3] = Some(2);
-        test_vec[4][7] = Some(3);
-        test_vec[7][5] = Some(4);
-        let output_string = string_from_grid(test_vec);
+        solve_sudoku(&sudoku, &mut solver, &EncodingType::Decimal).unwrap();
 
-        let test_string = ".....1...\n\
-                 .........\n\
-                 ...2.....\n\
-                 .........\n\
-                 .......3.\n\
-                 .........\n\
-                 .........\n\
-                 .....4...\n\
-                 .........\n";
-
-        assert_eq!(output_string, test_string)
+        let cell_value2 = get_cell_value(&solver, 1, 3);
+        assert_eq!(cell_value2, 3)
     }
 }

@@ -5,7 +5,7 @@ use egui::{
     TextFormat, TextStyle, Ui, Vec2,
 };
 
-use crate::cnf_var::CnfVariable;
+use crate::cnf::CnfVariable;
 
 use super::SATApp;
 

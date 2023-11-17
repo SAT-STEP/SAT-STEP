@@ -1,7 +1,6 @@
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 
-#[allow(dead_code)]
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
@@ -98,7 +97,6 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
 }
 
 /// Initialize variables that indicate 2 cells have same bits in some position
-#[allow(dead_code)]
 fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
@@ -131,7 +129,6 @@ fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     clauses
 }
 
-#[allow(dead_code)] // allowed since binary encoding isn't used yet
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value: i32 = 1;
     for bit in 0..4 {
@@ -160,8 +157,6 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
         + 1
 }
 
-/// These do not work for the new encoding YET, which is why they are not used YET
-#[allow(dead_code)]
 #[inline(always)]
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     // Reverse CNF-identifier creation
@@ -177,7 +172,6 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     )
 }
 
-#[allow(dead_code)]
 pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool) {
     // Reverse CNF-identifier creation for equality constraints
     // Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
@@ -194,26 +188,72 @@ pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, 
     )
 }
 
-#[allow(dead_code)]
-pub fn create_tuples_from_constraints(
-    constraints: Vec<Vec<i32>>,
-) -> Vec<Vec<(i32, i32, i32, bool)>> {
-    let mut tuples = Vec::new();
-    for constraint in constraints.iter() {
-        let mut temp = Vec::with_capacity(constraint.len());
-        for value in constraint {
-            temp.push(identifier_to_tuple(*value));
-        }
-        tuples.push(temp);
-    }
-    tuples
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
 
+    use crate::{app_state::EncodingType, sudoku::clues_from_string, sudoku::solve_sudoku};
+    use crate::{ConstraintList, Trail};
+
     use super::*;
+
+    #[test]
+    fn test_cnf_converter_respects_clues() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n";
+
+        let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
+        let clauses = sudoku_to_cnf(&clues);
+
+        let result = vec![
+            clauses[clauses.len() - 4][0],
+            clauses[clauses.len() - 3][0],
+            clauses[clauses.len() - 2][0],
+            clauses[clauses.len() - 1][0],
+        ];
+
+        let expected = vec![
+            cnf_identifier(9, 6, 0), // we have 6 as the clue, inside the converter this is 5,
+            -cnf_identifier(9, 6, 1), // so in binary 0101
+            cnf_identifier(9, 6, 2),
+            -cnf_identifier(9, 6, 3),
+        ];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_get_cell_value() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n"
+            .to_string();
+
+        let sudoku = clues_from_string(test_sudoku, ".").unwrap();
+
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        solve_sudoku(&sudoku, &mut solver, &EncodingType::Binary).unwrap();
+
+        let cell_value = get_cell_value(&solver, 1, 3);
+
+        assert_eq!(cell_value, 3)
+    }
 
     #[test]
     fn no_overlapping_identifiers() {

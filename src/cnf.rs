@@ -1,8 +1,9 @@
+pub mod binary_encoding;
+pub mod decimal_encoding;
+
 use std::collections::HashSet;
 
 use crate::app_state::EncodingType;
-use crate::binary_cnf;
-use crate::cnf_converter;
 
 /// Enum that (hopefully) fixes everything
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
@@ -34,7 +35,7 @@ impl CnfVariable {
             EncodingType::Binary => {
                 if identifier.abs() > 9 * 9 * 4 {
                     let (row, col, row2, col2, bit_index, equal) =
-                        binary_cnf::eq_identifier_to_tuple(identifier);
+                        binary_encoding::eq_identifier_to_tuple(identifier);
                     Self::Equality {
                         row,
                         col,
@@ -44,7 +45,8 @@ impl CnfVariable {
                         equal,
                     }
                 } else {
-                    let (row, col, bit_index, value) = binary_cnf::identifier_to_tuple(identifier);
+                    let (row, col, bit_index, value) =
+                        binary_encoding::identifier_to_tuple(identifier);
                     Self::Bit {
                         row,
                         col,
@@ -54,7 +56,7 @@ impl CnfVariable {
                 }
             }
             EncodingType::Decimal => {
-                let (row, col, value) = cnf_converter::identifier_to_tuple(identifier);
+                let (row, col, value) = decimal_encoding::identifier_to_tuple(identifier);
                 Self::Decimal { row, col, value }
             }
         }
@@ -62,7 +64,9 @@ impl CnfVariable {
 
     pub fn to_cnf(&self) -> i32 {
         match self {
-            Self::Decimal { row, col, value } => cnf_converter::cnf_identifier(*row, *col, *value),
+            Self::Decimal { row, col, value } => {
+                decimal_encoding::cnf_identifier(*row, *col, *value)
+            }
             Self::Bit {
                 row,
                 col,
@@ -70,9 +74,9 @@ impl CnfVariable {
                 value,
             } => {
                 if *value {
-                    binary_cnf::cnf_identifier(*row, *col, *bit_index)
+                    binary_encoding::cnf_identifier(*row, *col, *bit_index)
                 } else {
-                    -binary_cnf::cnf_identifier(*row, *col, *bit_index)
+                    -binary_encoding::cnf_identifier(*row, *col, *bit_index)
                 }
             }
             Self::Equality {
@@ -84,9 +88,9 @@ impl CnfVariable {
                 equal,
             } => {
                 if *equal {
-                    binary_cnf::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
+                    binary_encoding::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
                 } else {
-                    -binary_cnf::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
+                    -binary_encoding::eq_cnf_identifier(*row, *col, *row2, *col2, *bit_index)
                 }
             }
         }
@@ -117,6 +121,76 @@ impl CnfVariable {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_to_cnf_and_back_bit() {
+        let variable = CnfVariable::Bit {
+            row: 1,
+            col: 2,
+            bit_index: 3,
+            value: true,
+        };
+        let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable, variable2);
+
+        let variable3 = CnfVariable::Bit {
+            row: 9,
+            col: 9,
+            bit_index: 3,
+            value: false,
+        };
+        let variable4 = CnfVariable::from_cnf(variable3.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable3, variable4);
+    }
+
+    #[test]
+    fn test_to_cnf_and_back_eq() {
+        let variable = CnfVariable::Equality {
+            row: 1,
+            col: 2,
+            row2: 3,
+            col2: 4,
+            bit_index: 0,
+            equal: true,
+        };
+        let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable, variable2);
+
+        let variable3 = CnfVariable::Equality {
+            row: 8,
+            col: 9,
+            row2: 9,
+            col2: 9,
+            bit_index: 3,
+            equal: false,
+        };
+        let variable4 = CnfVariable::from_cnf(variable3.to_cnf(), &EncodingType::Binary);
+        assert_eq!(variable3, variable4);
+    }
+
+    #[test]
+    fn test_to_cnf_and_back_decimal() {
+        let variable = CnfVariable::Decimal {
+            row: 1,
+            col: 2,
+            value: 3,
+        };
+        let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &EncodingType::Decimal);
+        assert_eq!(variable, variable2);
+
+        let variable3 = CnfVariable::Decimal {
+            row: 9,
+            col: 9,
+            value: 9,
+        };
+        let variable4 = CnfVariable::from_cnf(-variable3.to_cnf(), &EncodingType::Decimal);
+        let variable5 = CnfVariable::Decimal {
+            row: 9,
+            col: 9,
+            value: -9,
+        };
+        assert_eq!(variable4, variable5);
+    }
 
     #[test]
     fn test_get_possible_numbers_decimal() {
