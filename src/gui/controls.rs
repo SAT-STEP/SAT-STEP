@@ -314,6 +314,11 @@ impl SATApp {
                 &mut self.state.show_solved_sudoku,
                 RichText::new("Show solved sudoku").size(text_scale),
             );
+
+            ui.checkbox(
+                &mut self.state.highlight_fixed_literals,
+                RichText::new("Highligth fixed literals").size(text_scale),
+            );
         })
     }
 

@@ -56,9 +56,9 @@ impl SudokuCell {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
         } else if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
-        } else if self.fixed {
+        } else if self.fixed && app_state.highlight_fixed_literals {
             ui.painter()
-                .rect_filled(rect, 0.0, Color32::from_rgb(128, 128, 128));
+                .rect_filled(rect, 0.0, Color32::LIGHT_GREEN);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
