@@ -4,8 +4,6 @@ use crate::Trail;
 pub trait ControllableObj {
     fn clicked(&self, state: &mut AppState, i: usize);
     fn get_clicked(&self, state: &AppState) -> Option<usize>;
-    fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>);
-    fn get_literals(&self) -> Option<Vec<CnfVariable>>;
     fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>>;
     fn combiner(&self) -> String;
     fn move_up(&self, state: &mut AppState);
@@ -20,7 +18,6 @@ pub struct ConflictList {
     pub clauses: Vec<Vec<CnfVariable>>,
     pub combiner: String,
     pub trail: Trail,
-    pub literals: Option<Vec<CnfVariable>>,
 }
 
 impl ControllableObj for ConstraintList {
@@ -41,10 +38,6 @@ impl ControllableObj for ConstraintList {
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_constraint_index
     }
-    fn set_literal(&mut self, _literal: Option<Vec<CnfVariable>>) {}
-    fn get_literals(&self) -> Option<Vec<CnfVariable>> {
-        None
-    }
     fn clauses(&self, _state: &AppState) -> Vec<Vec<CnfVariable>> {
         self.clauses.clone()
     }
@@ -62,16 +55,9 @@ impl ControllableObj for ConstraintList {
 }
 
 impl ControllableObj for ConflictList {
-    fn set_literal(&mut self, literal: Option<Vec<CnfVariable>>) {
-        self.literals = literal;
-    }
-    fn get_literals(&self) -> Option<Vec<CnfVariable>> {
-        self.literals.clone()
-    }
     fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>> {
         let start = (state.page_number) as usize * state.page_length;
         let end = (state.page_number + 1) as usize * state.page_length;
-
         self.clauses.clone()
             [std::cmp::min(start, self.clauses.len())..std::cmp::min(end, self.clauses.len())]
             .to_vec()
@@ -80,6 +66,7 @@ impl ControllableObj for ConflictList {
         self.combiner.clone()
     }
     fn clicked(&self, state: &mut AppState, i: usize) {
+        println!("{:?}",i);
         let old_index = state.clicked_conflict_index;
         let old_page = state.page_number;
         state.clear_filters();
@@ -91,9 +78,8 @@ impl ControllableObj for ConflictList {
                         .iter()
                         .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                         .collect();
-                    if let Some(vars) = self.literals.clone() {
-                        state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
-                    }
+                    let vars = self.clauses[i].clone();
+                    state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
                 }
             }
             None => {
@@ -102,9 +88,8 @@ impl ControllableObj for ConflictList {
                     .iter()
                     .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                     .collect();
-                if let Some(vars) = self.literals.clone() {
+                    let vars = self.clauses[i].clone();
                     state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
-                }
             }
         }
         state.page_number = old_page;
