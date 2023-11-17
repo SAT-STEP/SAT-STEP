@@ -55,7 +55,7 @@ impl CnfVariable {
                     }
                 }
             }
-            EncodingType::Decimal => {
+            EncodingType::Decimal{ .. } => {
                 let (row, col, value) = decimal_encoding::identifier_to_tuple(identifier);
                 Self::Decimal { row, col, value }
             }

@@ -196,7 +196,12 @@ impl SATApp {
                 .show_ui(ui, |ui| {
                     ui.selectable_value(
                         &mut self.state.encoding,
-                        EncodingType::Decimal,
+                        EncodingType::Decimal {
+                            cell_at_least_one: true,
+                            cell_at_most_one: true,
+                            sudoku_has_all_values: true,
+                            sudoku_has_unique_values: false,
+                        },
                         "Decimal based CNF encoding",
                     );
                     ui.selectable_value(
