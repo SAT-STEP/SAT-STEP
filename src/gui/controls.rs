@@ -25,6 +25,9 @@ impl SATApp {
                 self.encoding_selection(ui, text_scale);
                 ui.end_row();
 
+                self.encoding_rules(ui, text_scale);
+                ui.end_row();
+
                 self.filters(ui, text_scale, ctx);
                 ui.end_row();
 
@@ -83,6 +86,11 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::P))
             {
                 self.state.editor_active = false;
+
+                if self.state.encoding_rules_changed {
+                    self.reset_cadical_and_solved_sudoku();
+                    self.state.encoding_rules_changed = !self.state.encoding_rules_changed;
+                }
 
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
@@ -232,6 +240,38 @@ impl SATApp {
                 }
             }
         }
+    }
+
+    /// CNF Encoding rules
+    fn encoding_rules(
+        &mut self,
+        ui: &mut Ui,
+        text_scale: f32,
+    ) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
+            match self.state.encoding {
+                EncodingType::Decimal {
+                    ref mut cell_at_least_one,
+                    ref mut cell_at_most_one,
+                    ref mut sudoku_has_all_values,
+                    ref mut sudoku_has_unique_values,
+                } => {
+                    if ui.checkbox(cell_at_least_one, RichText::new("Cell atleast one").size(text_scale)).clicked() {
+                        self.state.encoding_rules_changed = true;
+                    }
+                    if ui.checkbox(cell_at_most_one, RichText::new("Cell at most one").size(text_scale)).clicked() {
+                        self.state.encoding_rules_changed = true;
+                    }
+                    if ui.checkbox(sudoku_has_all_values, RichText::new("Sudoku has all values").size(text_scale)).clicked() {
+                        self.state.encoding_rules_changed = true;
+                    }
+                    if ui.checkbox(sudoku_has_unique_values, RichText::new("Sudoku has unique values").size(text_scale)).clicked() {
+                        self.state.encoding_rules_changed = true;
+                    }
+                }
+                EncodingType::Binary => todo!(),
+            }
+        })
     }
 
     // Row for filtering functionality

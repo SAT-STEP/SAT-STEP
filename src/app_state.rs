@@ -68,6 +68,7 @@ pub struct AppState {
     pub show_trail: bool,
     pub show_trail_view: bool,
     pub editor_active: bool,
+    pub encoding_rules_changed: bool,
 }
 
 impl AppState {
@@ -101,6 +102,7 @@ impl AppState {
             encoding,
             show_trail_view: false,
             editor_active: false,
+            encoding_rules_changed: false,
         }
     }
 

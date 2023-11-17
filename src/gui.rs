@@ -89,6 +89,27 @@ impl SATApp {
             self.sudoku[row as usize - 1][col as usize - 1].clue = false;
         }
     }
+
+    fn reset_cadical_and_solved_sudoku(&mut self) {
+        self.constraints.clear();
+        self.trail.clear();
+        self.rendered_constraints.clear();
+        self.state.reinit();
+        self.solver = Solver::with_config("plain").unwrap();
+        self.callback_wrapper =
+            CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
+        self.solver
+            .set_callbacks(Some(self.callback_wrapper.clone()));
+
+        // We want to keep the sudoku, but return it to an unsolved state
+        for row in self.sudoku.iter_mut() {
+            for cell in row.iter_mut() {
+                if !cell.clue {
+                    cell.value = None;
+                }
+            }
+        }
+    }
 }
 
 /// Trait to create app with default values (no variables yet)
