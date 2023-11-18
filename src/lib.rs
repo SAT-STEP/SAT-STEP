@@ -1,6 +1,7 @@
 mod app_state;
 mod cadical_wrapper;
 mod cnf;
+mod ctrl_obj;
 mod error;
 mod filtering;
 pub mod gui;
@@ -11,9 +12,12 @@ mod tests;
 
 use std::{cell::RefCell, num::ParseIntError, rc::Rc};
 
+use crate::app_state::EncodingType;
+
 use cadical::Solver;
 
 use cadical_wrapper::CadicalCallbackWrapper;
+use cnf::CnfVariable;
 use error::GenericError;
 use sudoku::{clues_from_string, string_from_grid};
 
@@ -75,6 +79,20 @@ impl Trail {
             conflict_literals: Rc::new(RefCell::new(Vec::new())),
             trail: Rc::new(RefCell::new(Vec::new())),
         }
+    }
+
+    pub fn as_cnf(&mut self, encoding: &EncodingType) -> Vec<Vec<CnfVariable>> {
+        (*self.conflict_literals.borrow())
+            .clone()
+            .into_iter()
+            .map(|tup| {
+                let (literal1_identifier, literal2_identifier) = tup;
+                Vec::from([
+                    CnfVariable::from_cnf(literal1_identifier, encoding),
+                    CnfVariable::from_cnf(literal2_identifier, encoding),
+                ])
+            })
+            .collect()
     }
 
     pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
