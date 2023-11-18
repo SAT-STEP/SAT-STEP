@@ -196,10 +196,13 @@ impl SATApp {
         let old_encoding = self.state.encoding;
 
         ui.horizontal(|ui| {
+            let selected_text = match self.state.encoding {
+                EncodingType::Decimal { .. } => "Decimal",
+                EncodingType::Binary => "Binary",
+            };
             egui::ComboBox::from_id_source(0)
                 .selected_text(
-                    RichText::new(format!("{:?} based CNF encoding", self.state.encoding))
-                        .size(text_scale),
+                    RichText::new(format!("{} based CNF encoding", selected_text)).size(text_scale),
                 )
                 .show_ui(ui, |ui| {
                     ui.selectable_value(
@@ -221,56 +224,87 @@ impl SATApp {
         });
 
         if old_encoding != self.state.encoding {
-            self.constraints.clear();
-            self.trail.clear();
-            self.rendered_constraints.clear();
-            self.state.reinit();
-            self.solver = Solver::with_config("plain").unwrap();
-            self.callback_wrapper =
-                CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
-            self.solver
-                .set_callbacks(Some(self.callback_wrapper.clone()));
-
-            // We want to keep the sudoku, but return it to an unsolved state
-            for row in self.sudoku.iter_mut() {
-                for cell in row.iter_mut() {
-                    if !cell.clue {
-                        cell.value = None;
-                    }
-                }
-            }
+            self.reset_cadical_and_solved_sudoku(); //these do the same
         }
+        //     self.constraints.clear();
+        //     self.trail.clear();
+        //     self.rendered_constraints.clear();
+        //     self.state.reinit();
+        //     self.solver = Solver::with_config("plain").unwrap();
+        //     self.callback_wrapper =
+        //         CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
+        //     self.solver
+        //         .set_callbacks(Some(self.callback_wrapper.clone()));
+
+        //     // We want to keep the sudoku, but return it to an unsolved state
+        //     for row in self.sudoku.iter_mut() {
+        //         for cell in row.iter_mut() {
+        //             if !cell.clue {
+        //                 cell.value = None;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     /// CNF Encoding rules
-    fn encoding_rules(
-        &mut self,
-        ui: &mut Ui,
-        text_scale: f32,
-    ) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
-            match self.state.encoding {
-                EncodingType::Decimal {
-                    ref mut cell_at_least_one,
-                    ref mut cell_at_most_one,
-                    ref mut sudoku_has_all_values,
-                    ref mut sudoku_has_unique_values,
-                } => {
-                    if ui.checkbox(cell_at_least_one, RichText::new("Cell atleast one").size(text_scale)).clicked() {
-                        self.state.encoding_rules_changed = true;
-                    }
-                    if ui.checkbox(cell_at_most_one, RichText::new("Cell at most one").size(text_scale)).clicked() {
-                        self.state.encoding_rules_changed = true;
-                    }
-                    if ui.checkbox(sudoku_has_all_values, RichText::new("Sudoku has all values").size(text_scale)).clicked() {
-                        self.state.encoding_rules_changed = true;
-                    }
-                    if ui.checkbox(sudoku_has_unique_values, RichText::new("Sudoku has unique values").size(text_scale)).clicked() {
-                        self.state.encoding_rules_changed = true;
-                    }
+    fn encoding_rules(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        // Veery ugly but I couldn't find a better alternative
+        // Draw the first two checkboxes on one row, the last two on another row
+        ui.horizontal(|ui| match self.state.encoding {
+            EncodingType::Decimal {
+                ref mut cell_at_least_one,
+                ref mut cell_at_most_one,
+                ..
+            } => {
+                if ui
+                    .checkbox(
+                        cell_at_least_one,
+                        RichText::new("Cell atleast one").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
                 }
-                EncodingType::Binary => todo!(),
+                if ui
+                    .checkbox(
+                        cell_at_most_one,
+                        RichText::new("Cell at most one").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
+                }
             }
+            EncodingType::Binary => todo!(),
+        });
+        ui.end_row();
+        ui.horizontal(|ui| match self.state.encoding {
+            EncodingType::Decimal {
+                ref mut sudoku_has_all_values,
+                ref mut sudoku_has_unique_values,
+                ..
+            } => {
+                if ui
+                    .checkbox(
+                        sudoku_has_all_values,
+                        RichText::new("Sudoku has all values").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
+                }
+                if ui
+                    .checkbox(
+                        sudoku_has_unique_values,
+                        RichText::new("Sudoku has unique values").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
+                }
+            }
+            EncodingType::Binary => todo!(),
         })
     }
 
