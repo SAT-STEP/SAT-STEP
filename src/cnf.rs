@@ -55,7 +55,7 @@ impl CnfVariable {
                     }
                 }
             }
-            EncodingType::Decimal{ .. } => {
+            EncodingType::Decimal { .. } => {
                 let (row, col, value) = decimal_encoding::identifier_to_tuple(identifier);
                 Self::Decimal { row, col, value }
             }
@@ -175,7 +175,12 @@ mod tests {
             col: 2,
             value: 3,
         };
-        let encoding = EncodingType::Decimal { cell_at_least_one: true, cell_at_most_one: true, sudoku_has_all_values: true, sudoku_has_unique_values: true };
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
         let variable2 = CnfVariable::from_cnf(variable.to_cnf(), &encoding);
         assert_eq!(variable, variable2);
 
@@ -184,7 +189,12 @@ mod tests {
             col: 9,
             value: 9,
         };
-        let encoding = EncodingType::Decimal { cell_at_least_one: true, cell_at_most_one: true, sudoku_has_all_values: true, sudoku_has_unique_values: true };
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
 
         let variable4 = CnfVariable::from_cnf(-variable3.to_cnf(), &encoding);
         let variable5 = CnfVariable::Decimal {

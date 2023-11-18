@@ -146,7 +146,12 @@ mod tests {
         let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
         solver.set_callbacks(Some(callback_wrapper.clone()));
 
-        let encoding = EncodingType::Decimal { cell_at_least_one: true, cell_at_most_one: true, sudoku_has_all_values: true, sudoku_has_unique_values: true };
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
         let solved = solve_sudoku(&sudoku, &mut solver, &encoding).unwrap();
         let should_be = vec![
             vec![
@@ -523,7 +528,12 @@ mod tests {
         let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
         solver.set_callbacks(Some(callback_wrapper.clone()));
 
-        let encoding = EncodingType::Decimal { cell_at_least_one: true, cell_at_most_one: true, sudoku_has_all_values: true, sudoku_has_unique_values: true };
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
         let solved = solve_sudoku(&sudoku, &mut solver, &encoding);
         assert!(solved.is_err());
     }

@@ -170,7 +170,10 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value = -1;
     for val in 1..=9 {
-        if solver.value(cnf_identifier(row, col, val)).unwrap_or_else(|| {false}) {
+        if solver
+            .value(cnf_identifier(row, col, val))
+            .unwrap_or(false)
+        {
             value = val;
             break;
         }
@@ -234,7 +237,12 @@ mod tests {
         let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
         solver.set_callbacks(Some(callback_wrapper.clone()));
 
-        let encoding = EncodingType::Decimal { cell_at_least_one: true, cell_at_most_one: true, sudoku_has_all_values: true, sudoku_has_unique_values: true };
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
         solve_sudoku(&sudoku, &mut solver, &encoding).unwrap();
 
         let cell_value2 = get_cell_value(&solver, 1, 3);
