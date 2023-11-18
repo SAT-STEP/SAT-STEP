@@ -22,6 +22,9 @@ impl SATApp {
                 self.buttons(ui, text_scale, ctx);
                 ui.end_row();
 
+                self.trail_view(ui, text_scale);
+                ui.end_row();
+
                 self.encoding_selection(ui, text_scale);
                 ui.end_row();
 
@@ -33,8 +36,8 @@ impl SATApp {
 
                 self.page_buttons(ui, text_scale, ctx);
                 ui.end_row();
-            });
-        self.exit_button(ui, text_scale, ctx).response
+            })
+            .response
     }
 
     pub fn buttons(
@@ -171,7 +174,19 @@ impl SATApp {
                     }
                 }
             }
+            if ui
+                .button(RichText::new("Quit - Q").size(text_scale))
+                .clicked()
+                || ctx.input(|i| i.key_pressed(Key::Q))
+            {
+                self.state.quit();
+            }
+        })
+    }
 
+    /// Controls for showing conflict literals and trails
+    fn trail_view(&mut self, ui: &mut Ui, text_scale: f32) {
+        ui.horizontal(|ui| {
             let show_trail_text = if !self.state.show_trail_view {
                 RichText::new("Show trail")
             } else {
@@ -182,7 +197,7 @@ impl SATApp {
                 self.state.show_trail_view = !self.state.show_trail_view;
             }
             if self.state.show_trail_view {
-                ui.add(Label::new(RichText::new("Show trail").size(text_scale)));
+                ui.add(Label::new(RichText::new("Trail").size(text_scale)));
 
                 let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
                 let (rect, mut response) =
@@ -214,11 +229,10 @@ impl SATApp {
                     .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
 
                 ui.add(Label::new(
-                    RichText::new("Show conflict literals and learned constraints")
-                        .size(text_scale),
+                    RichText::new("Conflict literals/learned constraints").size(text_scale),
                 ));
             }
-        })
+        });
     }
 
     /// Row for CNF encoding related inputs
@@ -410,23 +424,6 @@ impl SATApp {
                 &mut self.state.highlight_fixed_literals,
                 RichText::new("Highlight fixed literals").size(text_scale),
             );
-        })
-    }
-
-    fn exit_button(
-        &mut self,
-        ui: &mut Ui,
-        text_scale: f32,
-        ctx: &egui::Context,
-    ) -> egui::InnerResponse<()> {
-        ui.horizontal_wrapped(|ui| {
-            if ui
-                .button(RichText::new("Quit - Q").size(text_scale))
-                .clicked()
-                || ctx.input(|i| i.key_pressed(Key::Q))
-            {
-                self.state.quit();
-            }
         })
     }
 
