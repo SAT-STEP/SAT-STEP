@@ -58,6 +58,7 @@ extern "C" {
     ) -> *const c_char;
     fn ccadical_configure(ptr: *mut c_void, name: *const c_char) -> c_int;
     fn ccadical_limit2(ptr: *mut c_void, name: *const c_char, limit: c_int) -> c_int;
+    fn ccadical_fixed(ptr: *mut c_void, lit: c_int) -> c_int;
 }
 
 /// The CaDiCaL incremental SAT solver. The literals are unwrapped positive
@@ -355,6 +356,12 @@ impl<C: Callbacks> Solver<C> {
         } else {
             Err(dimacs_error(err))
         }
+    }
+
+    /// Returns '1' if the literal is implied by the formula, '-1' if its
+    /// negation is implied, or '0' if this is unclear at this point.
+    pub fn fixed(&mut self, literal: i32) -> i32 {
+        unsafe { ccadical_fixed(self.ptr, literal) }
     }
 }
 
