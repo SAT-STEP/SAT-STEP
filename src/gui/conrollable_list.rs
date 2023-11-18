@@ -4,8 +4,8 @@ use egui::{
 };
 use std::ops::Add;
 
-use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
 use crate::cnf::CnfVariable;
+use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
 
 use super::SATApp;
 
@@ -151,7 +151,6 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                
                                 clauses.clicked(&mut self.state, i);
                                 self.rendered_constraints = self.state.get_filtered();
                             }

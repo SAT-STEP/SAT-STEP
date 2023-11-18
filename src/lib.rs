@@ -1,7 +1,7 @@
 mod app_state;
 mod cadical_wrapper;
-mod ctrl_obj;
 mod cnf;
+mod ctrl_obj;
 mod error;
 mod filtering;
 pub mod gui;

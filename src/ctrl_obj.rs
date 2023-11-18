@@ -70,7 +70,7 @@ impl ControllableObj for ConflictList {
         let old_index = state.clicked_conflict_index;
         let old_page = state.page_number;
         state.clear_filters();
-        let paged_index = i+(state.page_length*old_page as usize);
+        let paged_index = i + (state.page_length * old_page as usize);
         match old_index {
             Some(index) => {
                 if index != i {
@@ -80,12 +80,14 @@ impl ControllableObj for ConflictList {
                         .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                         .collect();
                     let vars = self.clauses[paged_index].clone();
-                
+
                     state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
                 }
             }
             None => {
-                let trail = self.trail.trail_at_index(i+(state.page_length*old_page as usize));
+                let trail = self
+                    .trail
+                    .trail_at_index(i + (state.page_length * old_page as usize));
                 let enum_trail = trail
                     .iter()
                     .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
