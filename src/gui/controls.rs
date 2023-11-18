@@ -189,11 +189,6 @@ impl SATApp {
                                 }
                                 _ => (),
                             }
-                            //if key == &Key::Backspace {
-                            //    if let Some((row, col)) = self.state.selected_cell {
-                            //        self.set_cell(row, col, None, false);
-                            //    }
-                            //}
                         }
                         _ => {}
                     }
