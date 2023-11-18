@@ -152,44 +152,42 @@ impl SATApp {
                         }
                         egui::Event::Key {
                             key, pressed: true, ..
-                        } => {
-                            match *key {
-                                Key::Backspace => {
-                                    if let Some((row, col)) = self.state.selected_cell {
-                                        self.set_cell(row, col, None, false);
-                                    }
+                        } => match *key {
+                            Key::Backspace => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    self.set_cell(row, col, None, false);
                                 }
-                                Key::ArrowLeft => {
-                                    if let Some((row, col)) = self.state.selected_cell {
-                                        if col > 1 {
-                                            self.state.selected_cell = Some((row, col - 1));
-                                        }
-                                    }
-                                }
-                                Key::ArrowRight => {
-                                    if let Some((row, col)) = self.state.selected_cell {
-                                        if col < 9 {
-                                            self.state.selected_cell = Some((row, col + 1));
-                                        }
-                                    }
-                                }
-                                Key::ArrowDown => {
-                                    if let Some((row, col)) = self.state.selected_cell {
-                                        if row < 9 {
-                                            self.state.selected_cell = Some((row + 1, col));
-                                        }
-                                    }
-                                }
-                                Key::ArrowUp => {
-                                    if let Some((row, col)) = self.state.selected_cell {
-                                        if row > 1 {
-                                            self.state.selected_cell = Some((row - 1, col));
-                                        }
-                                    }
-                                }
-                                _ => (),
                             }
-                        }
+                            Key::ArrowLeft => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if col > 1 {
+                                        self.state.selected_cell = Some((row, col - 1));
+                                    }
+                                }
+                            }
+                            Key::ArrowRight => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if col < 9 {
+                                        self.state.selected_cell = Some((row, col + 1));
+                                    }
+                                }
+                            }
+                            Key::ArrowDown => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if row < 9 {
+                                        self.state.selected_cell = Some((row + 1, col));
+                                    }
+                                }
+                            }
+                            Key::ArrowUp => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if row > 1 {
+                                        self.state.selected_cell = Some((row - 1, col));
+                                    }
+                                }
+                            }
+                            _ => (),
+                        },
                         _ => {}
                     }
                 }
