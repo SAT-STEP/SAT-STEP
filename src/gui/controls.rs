@@ -226,7 +226,6 @@ impl SATApp {
         if old_encoding != self.state.encoding {
             self.reset_cadical_and_solved_sudoku();
         }
-
     }
 
     /// CNF Encoding rules
@@ -258,7 +257,7 @@ impl SATApp {
                     self.state.encoding_rules_changed = true;
                 }
             }
-            EncodingType::Binary => {},
+            EncodingType::Binary => {}
         });
         ui.end_row();
         ui.horizontal(|ui| match self.state.encoding {
@@ -286,7 +285,7 @@ impl SATApp {
                     self.state.encoding_rules_changed = true;
                 }
             }
-            EncodingType::Binary => {},
+            EncodingType::Binary => {}
         })
     }
 
