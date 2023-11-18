@@ -1,8 +1,7 @@
-mod constraint_list;
+mod conrollable_list;
 mod controls;
 pub mod sudoku_cell;
 mod sudoku_grid;
-mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
@@ -159,12 +158,8 @@ impl eframe::App for SATApp {
             } else {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
-                        if !self.state.show_trail_view {
-                            self.controls(ui, width, ctx);
-                            self.constraint_list(ui, ctx, width);
-                        } else {
-                            self.trail_panel(ui, ctx, width);
-                        }
+                        self.controls(ui, width, ctx);
+                        self.controllable_list(ui, ctx, width);
                     });
                     columns[1].vertical_centered(|ui| {
                         self.new_sudoku_grid(ui, height, width);
