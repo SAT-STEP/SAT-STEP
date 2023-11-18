@@ -66,7 +66,6 @@ impl ControllableObj for ConflictList {
         self.combiner.clone()
     }
     fn clicked(&self, state: &mut AppState, i: usize) {
-        println!("{:?}",i);
         let old_index = state.clicked_conflict_index;
         let old_page = state.page_number;
         state.clear_filters();
@@ -88,8 +87,8 @@ impl ControllableObj for ConflictList {
                     .iter()
                     .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                     .collect();
-                    let vars = self.clauses[i].clone();
-                    state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
+                let vars = self.clauses[i].clone();
+                state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
             }
         }
         state.page_number = old_page;
