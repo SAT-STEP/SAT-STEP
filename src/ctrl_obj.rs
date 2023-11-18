@@ -1,5 +1,5 @@
 use crate::app_state::AppState;
-use crate::cnf_var::CnfVariable;
+use crate::cnf::CnfVariable;
 use crate::Trail;
 pub trait ControllableObj {
     fn clicked(&self, state: &mut AppState, i: usize);
@@ -58,6 +58,7 @@ impl ControllableObj for ConflictList {
     fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>> {
         let start = (state.page_number) as usize * state.page_length;
         let end = (state.page_number + 1) as usize * state.page_length;
+
         self.clauses.clone()
             [std::cmp::min(start, self.clauses.len())..std::cmp::min(end, self.clauses.len())]
             .to_vec()
@@ -69,25 +70,27 @@ impl ControllableObj for ConflictList {
         let old_index = state.clicked_conflict_index;
         let old_page = state.page_number;
         state.clear_filters();
+        let paged_index = i+(state.page_length*old_page as usize);
         match old_index {
             Some(index) => {
                 if index != i {
-                    let trail = self.trail.trail_at_index(i);
+                    let trail = self.trail.trail_at_index(paged_index);
                     let enum_trail = trail
                         .iter()
                         .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                         .collect();
-                    let vars = self.clauses[i].clone();
+                    let vars = self.clauses[paged_index].clone();
+                
                     state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
                 }
             }
             None => {
-                let trail = self.trail.trail_at_index(i);
+                let trail = self.trail.trail_at_index(i+(state.page_length*old_page as usize));
                 let enum_trail = trail
                     .iter()
                     .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                     .collect();
-                let vars = self.clauses[i].clone();
+                let vars = self.clauses[paged_index].clone();
                 state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
             }
         }

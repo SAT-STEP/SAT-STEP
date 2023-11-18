@@ -1,12 +1,13 @@
-use crate::app_state::AppState;
+use crate::{app_state::AppState, cnf::CnfVariable};
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, Pos2, Rect, Stroke, Ui, Vec2,
+    Color32, Pos2, Rect, RichText, Stroke, Ui, Vec2,
 };
 
 const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
-const LITTLE_NUMBER_MULTIPLIER: f32 = 0.2; // Of cell size
-const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.6; // Of cell size
+const LITTLE_NUMBER_MULTIPLIER: f32 = 0.225; // Of cell size
+const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.3; // Of cell size
+const TOOLTIP_MULTIPLIER: f32 = 0.3; // Of cell size
 
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
@@ -17,7 +18,8 @@ pub struct SudokuCell {
     pub draw_big_number: bool, // Should the solved sudoku cell value be shown
     pub clue: bool,            // Should the cell be darkened
     pub part_of_conflict: bool, // Should the cell have highlighted borders
-    pub eq_symbols: Vec<String>,
+    pub fixed: bool,
+    pub eq_symbols: Vec<(String, CnfVariable)>,
     pub little_numbers: Vec<i32>,
     pub top_left: Pos2,
     pub bottom_right: Pos2,
@@ -55,6 +57,8 @@ impl SudokuCell {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
         } else if self.clue {
             ui.painter().rect_filled(rect, 0.0, Color32::DARK_GRAY);
+        } else if self.fixed && app_state.highlight_fixed_literals {
+            ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_GREEN);
         } else {
             ui.painter().rect_filled(rect, 0.0, Color32::GRAY);
         }
@@ -84,21 +88,80 @@ impl SudokuCell {
 
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
-            // TODO: Fix this for binary encoding
             ui.painter().galley(self.top_left, galley);
+            if !self.eq_symbols.is_empty() {
+                rect_action.on_hover_ui(|ui| self.eq_tooltip(ui, size));
+            }
         }
 
         selection_changed
     }
 
-    // TODO: Fix this for binary encoding
-    // TODO: Improve this? This is good enough for now, but was done quickly to get a PR made
+    /// Draw tooltip explaining eq constraints on hover
+    fn eq_tooltip(&self, ui: &mut Ui, size: f32) {
+        let mut eq_symbol_iter = self.eq_symbols.iter().peekable();
+        let mut text = String::new();
+        while let Some((char, variable)) = eq_symbol_iter.next() {
+            if let CnfVariable::Equality {
+                bit_index, equal, ..
+            } = variable
+            {
+                let mut vec1: Vec<i32> = CnfVariable::Bit {
+                    row: 0,
+                    col: 0,
+                    bit_index: *bit_index,
+                    value: true,
+                }
+                .get_possible_numbers()
+                .into_iter()
+                .collect();
+                vec1.sort();
+                let mut vec2: Vec<i32> = CnfVariable::Bit {
+                    row: 0,
+                    col: 0,
+                    bit_index: *bit_index,
+                    value: false,
+                }
+                .get_possible_numbers()
+                .into_iter()
+                .collect();
+                vec2.sort();
+
+                if *equal {
+                    text.push_str(format!("The values of the cells marked with {} belong to the same set,\n either {:?} or {:?}", char, vec1, vec2).as_str())
+                } else {
+                    text.push_str(format!("The value of one cell marked with {} belongs to \n{:?} and the other to {:?}", char, vec1, vec2).as_str())
+                }
+                if eq_symbol_iter.peek().is_some() {
+                    text.push_str("\n\nOR\n\n")
+                }
+            }
+        }
+        ui.label(
+            RichText::new(text)
+                .size(size * TOOLTIP_MULTIPLIER)
+                .color(Color32::from_rgb(200, 200, 200)),
+        );
+    }
+
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
     fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
-        let mut littles = self.little_numbers.clone();
+        let mut nums: Vec<String> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| x.to_string())
+            .collect();
+        let mut littles: Vec<String> = self
+            .eq_symbols
+            .iter()
+            .map(|tuple| tuple.0.clone())
+            .collect();
 
-        littles.sort();
-        littles.dedup();
+        nums.sort();
+        nums.dedup();
+
+        littles.append(&mut nums);
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
@@ -108,7 +171,7 @@ impl SudokuCell {
         for (i, val) in littles.iter().enumerate() {
             if i % 3 == 0 && i > 0 {
                 text_job.append(
-                    "\n\n",
+                    "\n",
                     0.0,
                     TextFormat {
                         font_id: space_font_id.clone(),
@@ -116,7 +179,7 @@ impl SudokuCell {
                     },
                 );
             }
-            let text = if *val > 0 {
+            let text = if val.len() == 1 {
                 format!(" {}", *val)
             } else {
                 (*val).to_string()
@@ -126,7 +189,9 @@ impl SudokuCell {
                 0.0,
                 TextFormat {
                     font_id: font_id.clone(),
-                    color: if *val > 0 {
+                    color: if val.parse::<i32>().is_err() {
+                        Color32::YELLOW
+                    } else if val.parse::<i32>().unwrap() > 0 {
                         Color32::BLUE
                     } else {
                         Color32::RED
@@ -159,6 +224,7 @@ impl Default for SudokuCell {
             bottom_right: Pos2::new(0.0, 0.0),
             row: 1,
             col: 1,
+            fixed: false,
         }
     }
 }
