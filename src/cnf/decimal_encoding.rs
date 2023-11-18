@@ -170,7 +170,7 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value = -1;
     for val in 1..=9 {
-        if solver.value(cnf_identifier(row, col, val)).unwrap() {
+        if solver.value(cnf_identifier(row, col, val)).unwrap_or_else(|| {false}) {
             value = val;
             break;
         }
