@@ -202,7 +202,7 @@ mod tests {
                  .....6...\n";
 
         let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
-        let clauses = sudoku_to_cnf(&clues);
+        let clauses = sudoku_to_cnf(&clues, true, true, true, false);
 
         assert_eq!(clauses[clauses.len() - 1][0], cnf_identifier(9, 6, 6));
     }

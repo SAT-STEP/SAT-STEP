@@ -224,27 +224,9 @@ impl SATApp {
         });
 
         if old_encoding != self.state.encoding {
-            self.reset_cadical_and_solved_sudoku(); //these do the same
+            self.reset_cadical_and_solved_sudoku();
         }
-        //     self.constraints.clear();
-        //     self.trail.clear();
-        //     self.rendered_constraints.clear();
-        //     self.state.reinit();
-        //     self.solver = Solver::with_config("plain").unwrap();
-        //     self.callback_wrapper =
-        //         CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
-        //     self.solver
-        //         .set_callbacks(Some(self.callback_wrapper.clone()));
 
-        //     // We want to keep the sudoku, but return it to an unsolved state
-        //     for row in self.sudoku.iter_mut() {
-        //         for cell in row.iter_mut() {
-        //             if !cell.clue {
-        //                 cell.value = None;
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     /// CNF Encoding rules
@@ -276,7 +258,7 @@ impl SATApp {
                     self.state.encoding_rules_changed = true;
                 }
             }
-            EncodingType::Binary => todo!(),
+            EncodingType::Binary => {},
         });
         ui.end_row();
         ui.horizontal(|ui| match self.state.encoding {
@@ -304,7 +286,7 @@ impl SATApp {
                     self.state.encoding_rules_changed = true;
                 }
             }
-            EncodingType::Binary => todo!(),
+            EncodingType::Binary => {},
         })
     }
 
