@@ -39,6 +39,9 @@ impl SATApp {
 
                 self.page_buttons(ui, text_scale, ctx);
                 ui.end_row();
+
+                self.show_solved_and_fixed(ui, text_scale);
+                ui.end_row();
             })
             .response
     }
@@ -474,18 +477,27 @@ impl SATApp {
                 self.state.set_page_number(self.state.page_count - 1);
                 self.rendered_constraints = self.state.get_filtered();
             }
-
-            ui.checkbox(
-                &mut self.state.show_solved_sudoku,
-                RichText::new("Show solved sudoku").size(text_scale),
-            );
-
-            ui.checkbox(
-                &mut self.state.highlight_fixed_literals,
-                RichText::new("Highlight fixed literals").size(text_scale),
-            );
         })
     }
+    fn show_solved_and_fixed(&mut self,
+            ui: &mut Ui,
+            text_scale: f32,
+        ) -> egui::InnerResponse<()> {
+            ui.horizontal(|ui| {
+                ui.checkbox(
+                    &mut self.state.show_solved_sudoku,
+                    RichText::new("Show solved sudoku").size(text_scale),
+                );
+    
+                ui.checkbox(
+                    &mut self.state.highlight_fixed_literals,
+                    RichText::new("Highlight fixed literals").size(text_scale),
+                );
+    
+            })
+        }
+
+
 
     fn get_empty_sudoku(&mut self) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
         let empty = ".........
