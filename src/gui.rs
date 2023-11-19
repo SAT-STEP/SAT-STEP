@@ -111,6 +111,7 @@ impl SATApp {
                 if !cell.clue {
                     cell.value = None;
                 }
+                cell.fixed = false;
             }
         }
     }
