@@ -1,7 +1,7 @@
-mod constraint_list;
+mod conrollable_list;
 mod controls;
+pub mod sudoku_cell;
 mod sudoku_grid;
-mod trail_panel;
 
 use cadical::Solver;
 use eframe::egui;
@@ -10,28 +10,26 @@ use egui::Color32;
 use egui::Margin;
 use egui::RichText;
 
-use crate::Trail;
+use crate::cnf::decimal_encoding::cnf_identifier;
 use crate::{
-    app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, error::GenericError,
-    ConstraintList,
+    app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
+    error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
 };
 
 /// Main app struct
 pub struct SATApp {
-    sudoku: Vec<Vec<Option<i32>>>,
-    clues: Vec<Vec<Option<i32>>>,
+    sudoku: Vec<Vec<SudokuCell>>,
     constraints: ConstraintList,
     trail: Trail,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
-    rendered_constraints: Vec<Vec<(i32, i32, i32)>>,
+    rendered_constraints: Vec<Vec<CnfVariable>>,
     state: AppState,
     current_error: Option<GenericError>,
 }
 
 impl SATApp {
-    pub fn new(sudoku: Vec<Vec<Option<i32>>>) -> Self {
-        let clues = sudoku.clone();
+    pub fn new(sudoku: Vec<Vec<SudokuCell>>) -> Self {
         let constraints = ConstraintList::new();
         let trail = Trail::new();
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
@@ -41,7 +39,6 @@ impl SATApp {
         let current_error = None;
         Self {
             sudoku,
-            clues,
             constraints,
             trail,
             callback_wrapper,
@@ -49,6 +46,72 @@ impl SATApp {
             rendered_constraints: Vec::new(),
             state,
             current_error,
+        }
+    }
+
+    pub fn get_option_value_sudoku(&self) -> Vec<Vec<Option<i32>>> {
+        let mut sudoku = Vec::new();
+        for row in &self.sudoku {
+            let mut row_vec = Vec::new();
+            for cell in row {
+                row_vec.push(cell.value);
+            }
+            sudoku.push(row_vec);
+        }
+        sudoku
+    }
+
+    pub fn sudoku_from_option_values(
+        &mut self,
+        sudoku: Vec<Vec<Option<i32>>>,
+        add_new_clues: bool,
+    ) {
+        for (row_index, row) in sudoku.iter().enumerate() {
+            for (col_index, value) in row.iter().enumerate() {
+                self.set_cell(
+                    row_index as i32 + 1,
+                    col_index as i32 + 1,
+                    *value,
+                    add_new_clues,
+                );
+            }
+        }
+    }
+
+    /// Set a value to specific cell using row and column (1-9 indexed)
+    fn set_cell(&mut self, row: i32, col: i32, value: Option<i32>, add_new_clue: bool) {
+        self.sudoku[row as usize - 1][col as usize - 1].value = value;
+        if let Some(val) = value {
+            if add_new_clue {
+                self.sudoku[row as usize - 1][col as usize - 1].clue = true;
+            }
+            if self.solver.fixed(cnf_identifier(row, col, val)) == 1 {
+                self.sudoku[row as usize - 1][col as usize - 1].fixed = true;
+            }
+        } else {
+            self.sudoku[row as usize - 1][col as usize - 1].clue = false;
+            self.sudoku[row as usize - 1][col as usize - 1].fixed = false;
+        }
+    }
+
+    fn reset_cadical_and_solved_sudoku(&mut self) {
+        self.constraints.clear();
+        self.trail.clear();
+        self.rendered_constraints.clear();
+        self.state.reinit();
+        self.solver = Solver::with_config("plain").unwrap();
+        self.callback_wrapper =
+            CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
+        self.solver
+            .set_callbacks(Some(self.callback_wrapper.clone()));
+
+        // We want to keep the sudoku, but return it to an unsolved state
+        for row in self.sudoku.iter_mut() {
+            for cell in row.iter_mut() {
+                if !cell.clue {
+                    cell.value = None;
+                }
+            }
         }
     }
 }
@@ -65,7 +128,6 @@ impl Default for SATApp {
         let current_error = None;
         Self {
             sudoku: Vec::new(),
-            clues: Vec::new(),
             constraints,
             trail,
             callback_wrapper,
@@ -117,15 +179,11 @@ impl eframe::App for SATApp {
             } else {
                 ui.columns(2, |columns| {
                     columns[0].vertical_centered(|ui| {
-                        if !self.state.show_trail_view {
-                            self.controls(ui, width, ctx);
-                            self.constraint_list(ui, ctx, width);
-                        } else {
-                            self.trail_panel(ui, ctx, width);
-                        }
+                        self.controls(ui, width, ctx);
+                        self.controllable_list(ui, ctx, width);
                     });
                     columns[1].vertical_centered(|ui| {
-                        self.sudoku_grid(ui, height, width);
+                        self.new_sudoku_grid(ui, height, width);
                     });
                 });
             }

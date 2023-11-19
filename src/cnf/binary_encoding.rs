@@ -1,135 +1,6 @@
-use crate::{cadical_wrapper::CadicalCallbackWrapper, cnf_var::CnfVariable};
+use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
-use egui::{
-    text::{LayoutJob, TextFormat},
-    Color32, FontId,
-};
 
-pub struct BitVar {
-    pub row: i32,
-    pub col: i32,
-    pub bit_index: i32,
-    pub bit_value: bool,
-}
-
-pub struct EqVar {
-    pub row: i32,
-    pub col: i32,
-    pub row2: i32,
-    pub col2: i32,
-    pub bit_index: i32,
-    pub equal: bool,
-}
-
-impl CnfVariable for BitVar {
-    fn new(identifier: i32) -> BitVar {
-        let (row, col, bit_index, bit_value) = identifier_to_tuple(identifier);
-        BitVar {
-            row,
-            col,
-            bit_index,
-            bit_value,
-        }
-    }
-
-    fn human_readable(
-        &self,
-        text_job: &mut LayoutJob,
-        large_font: FontId,
-        small_font: FontId,
-        text_color: Color32,
-    ) {
-        let (lead_char, color) = if self.bit_value {
-            ("B", text_color)
-        } else {
-            ("~B", Color32::RED)
-        };
-
-        text_job.append(
-            &format!("{}{}", lead_char, self.bit_index),
-            0.0,
-            TextFormat {
-                font_id: large_font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
-        text_job.append(
-            &format!("({},{})", self.row, self.col),
-            0.0,
-            TextFormat {
-                font_id: small_font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
-    }
-
-    fn to_cnf(&self) -> i32 {
-        if self.bit_value {
-            cnf_identifier(self.row, self.col, self.bit_index)
-        } else {
-            -cnf_identifier(self.row, self.col, self.bit_index)
-        }
-    }
-}
-
-impl CnfVariable for EqVar {
-    fn new(identifier: i32) -> EqVar {
-        let (row, col, row2, col2, bit_index, equal) = eq_identifier_to_tuple(identifier);
-        EqVar {
-            row,
-            col,
-            row2,
-            col2,
-            bit_index,
-            equal,
-        }
-    }
-
-    fn human_readable(
-        &self,
-        text_job: &mut LayoutJob,
-        large_font: FontId,
-        small_font: FontId,
-        text_color: Color32,
-    ) {
-        let (lead_char, color) = if self.equal {
-            ("EQ", text_color)
-        } else {
-            ("~EQ", Color32::RED)
-        };
-
-        text_job.append(
-            &format!("{}{}", lead_char, self.bit_index),
-            0.0,
-            TextFormat {
-                font_id: large_font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
-        text_job.append(
-            &format!("({},{});({},{})", self.row, self.col, self.row2, self.col2),
-            0.0,
-            TextFormat {
-                font_id: small_font.clone(),
-                color,
-                ..Default::default()
-            },
-        );
-    }
-
-    fn to_cnf(&self) -> i32 {
-        if self.equal {
-            eq_cnf_identifier(self.row, self.col, self.row2, self.col2, self.bit_index)
-        } else {
-            -eq_cnf_identifier(self.row, self.col, self.row2, self.col2, self.bit_index)
-        }
-    }
-}
-
-#[allow(dead_code)]
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
@@ -226,7 +97,6 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
 }
 
 /// Initialize variables that indicate 2 cells have same bits in some position
-#[allow(dead_code)]
 fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
@@ -259,7 +129,6 @@ fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     clauses
 }
 
-#[allow(dead_code)] // allowed since binary encoding isn't used yet
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value: i32 = 1;
     for bit in 0..4 {
@@ -288,10 +157,8 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
         + 1
 }
 
-/// These do not work for the new encoding YET, which is why they are not used YET
-#[allow(dead_code)]
 #[inline(always)]
-fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
+pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     // Reverse CNF-identifier creation
     // Return tuple of (row, col, bit_index, bit_value) from identifier
     // bit_value will be false for negative ids, positive otherwise
@@ -305,8 +172,7 @@ fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     )
 }
 
-#[allow(dead_code)]
-fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool) {
+pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool) {
     // Reverse CNF-identifier creation for equality constraints
     // Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
     // equal will be false, if the bits in the two cells are different
@@ -322,26 +188,72 @@ fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool
     )
 }
 
-#[allow(dead_code)]
-pub fn create_tuples_from_constraints(
-    constraints: Vec<Vec<i32>>,
-) -> Vec<Vec<(i32, i32, i32, bool)>> {
-    let mut tuples = Vec::new();
-    for constraint in constraints.iter() {
-        let mut temp = Vec::with_capacity(constraint.len());
-        for value in constraint {
-            temp.push(identifier_to_tuple(*value));
-        }
-        tuples.push(temp);
-    }
-    tuples
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
 
+    use crate::{app_state::EncodingType, sudoku::clues_from_string, sudoku::solve_sudoku};
+    use crate::{ConstraintList, Trail};
+
     use super::*;
+
+    #[test]
+    fn test_cnf_converter_respects_clues() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n";
+
+        let clues = clues_from_string(test_sudoku.to_owned(), ".").unwrap();
+        let clauses = sudoku_to_cnf(&clues);
+
+        let result = vec![
+            clauses[clauses.len() - 4][0],
+            clauses[clauses.len() - 3][0],
+            clauses[clauses.len() - 2][0],
+            clauses[clauses.len() - 1][0],
+        ];
+
+        let expected = vec![
+            cnf_identifier(9, 6, 0), // we have 6 as the clue, inside the converter this is 5,
+            -cnf_identifier(9, 6, 1), // so in binary 0101
+            cnf_identifier(9, 6, 2),
+            -cnf_identifier(9, 6, 3),
+        ];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_get_cell_value() {
+        let test_sudoku = "..3......\n\
+                 1........\n\
+                 .........\n\
+                 .........\n\
+                 ..8......\n\
+                 .........\n\
+                 ......2..\n\
+                 .........\n\
+                 .....6...\n"
+            .to_string();
+
+        let sudoku = clues_from_string(test_sudoku, ".").unwrap();
+
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let callback_wrapper = CadicalCallbackWrapper::new(ConstraintList::new(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        solve_sudoku(&sudoku, &mut solver, &EncodingType::Binary).unwrap();
+
+        let cell_value = get_cell_value(&solver, 1, 3);
+
+        assert_eq!(cell_value, 3)
+    }
 
     #[test]
     fn no_overlapping_identifiers() {
