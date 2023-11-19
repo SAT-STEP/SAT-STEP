@@ -6,14 +6,30 @@ use crate::{
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum EncodingType {
-    Decimal,
+    Decimal {
+        cell_at_least_one: bool,
+        cell_at_most_one: bool,
+        sudoku_has_all_values: bool,
+        sudoku_has_unique_values: bool,
+    },
     Binary,
 }
 
 impl EncodingType {
     pub fn sudoku_to_cnf(&self, clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
         match self {
-            EncodingType::Decimal => decimal_encoding::sudoku_to_cnf(clues),
+            EncodingType::Decimal {
+                cell_at_least_one,
+                cell_at_most_one,
+                sudoku_has_all_values,
+                sudoku_has_unique_values,
+            } => decimal_encoding::sudoku_to_cnf(
+                clues,
+                *cell_at_least_one,
+                *cell_at_most_one,
+                *sudoku_has_all_values,
+                *sudoku_has_unique_values,
+            ),
             EncodingType::Binary => binary_encoding::sudoku_to_cnf(clues),
         }
     }
@@ -25,7 +41,7 @@ impl EncodingType {
         col: i32,
     ) -> i32 {
         match self {
-            EncodingType::Decimal => decimal_encoding::get_cell_value(solver, row, col),
+            EncodingType::Decimal { .. } => decimal_encoding::get_cell_value(solver, row, col),
             EncodingType::Binary => binary_encoding::get_cell_value(solver, row, col),
         }
     }
@@ -52,13 +68,19 @@ pub struct AppState {
     pub show_trail: bool,
     pub show_trail_view: bool,
     pub editor_active: bool,
+    pub encoding_rules_changed: bool,
     pub highlight_fixed_literals: bool,
 }
 
 impl AppState {
     pub fn new(constraints: ConstraintList) -> Self {
         let mut filter = ListFilter::new(constraints.clone());
-        let encoding = EncodingType::Decimal;
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: false,
+            sudoku_has_all_values: false,
+            sudoku_has_unique_values: true,
+        };
         filter.reinit(&encoding);
         Self {
             filter,
@@ -81,6 +103,7 @@ impl AppState {
             encoding,
             show_trail_view: false,
             editor_active: false,
+            encoding_rules_changed: false,
             highlight_fixed_literals: false,
         }
     }
