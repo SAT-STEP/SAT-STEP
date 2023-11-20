@@ -1,4 +1,6 @@
 #include "internal.hpp"
+#include "resources.hpp"
+#include <cstdint>
 
 /*------------------------------------------------------------------------*/
 
@@ -920,6 +922,39 @@ void Solver::resources () {
   REQUIRE_VALID_OR_SOLVING_STATE ();
   internal->print_resource_usage ();
   LOG_API_CALL_END ("resources");
+}
+
+double Solver::process_time () {
+    return internal->process_time();
+}
+
+double Solver::real_time () {
+    return internal->real_time();
+}
+
+double Solver::max_resident_set_size () {
+    int64_t m = maximum_resident_set_size ();
+    return m/(double)(1l<<20);
+}
+
+int64_t Solver::conflicts () {
+    return internal->stats.conflicts;
+}
+
+int64_t Solver::learned_clauses () {
+    return internal->stats.learned.clauses;
+}
+
+int64_t Solver::learned_literals () {
+    return internal->stats.learned.literals;
+}
+
+int64_t Solver::decisions () {
+    return internal->stats.decisions;
+}
+
+int64_t Solver::restarts() {
+    return internal->stats.restarts;
 }
 
 /*------------------------------------------------------------------------*/
