@@ -19,7 +19,7 @@ struct Wrapper : Learner, Terminator {
     int * begin_clause, * end_clause, * capacity_clause;
     void (*function) (void *, int *);
     // PAAVO:
-    void (*trail_function) (void *, int *, unsigned long, int *);
+    void (*trail_function) (void *, unsigned long, int *, unsigned long, int *);
   } learner;
 
   bool terminate () {
@@ -51,8 +51,8 @@ struct Wrapper : Learner, Terminator {
   }
 
   // PAAVO:
-  void learn_trail (int* conflict_literals, unsigned long size, int* data) {
-    learner.trail_function (learner.state, conflict_literals, size, data);
+  void learn_trail (unsigned long conflict_size, int* conflict_literals, unsigned long size, int* data) {
+    learner.trail_function (learner.state, conflict_size, conflict_literals, size, data);
   }
 
   Wrapper () : solver (new Solver ()) {
@@ -165,7 +165,7 @@ void ccadical_set_learn (CCaDiCaL * ptr,
 }
 
 // PAAVO:
-void ccadical_set_learn_trail(CCaDiCaL * ptr, void *state, void (*trail)(void * state, int * conflict_literals, unsigned long size, int * trail)) {
+void ccadical_set_learn_trail(CCaDiCaL * ptr, void *state, void (*trail)(void * state, unsigned long conflict_size, int * conflict_literals, unsigned long size, int * trail)) {
   Wrapper * wrapper = (Wrapper *) ptr;
   wrapper->learner.state = state;
   wrapper->learner.trail_function = trail;
