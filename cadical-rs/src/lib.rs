@@ -7,7 +7,7 @@
 //! overall place. It was written by Armin Biere, and it is available under the
 //! MIT license.
 
-use std::ffi::{CStr, CString};
+use std::ffi::{c_double, CStr, CString};
 use std::mem::ManuallyDrop;
 use std::os::raw::{c_char, c_int, c_ulong, c_void};
 use std::path::Path;
@@ -59,6 +59,14 @@ extern "C" {
     fn ccadical_configure(ptr: *mut c_void, name: *const c_char) -> c_int;
     fn ccadical_limit2(ptr: *mut c_void, name: *const c_char, limit: c_int) -> c_int;
     fn ccadical_fixed(ptr: *mut c_void, lit: c_int) -> c_int;
+    fn ccadical_process_time(ptr: *mut c_void) -> c_double;
+    fn ccadical_real_time(ptr: *mut c_void) -> c_double;
+    fn ccadical_max_resident_set_size(ptr: *mut c_void) -> c_double;
+    fn ccadical_conflicts(ptr: *mut c_void) -> i64;
+    fn ccadical_learned_clauses(ptr: *mut c_void) -> i64;
+    fn ccadical_learned_literals(ptr: *mut c_void) -> i64;
+    fn ccadical_decisions(ptr: *mut c_void) -> i64;
+    fn ccadical_restarts(ptr: *mut c_void) -> i64;
 }
 
 /// The CaDiCaL incremental SAT solver. The literals are unwrapped positive
@@ -363,6 +371,59 @@ impl<C: Callbacks> Solver<C> {
     pub fn fixed(&mut self, literal: i32) -> i32 {
         unsafe { ccadical_fixed(self.ptr, literal) }
     }
+
+    pub fn process_time(&mut self) -> f64 {
+        unsafe { ccadical_process_time(self.ptr) }
+    }
+
+    pub fn real_time(&mut self) -> f64 {
+        unsafe { ccadical_real_time(self.ptr) }
+    }
+
+    pub fn max_resident_set_size(&mut self) -> f64 {
+        unsafe { ccadical_max_resident_set_size(self.ptr) }
+    }
+
+    pub fn conflicts(&mut self) -> i64 {
+        unsafe { ccadical_conflicts(self.ptr) }
+    }
+
+    pub fn learned_clauses(&mut self) -> i64 {
+        unsafe { ccadical_learned_clauses(self.ptr) }
+    }
+
+    pub fn learned_literals(&mut self) -> i64 {
+        unsafe { ccadical_learned_literals(self.ptr) }
+    }
+
+    pub fn decisions(&mut self) -> i64 {
+        unsafe { ccadical_decisions(self.ptr) }
+    }
+
+    pub fn stats(&mut self) -> CadicalStats {
+        CadicalStats {
+            process_time: unsafe { ccadical_process_time(self.ptr) },
+            real_time: unsafe { ccadical_real_time(self.ptr) },
+            max_resident_set_size_mb: unsafe { ccadical_max_resident_set_size(self.ptr) },
+            conflicts: unsafe { ccadical_conflicts(self.ptr) },
+            learned_clauses: unsafe { ccadical_learned_clauses(self.ptr) },
+            learned_literals: unsafe { ccadical_learned_literals(self.ptr) },
+            decisions: unsafe { ccadical_decisions(self.ptr) },
+            restarts: unsafe { ccadical_restarts(self.ptr) },
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct CadicalStats {
+    pub process_time: f64,
+    pub real_time: f64,
+    pub max_resident_set_size_mb: f64,
+    pub conflicts: i64,
+    pub learned_clauses: i64,
+    pub learned_literals: i64,
+    pub decisions: i64,
+    pub restarts: i64,
 }
 
 fn dimacs_path(path: &Path) -> Result<CString, Error> {
