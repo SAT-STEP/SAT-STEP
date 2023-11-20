@@ -189,7 +189,13 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
-        filter.reinit(&EncodingType::Decimal);
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
+        filter.reinit(&encoding);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);
@@ -241,7 +247,13 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints);
-        filter.reinit(&EncodingType::Decimal);
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: true,
+            sudoku_has_all_values: true,
+            sudoku_has_unique_values: true,
+        };
+        filter.reinit(&encoding);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);

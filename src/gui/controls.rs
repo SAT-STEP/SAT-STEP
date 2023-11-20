@@ -28,6 +28,9 @@ impl SATApp {
                 self.encoding_selection(ui, text_scale);
                 ui.end_row();
 
+                self.encoding_rules(ui, text_scale);
+                ui.end_row();
+
                 self.filters(ui, text_scale, ctx);
                 ui.end_row();
 
@@ -35,6 +38,9 @@ impl SATApp {
                 ui.end_row();
 
                 self.page_buttons(ui, text_scale, ctx);
+                ui.end_row();
+
+                self.show_solved_and_fixed(ui, text_scale);
                 ui.end_row();
             })
             .response
@@ -87,6 +93,11 @@ impl SATApp {
             {
                 self.state.editor_active = false;
 
+                if self.state.encoding_rules_changed {
+                    self.reset_cadical_and_solved_sudoku();
+                    self.state.encoding_rules_changed = !self.state.encoding_rules_changed;
+                }
+
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
                     &mut self.solver,
@@ -130,6 +141,8 @@ impl SATApp {
                         self.current_error = Some(e);
                     }
                 }
+
+                self.state.selected_cell = Some((1, 1));
             }
 
             if self.state.editor_active {
@@ -150,13 +163,42 @@ impl SATApp {
                         }
                         egui::Event::Key {
                             key, pressed: true, ..
-                        } => {
-                            if key == &Key::Backspace {
+                        } => match *key {
+                            Key::Backspace => {
                                 if let Some((row, col)) = self.state.selected_cell {
                                     self.set_cell(row, col, None, false);
                                 }
                             }
-                        }
+                            Key::ArrowLeft => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if col > 1 {
+                                        self.state.selected_cell = Some((row, col - 1));
+                                    }
+                                }
+                            }
+                            Key::ArrowRight => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if col < 9 {
+                                        self.state.selected_cell = Some((row, col + 1));
+                                    }
+                                }
+                            }
+                            Key::ArrowDown => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if row < 9 {
+                                        self.state.selected_cell = Some((row + 1, col));
+                                    }
+                                }
+                            }
+                            Key::ArrowUp => {
+                                if let Some((row, col)) = self.state.selected_cell {
+                                    if row > 1 {
+                                        self.state.selected_cell = Some((row - 1, col));
+                                    }
+                                }
+                            }
+                            _ => (),
+                        },
                         _ => {}
                     }
                 }
@@ -240,15 +282,23 @@ impl SATApp {
         let old_encoding = self.state.encoding;
 
         ui.horizontal(|ui| {
+            let selected_text = match self.state.encoding {
+                EncodingType::Decimal { .. } => "Decimal",
+                EncodingType::Binary => "Binary",
+            };
             egui::ComboBox::from_id_source(0)
                 .selected_text(
-                    RichText::new(format!("{:?} based CNF encoding", self.state.encoding))
-                        .size(text_scale),
+                    RichText::new(format!("{} based CNF encoding", selected_text)).size(text_scale),
                 )
                 .show_ui(ui, |ui| {
                     ui.selectable_value(
                         &mut self.state.encoding,
-                        EncodingType::Decimal,
+                        EncodingType::Decimal {
+                            cell_at_least_one: true,
+                            cell_at_most_one: true,
+                            sudoku_has_all_values: true,
+                            sudoku_has_unique_values: false,
+                        },
                         "Decimal based CNF encoding",
                     );
                     ui.selectable_value(
@@ -260,25 +310,69 @@ impl SATApp {
         });
 
         if old_encoding != self.state.encoding {
-            self.constraints.clear();
-            self.trail.clear();
-            self.rendered_constraints.clear();
-            self.state.reinit();
-            self.solver = Solver::with_config("plain").unwrap();
-            self.callback_wrapper =
-                CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
-            self.solver
-                .set_callbacks(Some(self.callback_wrapper.clone()));
+            self.reset_cadical_and_solved_sudoku();
+        }
+    }
 
-            // We want to keep the sudoku, but return it to an unsolved state
-            for row in self.sudoku.iter_mut() {
-                for cell in row.iter_mut() {
-                    if !cell.clue {
-                        cell.value = None;
-                    }
+    /// CNF Encoding rules
+    fn encoding_rules(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        // Veery ugly but I couldn't find a better alternative
+        // Draw the first two checkboxes on one row, the last two on another row
+        ui.horizontal(|ui| match self.state.encoding {
+            EncodingType::Decimal {
+                ref mut cell_at_least_one,
+                ref mut cell_at_most_one,
+                ..
+            } => {
+                if ui
+                    .checkbox(
+                        cell_at_least_one,
+                        RichText::new("Cell atleast one").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
+                }
+                if ui
+                    .checkbox(
+                        cell_at_most_one,
+                        RichText::new("Cell at most one").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
                 }
             }
-        }
+            EncodingType::Binary => {}
+        });
+        ui.end_row();
+        ui.horizontal(|ui| match self.state.encoding {
+            EncodingType::Decimal {
+                ref mut sudoku_has_all_values,
+                ref mut sudoku_has_unique_values,
+                ..
+            } => {
+                if ui
+                    .checkbox(
+                        sudoku_has_all_values,
+                        RichText::new("Sudoku has all values").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
+                }
+                if ui
+                    .checkbox(
+                        sudoku_has_unique_values,
+                        RichText::new("Sudoku has unique values").size(text_scale),
+                    )
+                    .clicked()
+                {
+                    self.state.encoding_rules_changed = true;
+                }
+            }
+            EncodingType::Binary => {}
+        })
     }
 
     // Row for filtering functionality
@@ -414,7 +508,10 @@ impl SATApp {
                 self.state.set_page_number(self.state.page_count - 1);
                 self.rendered_constraints = self.state.get_filtered();
             }
-
+        })
+    }
+    fn show_solved_and_fixed(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
             ui.checkbox(
                 &mut self.state.show_solved_sudoku,
                 RichText::new("Show solved sudoku").size(text_scale),
