@@ -103,6 +103,10 @@ impl SATApp {
                     &mut self.solver,
                     &self.state.encoding,
                 );
+
+                let stats = self.solver.stats();
+                println!("{:?}", stats);
+
                 match solve_result {
                     Ok(solved) => {
                         self.sudoku_from_option_values(solved, false);
