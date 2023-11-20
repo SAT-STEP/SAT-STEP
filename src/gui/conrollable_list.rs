@@ -4,11 +4,14 @@ use egui::{
 };
 use std::ops::Add;
 
+use crate::cnf::CnfVariable;
+use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
+
 use super::SATApp;
 
 impl SATApp {
     /// Constraint list GUI element
-    pub fn constraint_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
+    pub fn controllable_list(&mut self, ui: &mut Ui, ctx: &egui::Context, width: f32) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
 
@@ -84,49 +87,43 @@ impl SATApp {
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                    let clauses_binding = &self.rendered_constraints;
-                    let mut clauses = clauses_binding.iter().skip(first_item);
+                    let clauses_binding = self.rendered_constraints.clone();
+
+                    let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
+                        clauses: clauses_binding,
+                        combiner: "v".to_string(),
+                    });
+                    if self.state.show_trail_view {
+                        clauses = Box::new(ConflictList {
+                            clauses: self.trail.as_cnf(&self.state.encoding),
+                            combiner: "^".to_string(),
+                            trail: self.trail.clone(),
+                        });
+                    }
+                    let binding = clauses.clauses(&self.state);
+                    let mut clause_iter = binding.iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
-                        if let Some(clause) = clauses.next() {
-                            // Construct a single LayoutJob for the whole constraint
+                        if let Some(clause) = clause_iter.next() {
+                            // Construct a se LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();
                             let mut identifiers = clause.iter().peekable();
 
                             // Large while block just constructs the LayoutJob
-                            while let Some(identifier) = identifiers.next() {
-                                let (row, col, val) = *identifier;
-
-                                let (lead_char, color) = if val > 0 {
-                                    ("", ui.visuals().text_color())
-                                } else {
-                                    ("~", Color32::RED)
-                                };
-
-                                text_job.append(
-                                    &format!("{}{}", lead_char, val.abs()),
-                                    0.0,
-                                    TextFormat {
-                                        font_id: large_font.clone(),
-                                        color,
-                                        ..Default::default()
-                                    },
-                                );
-                                text_job.append(
-                                    &format!("({},{})", row, col),
-                                    0.0,
-                                    TextFormat {
-                                        font_id: small_font.clone(),
-                                        color,
-                                        ..Default::default()
-                                    },
+                            while let Some(cnf_var) = identifiers.next() {
+                                Self::append_var_to_layout_job(
+                                    cnf_var,
+                                    &mut text_job,
+                                    &large_font,
+                                    &small_font,
+                                    ui.visuals().text_color(),
                                 );
 
                                 if identifiers.peek().is_some() {
                                     text_job.append(
-                                        " v ",
+                                        &clauses.combiner(),
                                         0.0,
                                         TextFormat {
                                             font_id: large_font.clone(),
@@ -154,21 +151,11 @@ impl SATApp {
                             //Add binding for reacting to clicks
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
-                                self.state.clear_trail();
-                                match self.state.clicked_constraint_index {
-                                    Some(index) => {
-                                        // clicking constraint again clears little numbers
-                                        if index == i {
-                                            self.state.clicked_constraint_index = None;
-                                        } else {
-                                            self.state.clicked_constraint_index = Some(i);
-                                        }
-                                    }
-                                    None => self.state.clicked_constraint_index = Some(i),
-                                }
+                                clauses.clicked(&mut self.state, i);
+                                self.rendered_constraints = self.state.get_filtered();
                             }
 
-                            if let Some(clicked_index) = self.state.clicked_constraint_index {
+                            if let Some(clicked_index) = clauses.get_clicked(&self.state) {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
                                         rect_action.rect,
@@ -183,8 +170,7 @@ impl SATApp {
                     }
 
                     // Index of the row that has been clicked on the particular page, between 0 and page length minus 1
-                    let mut current_constraint_row: usize =
-                        self.state.clicked_constraint_index.unwrap_or(0);
+                    let current_row: usize = clauses.get_clicked(&self.state).unwrap_or(0);
 
                     // Number of the rows on the current page, which might be less on the last page than on other pages
                     let mut current_page_length: usize = self.state.page_length;
@@ -200,29 +186,24 @@ impl SATApp {
 
                     let mut scroll_delta = Vec2::ZERO;
 
-                    if self.state.clicked_constraint_index.is_some() {
+                    if clauses.get_clicked(&self.state).is_some() {
                         // Actions when a constraint row is clicked with the ArrowDown button
                         if ctx.input(|i| i.key_pressed(Key::ArrowDown))
-                            && current_constraint_row < self.state.filtered_length - 1
-                            && current_constraint_row % self.state.page_length
-                                < self.state.page_length - 1
-                            && current_constraint_row < current_page_length
+                            && current_row < self.state.filtered_length - 1
+                            && current_row % self.state.page_length < self.state.page_length - 1
+                            && current_row < current_page_length
                         {
-                            current_constraint_row += 1;
-                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                            clauses.move_down(&mut self.state);
                             // Check how far down the visible list currently and keep in view
-                            if current_constraint_row > last_item - 5 {
+                            if current_row > last_item - 5 {
                                 // Scroll down with the selection
                                 scroll_delta.y -= row_height;
                             }
                         }
 
                         // Actions when a constraint row is clicked with the ArrowUp button
-                        if ctx.input(|i| i.key_pressed(Key::ArrowUp))
-                            && (current_constraint_row > 0)
-                        {
-                            current_constraint_row -= 1;
-                            self.state.clicked_constraint_index = Some(current_constraint_row);
+                        if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_row > 0) {
+                            clauses.move_up(&mut self.state);
                             // Scroll up with the selection
                             scroll_delta.y += row_height;
                         }
@@ -230,5 +211,107 @@ impl SATApp {
                     }
                 });
         })
+    }
+
+    /// Draw human readable version of cnf variables according to variable type
+    pub fn append_var_to_layout_job(
+        variable: &CnfVariable,
+        text_job: &mut LayoutJob,
+        large_font: &FontId,
+        small_font: &FontId,
+        text_color: Color32,
+    ) {
+        match variable {
+            CnfVariable::Decimal { row, col, value } => {
+                let (lead_char, color) = if *value > 0 {
+                    ("", text_color)
+                } else {
+                    ("~", Color32::RED)
+                };
+
+                text_job.append(
+                    &format!("{}{}", lead_char, value.abs()),
+                    0.0,
+                    TextFormat {
+                        font_id: large_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text_job.append(
+                    &format!("({},{})", row, col),
+                    0.0,
+                    TextFormat {
+                        font_id: small_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
+            CnfVariable::Bit {
+                row,
+                col,
+                bit_index,
+                value,
+            } => {
+                let (lead_char, color) = if *value {
+                    ("B", text_color)
+                } else {
+                    ("~B", Color32::RED)
+                };
+
+                text_job.append(
+                    &format!("{}{}", lead_char, bit_index),
+                    0.0,
+                    TextFormat {
+                        font_id: large_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text_job.append(
+                    &format!("({},{})", row, col),
+                    0.0,
+                    TextFormat {
+                        font_id: small_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
+            CnfVariable::Equality {
+                row,
+                col,
+                row2,
+                col2,
+                bit_index,
+                equal,
+            } => {
+                let (lead_char, color) = if *equal {
+                    ("EQ", text_color)
+                } else {
+                    ("~EQ", Color32::RED)
+                };
+
+                text_job.append(
+                    &format!("{}{}", lead_char, bit_index),
+                    0.0,
+                    TextFormat {
+                        font_id: large_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+                text_job.append(
+                    &format!("({},{});({},{})", row, col, row2, col2),
+                    0.0,
+                    TextFormat {
+                        font_id: small_font.clone(),
+                        color,
+                        ..Default::default()
+                    },
+                );
+            }
+        }
     }
 }

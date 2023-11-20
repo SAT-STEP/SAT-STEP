@@ -1,7 +1,7 @@
 //! For filtering the constraint list shown in the GUI
 use std::collections::{HashMap, HashSet};
 
-use crate::{cnf_converter::identifier_to_tuple, ConstraintList};
+use crate::{app_state::EncodingType, cnf::CnfVariable, ConstraintList};
 
 /// Struct for filtering the constraint list
 pub struct ListFilter {
@@ -42,11 +42,12 @@ impl ListFilter {
     }
 
     // Kept in case there is a need to reinit more things in future
-    pub fn reinit(&mut self) {
-        self.create_cell_map();
+    pub fn reinit(&mut self, encoding: &EncodingType) {
+        self.create_cell_map(encoding);
     }
 
-    fn create_cell_map(&mut self) {
+    /// Create map for which constraints apply to each cell
+    fn create_cell_map(&mut self, encoding: &EncodingType) {
         for row in 1..=9 {
             for col in 1..=9 {
                 self.cell_constraints.insert((row, col), HashSet::new());
@@ -54,9 +55,32 @@ impl ListFilter {
         }
         for (index, list) in self.constraints.borrow().iter().enumerate() {
             for identifier in list {
-                let (row, col, _) = identifier_to_tuple(*identifier);
-                if let Some(cell_set) = self.cell_constraints.get_mut(&(row, col)) {
-                    cell_set.insert(index);
+                let var = CnfVariable::from_cnf(*identifier, encoding);
+                match var {
+                    CnfVariable::Bit { row, col, .. } => {
+                        if let Some(cell_set) = self.cell_constraints.get_mut(&(row, col)) {
+                            cell_set.insert(index);
+                        }
+                    }
+                    CnfVariable::Decimal { row, col, .. } => {
+                        if let Some(cell_set) = self.cell_constraints.get_mut(&(row, col)) {
+                            cell_set.insert(index);
+                        }
+                    }
+                    CnfVariable::Equality {
+                        row,
+                        col,
+                        row2,
+                        col2,
+                        ..
+                    } => {
+                        if let Some(cell_set) = self.cell_constraints.get_mut(&(row, col)) {
+                            cell_set.insert(index);
+                        }
+                        if let Some(cell_set) = self.cell_constraints.get_mut(&(row2, col2)) {
+                            cell_set.insert(index);
+                        }
+                    }
                 }
             }
         }
@@ -94,7 +118,7 @@ impl ListFilter {
         &self,
         page_number: usize,
         page_length: usize,
-    ) -> Vec<(i32, i32, i32)> {
+    ) -> Vec<i32> {
         let all_filtered_indexes = self.get_filtered_index_list();
         let stop: usize =
             std::cmp::min(all_filtered_indexes.len(), (page_number + 1) * page_length);
@@ -104,7 +128,7 @@ impl ListFilter {
 
         for index in index_list {
             if all_constraints[index].len() == 1 {
-                little_number_constraints.push(identifier_to_tuple(all_constraints[index][0]));
+                little_number_constraints.push(all_constraints[index][0]);
             }
         }
         little_number_constraints
@@ -158,14 +182,40 @@ mod tests {
     }
 
     #[test]
-    fn test_filter_by_cell() {
+    fn test_filter_by_cell_decimal() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
             vec![1; 10],
             vec![10; 3],
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints.clone());
-        filter.reinit();
+        filter.reinit(&EncodingType::Decimal);
+
+        filter.by_cell(1, 1);
+        let (filtered, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered.len(), 1);
+        assert_eq!(filtered_length, 1);
+
+        filter.by_cell(1, 2);
+        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
+        assert_eq!(filtered2.len(), 2);
+        assert_eq!(filtered_length2, 2);
+
+        filter.by_cell(2, 2);
+        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
+        assert_eq!(filtered3.len(), 0);
+        assert_eq!(filtered_length3, 0);
+    }
+
+    #[test]
+    fn test_filter_by_cell_binary() {
+        let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![
+            vec![1; 10],
+            vec![5; 3],
+            vec![5; 3],
+        ])));
+        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+        filter.reinit(&EncodingType::Binary);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);
@@ -191,7 +241,7 @@ mod tests {
             vec![10; 3],
         ])));
         let mut filter: ListFilter = ListFilter::new(constraints);
-        filter.reinit();
+        filter.reinit(&EncodingType::Decimal);
 
         filter.by_cell(1, 1);
         let (filtered, filtered_length) = filter.get_filtered(0, 50);
