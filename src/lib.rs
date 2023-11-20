@@ -85,12 +85,11 @@ impl Trail {
         (*self.conflict_literals.borrow())
             .clone()
             .into_iter()
-            .map(|tup| {
-                let mut conflict_vec = Vec::new();
-                for literal in tup {
-                    conflict_vec.push(CnfVariable::from_cnf(literal, encoding));
-                }
-                conflict_vec
+            .map(|conflict| {
+                conflict
+                    .into_iter()
+                    .map(|literal| CnfVariable::from_cnf(literal, encoding))
+                    .collect()
             })
             .collect()
     }
