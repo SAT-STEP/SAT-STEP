@@ -53,7 +53,7 @@ pub struct AppState {
     pub max_length_input: String,
     pub selected_cell: Option<(i32, i32)>,
     pub clicked_constraint_index: Option<usize>,
-    pub conflict_literals: Option<[CnfVariable; 2]>,
+    pub conflict_literals: Option<Vec<CnfVariable>>,
     pub clicked_conflict_index: Option<usize>,
     pub trail: Option<Vec<CnfVariable>>,
     pub page_number: i32,
@@ -232,13 +232,13 @@ impl AppState {
     pub fn set_trail(
         &mut self,
         index: usize,
-        conflict_literals: (CnfVariable, CnfVariable),
+        conflict_literals: Vec<CnfVariable>,
         trail: Vec<CnfVariable>,
     ) {
         self.clear_filters();
 
         self.clicked_conflict_index = Some(index);
-        self.conflict_literals = Some([conflict_literals.0, conflict_literals.1]);
+        self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
     }
 

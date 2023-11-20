@@ -69,7 +69,7 @@ impl Default for ConstraintList {
 // Datastructure to hold conflict literals and trail data
 #[derive(Clone)]
 pub struct Trail {
-    pub conflict_literals: Rc<RefCell<Vec<(i32, i32)>>>,
+    pub conflict_literals: Rc<RefCell<Vec<Vec<i32>>>>,
     pub trail: Rc<RefCell<Vec<Vec<i32>>>>,
 }
 
@@ -85,17 +85,16 @@ impl Trail {
         (*self.conflict_literals.borrow())
             .clone()
             .into_iter()
-            .map(|tup| {
-                let (literal1_identifier, literal2_identifier) = tup;
-                Vec::from([
-                    CnfVariable::from_cnf(literal1_identifier, encoding),
-                    CnfVariable::from_cnf(literal2_identifier, encoding),
-                ])
+            .map(|conflict| {
+                conflict
+                    .into_iter()
+                    .map(|literal| CnfVariable::from_cnf(literal, encoding))
+                    .collect()
             })
             .collect()
     }
 
-    pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
+    pub fn push(&mut self, conflict_literals: Vec<i32>, trail: Vec<i32>) {
         self.conflict_literals.borrow_mut().push(conflict_literals);
         self.trail.borrow_mut().push(trail);
     }
