@@ -81,7 +81,7 @@ impl ControllableObj for ConflictList {
                         .collect();
                     let vars = self.clauses[paged_index].clone();
 
-                    state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
+                    state.set_trail(i, vars, enum_trail);
                 }
             }
             None => {
@@ -93,7 +93,7 @@ impl ControllableObj for ConflictList {
                     .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                     .collect();
                 let vars = self.clauses[paged_index].clone();
-                state.set_trail(i, (vars[0].clone(), vars[1].clone()), enum_trail);
+                state.set_trail(i, vars, enum_trail);
             }
         }
         state.page_number = old_page;
