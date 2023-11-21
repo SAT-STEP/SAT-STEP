@@ -324,16 +324,27 @@ impl SATApp {
                 ref mut cell_at_most_one,
                 ..
             } => {
-                let cell_at_least_one_checkbox = ui.checkbox(cell_at_least_one, RichText::new("Cell at least one").size(text_scale));
-                let cell_at_most_one_checkbox = ui.checkbox(cell_at_most_one, RichText::new("Cell at most one").size(text_scale));
+                let cell_at_least_one_checkbox = ui.checkbox(
+                    cell_at_least_one,
+                    RichText::new("Cell at least one").size(text_scale),
+                );
+                let cell_at_most_one_checkbox = ui.checkbox(
+                    cell_at_most_one,
+                    RichText::new("Cell at most one").size(text_scale),
+                );
 
-                if cell_at_least_one_checkbox.clicked() || cell_at_most_one_checkbox.clicked()
-                {
+                if cell_at_least_one_checkbox.clicked() || cell_at_most_one_checkbox.clicked() {
                     self.state.encoding_rules_changed = true;
                 }
 
-                cell_at_least_one_checkbox.on_hover_text(RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.").size(text_scale));
-                cell_at_most_one_checkbox.on_hover_text(RichText::new("A cell CAN be empty.\nA cell CAN NOT have multiple values.").size(text_scale));
+                cell_at_least_one_checkbox.on_hover_text(
+                    RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
+                        .size(text_scale),
+                );
+                cell_at_most_one_checkbox.on_hover_text(
+                    RichText::new("A cell CAN be empty.\nA cell CAN NOT have multiple values.")
+                        .size(text_scale),
+                );
             }
             EncodingType::Binary => {}
         });
