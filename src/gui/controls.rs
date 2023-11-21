@@ -355,16 +355,28 @@ impl SATApp {
                 ref mut sudoku_has_unique_values,
                 ..
             } => {
-                let sudoku_has_all_values_checkbox = ui.checkbox(sudoku_has_all_values, RichText::new("Sudoku has all values").size(text_scale));
-                let sudoku_has_unique_values_checkbox = ui.checkbox(sudoku_has_unique_values, RichText::new("Sudoku has unique values").size(text_scale));
+                let sudoku_has_all_values_checkbox = ui.checkbox(
+                    sudoku_has_all_values,
+                    RichText::new("Sudoku has all values").size(text_scale)
+                );
+                let sudoku_has_unique_values_checkbox = ui.checkbox(
+                    sudoku_has_unique_values,
+                    RichText::new("Sudoku has unique values").size(text_scale)
+                );
 
                 if sudoku_has_all_values_checkbox.clicked() || sudoku_has_unique_values_checkbox.clicked()
                 {
                     self.state.encoding_rules_changed = true;
                 }
 
-                sudoku_has_all_values_checkbox.on_hover_text(RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.").size(text_scale));
-                sudoku_has_unique_values_checkbox.on_hover_text(RichText::new("No row/col/sub-grid can have duplicates.\nA value can apper once, or not at all.").size(text_scale));
+                sudoku_has_all_values_checkbox.on_hover_text(
+                    RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")
+                    .size(text_scale)
+                );
+                sudoku_has_unique_values_checkbox.on_hover_text(
+                    RichText::new("No row/col/sub-grid can have duplicates.\nA value can apper once, or not at all.")
+                    .size(text_scale)
+                );
             }
             EncodingType::Binary => {}
         })
