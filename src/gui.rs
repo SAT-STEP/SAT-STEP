@@ -148,6 +148,8 @@ impl eframe::App for SATApp {
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
 
+            self.state.show_warning = None;
+
             let mut error_open = true;
             if let Some(e) = &self.current_error {
                 let default_margin = 10.0;

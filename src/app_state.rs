@@ -70,6 +70,7 @@ pub struct AppState {
     pub editor_active: bool,
     pub encoding_rules_changed: bool,
     pub highlight_fixed_literals: bool,
+    pub show_warning: Option<String>,
 }
 
 impl AppState {
@@ -105,6 +106,7 @@ impl AppState {
             editor_active: false,
             encoding_rules_changed: false,
             highlight_fixed_literals: false,
+            show_warning: None,
         }
     }
 

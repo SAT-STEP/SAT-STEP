@@ -5,7 +5,7 @@ use super::SATApp;
 
 use crate::{
     app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, string_from_grid,
-    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError,
+    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError, cnf_encoding_rules_ok
 };
 
 impl SATApp {
@@ -42,6 +42,17 @@ impl SATApp {
 
                 self.show_solved_and_fixed(ui, text_scale);
                 ui.end_row();
+
+                // todo, placeholder label for warning symbol
+                if self.state.show_warning.is_some() {
+                    ui.add(
+                        Label::new(
+                            RichText::new(format!("{}", self.state.show_warning.as_ref().unwrap()))
+                                .size(text_scale),
+                        )
+                        .wrap(false),
+                    );
+                }
             })
             .response
     }
@@ -318,6 +329,15 @@ impl SATApp {
     fn encoding_rules(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Veery ugly but I couldn't find a better alternative
         // Draw the first two checkboxes on one row, the last two on another row
+        match self.state.encoding {
+            EncodingType::Decimal { cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values } => {
+                if !cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values) {
+                    self.state.show_warning = Some("bad choice of cnf encoding rules".to_string());
+                }
+            }
+            EncodingType::Binary => {}
+        }
+
         ui.horizontal(|ui| match self.state.encoding {
             EncodingType::Decimal {
                 ref mut cell_at_least_one,
@@ -380,6 +400,7 @@ impl SATApp {
             }
             EncodingType::Binary => {}
         })
+        
     }
 
     // Row for filtering functionality
