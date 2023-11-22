@@ -203,6 +203,17 @@ impl SATApp {
                     }
                 }
             }
+
+            if ui
+                .button(RichText::new("Edit - E").size(text_scale))
+                .clicked()
+                || ctx.input(|i| i.key_pressed(Key::E))
+            {
+                self.reset_cadical_and_solved_sudoku();
+                self.state.selected_cell = Some((1, 1));
+                self.state.editor_active = true;
+            }
+
             if ui
                 .button(RichText::new("Save - S").size(text_scale))
                 .clicked()
