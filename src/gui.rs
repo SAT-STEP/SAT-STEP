@@ -10,7 +10,6 @@ use egui::Color32;
 use egui::Margin;
 use egui::RichText;
 
-use crate::cnf::decimal_encoding::cnf_identifier;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
     error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
