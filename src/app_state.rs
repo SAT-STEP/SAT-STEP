@@ -45,6 +45,32 @@ impl EncodingType {
             EncodingType::Binary => binary_encoding::get_cell_value(solver, row, col),
         }
     }
+
+    pub fn fixed(
+        &self,
+        solver: &Solver<CadicalCallbackWrapper>,
+        row: i32,
+        col: i32,
+        val: i32,
+    ) -> bool {
+        match self {
+            EncodingType::Decimal { .. } => {
+                solver.fixed(decimal_encoding::cnf_identifier(row, col, val)) == 1
+            }
+            EncodingType::Binary => {
+                let mut value = 1;
+                for bit in 0..4 {
+                    let fix_val = solver.fixed(binary_encoding::cnf_identifier(row, col, bit));
+                    if fix_val == 0 {
+                        return false;
+                    } else if fix_val == 1 {
+                        value += 2i32.pow(bit as u32);
+                    }
+                }
+                value == val
+            }
+        }
+    }
 }
 
 pub struct AppState {
