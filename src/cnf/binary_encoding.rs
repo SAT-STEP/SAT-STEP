@@ -1,11 +1,16 @@
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 
+/// Returns a Vec of CNF clauses (stored as Vec<i32>) which fully
+/// encodes the rules of sudoku, and the clues given as an argument.
+/// Check the link below for more details on the encoding:
+/// https://docs.google.com/document/u/0/d/1VMQQ-wGp8Ji-V3uGQBcjKqTwO-OnSFk2WjuArnd57Fk/mobilebasic
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
-    // each vec inside represents one cnf "statement"
+    // Each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
-    // every number in each row is different
+    // Every number in each row is different
+    // For each pair of cells in a row, at least one bit is NOT equal
     for row in 1..=9 {
         for col in 1..=9 {
             for col2 in (col + 1)..=9 {
@@ -20,7 +25,8 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
         }
     }
 
-    // every number in each col is different
+    // Every number in each col is different
+    // For each pair of cells in a column, at least one bit is NOT equal
     for col in 1..=9 {
         for row in 1..=9 {
             for row2 in (row + 1)..=9 {
@@ -35,7 +41,8 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
         }
     }
 
-    // each sub-grid has all the numbers
+    // Every number in each 3x3 cell sub-grid is different
+    // For each pair of cells in a sub-grid, at least one bit is NOT equal
     for subgrid_row in 0..=2 {
         for subgrid_col in 0..=2 {
             for index1 in 0..9 {
@@ -55,14 +62,16 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
             }
         }
     }
-    // no numbers > 9
+
+    // No numbers > 9 (> 8 in binary, since we are using the binary numbers 0 to 8)
+    // Each cell must differ from every forbidden value by at least one bit
     for row in 1..=9 {
         for col in 1..=9 {
             for forbidden in 9..16 {
                 let mut cell_clause = Vec::with_capacity(4);
                 let mut mask = 1;
                 for index in 0..4 {
-                    // Here we invert the bits, since we do not want to allow the forbidden numbers
+                    // Here we invert the bits, since we do NOT want to allow the forbidden numbers
                     if (forbidden & mask) != 0 {
                         cell_clause.push(-cnf_identifier(row, col, index));
                     } else {
@@ -75,7 +84,8 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
         }
     }
 
-    // respect all the clues
+    // Respect all the clues
+    // Adds a unit clause (single variable clause) for each bit of each clue
     for (row, line) in clues.iter().enumerate() {
         for (col, val) in line.iter().enumerate() {
             if let Some(mut val) = val {
@@ -96,7 +106,9 @@ pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     clauses
 }
 
-/// Initialize variables that indicate 2 cells have same bits in some position
+/// Initialize EQ variable that indicate 2 cells have same bits in a specific position
+/// There clauses are needed to ensure that the EQ var corresponds exactly to two bits being equal
+/// since they are just variables from the perspective of the SAT-solver
 fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
@@ -132,6 +144,7 @@ fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value: i32 = 1;
     for bit in 0..4 {
+        // Add 2^(bit) to the value for each 1-bit of the cell
         if solver.value(cnf_identifier(row, col, bit)).unwrap() {
             value += 2_i32.pow(bit as u32);
         }
@@ -140,13 +153,13 @@ pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i3
 }
 
 #[inline(always)]
+/// Gives every bit variable (row, column and bit combination) a unique identifier 1 to 324
 pub fn cnf_identifier(row: i32, col: i32, bit: i32) -> i32 {
-    // Creates cnf identifier from sudoku based on row, column and value
-    // So every row, column and value combination has a unique identifier
     (row - 1) * 4 * 9 + (col - 1) * 4 + bit + 1
 }
 
 #[inline(always)]
+/// Gives every equality variable (cell pair and bit combination) a unique identifier > 324
 pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> i32 {
     9 * 9 * 4
         + (row - 1) * 4 * 9 * 9 * 9
@@ -158,10 +171,10 @@ pub fn eq_cnf_identifier(row: i32, col: i32, row2: i32, col2: i32, bit: i32) -> 
 }
 
 #[inline(always)]
+/// Reverse CNF-identifier creation
+/// Return tuple of (row, col, bit_index, bit_value) from identifier
+/// bit_value will be false for negative ids, positive otherwise
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
-    // Reverse CNF-identifier creation
-    // Return tuple of (row, col, bit_index, bit_value) from identifier
-    // bit_value will be false for negative ids, positive otherwise
     let bit_value = identifier > 0;
     identifier = identifier.abs() - 1;
     (
@@ -172,10 +185,10 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, bool) {
     )
 }
 
+/// Reverse CNF-identifier creation for equality variables
+/// Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
+/// equal will be false, if the bits in the two cells are different
 pub fn eq_identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32, i32, i32, bool) {
-    // Reverse CNF-identifier creation for equality constraints
-    // Return tuple of (row, col, row2, col2, bit_index, equal) from identifier
-    // equal will be false, if the bits in the two cells are different
     let equal = identifier > 0;
     identifier = identifier.abs() - 1 - 9 * 9 * 4;
     (
