@@ -51,6 +51,21 @@ pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
     }
 }
 
+pub fn get_empty_sudoku() -> Result<Vec<Vec<Option<i32>>>, GenericError> {
+    let empty = ".........
+        .........
+        .........
+        .........
+        .........
+        .........
+        .........
+        .........
+        ........."
+        .to_string();
+
+    clues_from_string(empty, ".")
+}
+
 /// Returns a 2D Vec from string to represent clues found in sudoku
 pub fn clues_from_string(
     buf: String,
@@ -541,5 +556,15 @@ mod tests {
         };
         let solved = solve_sudoku(&sudoku, &mut solver, &encoding);
         assert!(solved.is_err());
+    }
+
+    #[test]
+    fn test_get_empty_sudoku() {
+        let sudoku = get_empty_sudoku();
+        assert_eq!(sudoku.is_ok(), true);
+        if let Ok(sudoku) = sudoku {
+            assert_eq!(sudoku[0][0], None);
+            assert_eq!(sudoku[8][8], None);
+        }
     }
 }

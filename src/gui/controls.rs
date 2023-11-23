@@ -6,8 +6,12 @@ use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 use super::SATApp;
 
 use crate::{
-    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, string_from_grid,
-    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError,
+    app_state::EncodingType,
+    cadical_wrapper::CadicalCallbackWrapper,
+    string_from_grid,
+    sudoku::get_sudoku,
+    sudoku::write_sudoku,
+    sudoku::{get_empty_sudoku, solve_sudoku},
 };
 
 impl SATApp {
@@ -125,20 +129,12 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::N))
             {
                 self.state.editor_active = true;
+                self.reset_cadical_and_solved_sudoku();
 
-                self.constraints.clear();
-                self.trail.clear();
-                self.state.reinit();
-                self.rendered_constraints = Vec::new();
-
-                let sudoku = self.get_empty_sudoku();
-
+                let sudoku = get_empty_sudoku();
                 match sudoku {
                     Ok(sudoku_vec) => {
                         self.sudoku_from_option_values(sudoku_vec, true);
-                        self.solver = Solver::with_config("plain").unwrap();
-                        self.solver
-                            .set_callbacks(Some(self.callback_wrapper.clone()));
                     }
                     Err(e) => {
                         self.current_error = Some(e);
@@ -146,6 +142,16 @@ impl SATApp {
                 }
 
                 self.state.selected_cell = Some((1, 1));
+            }
+
+            if ui
+                .button(RichText::new("Edit - E").size(text_scale))
+                .clicked()
+                || ctx.input(|i| i.key_pressed(Key::E))
+            {
+                self.reset_cadical_and_solved_sudoku();
+                self.state.selected_cell = Some((1, 1));
+                self.state.editor_active = true;
             }
 
             // Handle key inputs for inputting/editing a sudoku
@@ -207,6 +213,7 @@ impl SATApp {
                     }
                 }
             }
+
             if ui
                 .button(RichText::new("Save - S").size(text_scale))
                 .clicked()
@@ -535,20 +542,5 @@ impl SATApp {
                 RichText::new("Highlight fixed literals").size(text_scale),
             );
         })
-    }
-
-    fn get_empty_sudoku(&mut self) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
-        let empty = ".........
-        .........
-        .........
-        .........
-        .........
-        .........
-        .........
-        .........
-        ........."
-            .to_string();
-
-        crate::clues_from_string(empty, ".")
     }
 }
