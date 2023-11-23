@@ -162,6 +162,13 @@ impl SudokuCell {
         nums.dedup();
 
         littles.append(&mut nums);
+        for little in littles.clone() {
+            let l: i32 = little.trim().parse().unwrap();
+            if l > 0 {
+                littles.clear();
+                littles.push(l.to_string());
+            }
+        }
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
