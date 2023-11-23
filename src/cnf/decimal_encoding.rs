@@ -182,7 +182,7 @@ pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i3
 mod tests {
     use super::*;
     use crate::{
-        clues_from_string, cnf::EncodingType, sudoku::solve_sudoku, CadicalCallbackWrapper,
+        cnf::EncodingType, sudoku::clues_from_string, sudoku::solve_sudoku, CadicalCallbackWrapper,
         ConstraintList, Trail,
     };
 
