@@ -324,24 +324,27 @@ impl SATApp {
                 ref mut cell_at_most_one,
                 ..
             } => {
-                if ui
-                    .checkbox(
-                        cell_at_least_one,
-                        RichText::new("Cell atleast one").size(text_scale),
-                    )
-                    .clicked()
-                {
+                let cell_at_least_one_checkbox = ui.checkbox(
+                    cell_at_least_one,
+                    RichText::new("Cell at least one").size(text_scale),
+                );
+                let cell_at_most_one_checkbox = ui.checkbox(
+                    cell_at_most_one,
+                    RichText::new("Cell at most one").size(text_scale),
+                );
+
+                if cell_at_least_one_checkbox.clicked() || cell_at_most_one_checkbox.clicked() {
                     self.state.encoding_rules_changed = true;
                 }
-                if ui
-                    .checkbox(
-                        cell_at_most_one,
-                        RichText::new("Cell at most one").size(text_scale),
-                    )
-                    .clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
+
+                cell_at_least_one_checkbox.on_hover_text(
+                    RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
+                        .size(text_scale),
+                );
+                cell_at_most_one_checkbox.on_hover_text(
+                    RichText::new("A cell CAN be empty.\nA cell CAN NOT have multiple values.")
+                        .size(text_scale),
+                );
             }
             EncodingType::Binary => {}
         });
@@ -352,24 +355,28 @@ impl SATApp {
                 ref mut sudoku_has_unique_values,
                 ..
             } => {
-                if ui
-                    .checkbox(
-                        sudoku_has_all_values,
-                        RichText::new("Sudoku has all values").size(text_scale),
-                    )
-                    .clicked()
+                let sudoku_has_all_values_checkbox = ui.checkbox(
+                    sudoku_has_all_values,
+                    RichText::new("Sudoku has all values").size(text_scale)
+                );
+                let sudoku_has_unique_values_checkbox = ui.checkbox(
+                    sudoku_has_unique_values,
+                    RichText::new("Sudoku has unique values").size(text_scale)
+                );
+
+                if sudoku_has_all_values_checkbox.clicked() || sudoku_has_unique_values_checkbox.clicked()
                 {
                     self.state.encoding_rules_changed = true;
                 }
-                if ui
-                    .checkbox(
-                        sudoku_has_unique_values,
-                        RichText::new("Sudoku has unique values").size(text_scale),
-                    )
-                    .clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
+
+                sudoku_has_all_values_checkbox.on_hover_text(
+                    RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")
+                    .size(text_scale)
+                );
+                sudoku_has_unique_values_checkbox.on_hover_text(
+                    RichText::new("No row/col/sub-grid can have duplicates.\nA value can apper once, or not at all.")
+                    .size(text_scale)
+                );
             }
             EncodingType::Binary => {}
         })
