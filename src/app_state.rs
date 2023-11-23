@@ -180,7 +180,6 @@ impl AppState {
         };
     }
 
-
     /// Also resets data that becomes invalid when the page changes
     pub fn set_page_length(&mut self) {
         self.clear_trail();

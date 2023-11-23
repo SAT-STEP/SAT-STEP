@@ -20,7 +20,7 @@ pub struct SudokuCell {
     pub draw_big_number: bool, // Should the solved sudoku cell value be shown
     pub clue: bool,            // Should the cell be darkened (is it a clue)
     pub part_of_conflict: bool, // Should the cell have highlighted borders
-    pub fixed: bool,            // Is the value of the cell set by fixed literals (used for highlighting)
+    pub fixed: bool, // Is the value of the cell set by fixed literals (used for highlighting)
     pub eq_symbols: Vec<(String, CnfVariable)>,
     pub little_numbers: Vec<i32>,
     pub top_left: Pos2,
@@ -125,7 +125,6 @@ impl SudokuCell {
 
                 vec1.sort();
 
-
                 let mut vec2: Vec<i32> = CnfVariable::Bit {
                     row: 0,
                     col: 0,
@@ -137,7 +136,6 @@ impl SudokuCell {
                 .collect();
 
                 vec2.sort();
-
 
                 if *equal {
                     text.push_str(format!("The values of the cells marked with {} belong to the same set,\n either {:?} or {:?}", char, vec1, vec2).as_str())
