@@ -84,7 +84,7 @@ impl SudokuCell {
         } else {
             let mut text_job = LayoutJob::default();
 
-            self.prepare_little_symbols(&mut text_job, size);
+            self.prepare_little_symbols(app_state, &mut text_job, size);
 
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
@@ -145,7 +145,12 @@ impl SudokuCell {
     }
 
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
-    fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
+    fn prepare_little_symbols(
+        &self,
+        app_state: &mut AppState,
+        text_job: &mut LayoutJob,
+        size: f32,
+    ) {
         let mut nums: Vec<String> = self
             .little_numbers
             .clone()
@@ -162,13 +167,30 @@ impl SudokuCell {
         nums.dedup();
 
         littles.append(&mut nums);
-        for little in littles.clone() {
-            let l: i32 = little.trim().parse().unwrap();
-            if l > 0 {
+
+        println!(
+            "Cell: ({},{}), little numbers at first: {:?}",
+            self.row, self.col, littles
+        );
+
+        if app_state.show_trail_view {
+            let mut positives: Vec<String> = Vec::new();
+            for little in littles.clone() {
+                let l: i32 = little.trim().parse().unwrap();
+                if l > 0 {
+                    positives.push(l.to_string());
+                }
+            }
+            if !positives.is_empty() {
                 littles.clear();
-                littles.push(l.to_string());
+                littles = positives;
             }
         }
+
+        println!(
+            "Cell: ({},{}), little numbers after pruning: {:?}",
+            self.row, self.col, littles
+        );
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
