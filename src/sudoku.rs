@@ -1,3 +1,5 @@
+//! Functions focused on the Sudoku puzzle itself
+
 use crate::{app_state::EncodingType, CadicalCallbackWrapper, GenericError, Solver};
 use std::{fs, path::Path};
 

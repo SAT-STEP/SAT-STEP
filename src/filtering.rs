@@ -41,7 +41,7 @@ impl ListFilter {
         (final_list[begin..stop].to_vec(), filtered_length)
     }
 
-    // Kept in case there is a need to reinit more things in future
+    /// Kept in case there is a need to reinit more things in future
     pub fn reinit(&mut self, encoding: &EncodingType) {
         self.create_cell_map(encoding);
     }

@@ -1,3 +1,6 @@
+//! Code that the rest of the app can use for dealing with CNF variables.
+//! Using code from sub-modules directly should not be needed
+
 pub mod binary_encoding;
 pub mod decimal_encoding;
 

@@ -1,3 +1,5 @@
+//! Traits and structs for constraints and conflicts. Displayed using controllable_list.rs
+
 use crate::app_state::AppState;
 use crate::cnf::CnfVariable;
 use crate::Trail;

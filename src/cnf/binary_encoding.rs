@@ -1,3 +1,5 @@
+//! Functions for binary based CNF encoding
+
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 

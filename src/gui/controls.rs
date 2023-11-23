@@ -1,3 +1,5 @@
+//! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
+
 use cadical::Solver;
 use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 

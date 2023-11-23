@@ -1,3 +1,5 @@
+//! GUI code for the sudoku grid
+
 use std::cmp;
 
 use egui::{Color32, Pos2, Ui, Vec2};

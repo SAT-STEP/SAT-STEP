@@ -1,3 +1,5 @@
+//! Functions for decimal based CNF encoding
+
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 

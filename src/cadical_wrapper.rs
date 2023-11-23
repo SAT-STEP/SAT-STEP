@@ -1,3 +1,5 @@
+//! Interfacing with cadical
+
 use cadical::Callbacks;
 
 use crate::{ConstraintList, Trail};

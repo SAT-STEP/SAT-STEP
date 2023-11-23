@@ -1,3 +1,5 @@
+//! State info for the main app struct SATApp
+
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
@@ -47,7 +49,6 @@ impl EncodingType {
     }
 }
 
-/// State for the main app struct SATApp
 /// Contains data relevant to app state
 pub struct AppState {
     filter: ListFilter,

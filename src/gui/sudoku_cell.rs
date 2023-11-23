@@ -1,3 +1,5 @@
+//! Struct and GUI code for an individual sudoku cell
+
 use crate::{app_state::AppState, cnf::CnfVariable};
 use egui::{
     text::{LayoutJob, TextFormat},

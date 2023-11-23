@@ -1,3 +1,5 @@
+//! GUI for listing 'controllable objects' (constraints, conflicts)
+
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
