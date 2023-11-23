@@ -1,6 +1,10 @@
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 
+/// Returns a Vec of CNF clauses (stored as Vec<i32>) which fully
+/// encodes the rules of sudoku, and the clues given as an argument.
+/// Check the link below for more details on the encoding:
+/// https://docs.google.com/document/u/0/d/1VMQQ-wGp8Ji-V3uGQBcjKqTwO-OnSFk2WjuArnd57Fk/mobilebasic
 pub fn sudoku_to_cnf(
     clues: &[Vec<Option<i32>>],
     cell_at_least_one: bool,
@@ -8,10 +12,10 @@ pub fn sudoku_to_cnf(
     sudoku_has_all_values: bool,
     sudoku_has_unique_values: bool,
 ) -> Vec<Vec<i32>> {
-    // each vec inside represents one cnf "statement"
+    // Each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
 
-    // each cell has at least one value
+    // Each cell has at least one value
     if cell_at_least_one {
         for row in 1..=9 {
             for col in 1..=9 {
@@ -24,7 +28,7 @@ pub fn sudoku_to_cnf(
         }
     }
 
-    // each cell has at most one value
+    // Each cell has at most one value
     if cell_at_most_one {
         for row in 1..=9 {
             for col in 1..=9 {
@@ -42,7 +46,7 @@ pub fn sudoku_to_cnf(
     }
 
     if sudoku_has_all_values {
-        // each row has all the numbers
+        // Each row has all the numbers
         for val in 1..=9 {
             for row in 1..=9 {
                 let mut row_cnf: Vec<i32> = Vec::with_capacity(9);
@@ -53,7 +57,7 @@ pub fn sudoku_to_cnf(
             }
         }
 
-        // each column has all the numbers
+        // Each column has all the numbers
         for val in 1..=9 {
             for col in 1..=9 {
                 let mut col_cnf: Vec<i32> = Vec::with_capacity(9);
@@ -64,7 +68,7 @@ pub fn sudoku_to_cnf(
             }
         }
 
-        // each sub-grid has all the numbers
+        // Each sub-grid has all the numbers
         for subgrid_row in 0..=2 {
             for subgrid_col in 0..=2 {
                 for val in 1..=9 {
@@ -85,7 +89,7 @@ pub fn sudoku_to_cnf(
     }
 
     if sudoku_has_unique_values {
-        // each row has unique numbers
+        // Each row has unique numbers (no duplicates)
         for row in 1..=9 {
             for col1 in 1..=8 {
                 for col2 in (col1 + 1)..=9 {
@@ -99,7 +103,7 @@ pub fn sudoku_to_cnf(
             }
         }
 
-        // each column has unique numbers
+        // Each column has unique numbers (no duplicates)
         for col in 1..=9 {
             for row1 in 1..=8 {
                 for row2 in (row1 + 1)..=9 {
@@ -113,7 +117,7 @@ pub fn sudoku_to_cnf(
             }
         }
 
-        // each sub-grid has unique numbers
+        // Each sub-grid has unique numbers (no duplicates)
         for subgrid_row in 0..=2 {
             for subgrid_col in 0..=2 {
                 for index1 in 0..9 {
@@ -134,7 +138,8 @@ pub fn sudoku_to_cnf(
         }
     }
 
-    // respect all the clues
+    // Respect all the clues
+    // Adds a unit clause (single variable clause) for each clue
     for (row, line) in clues.iter().enumerate() {
         for (col, val) in line.iter().enumerate() {
             if let Some(val) = val {
@@ -147,17 +152,16 @@ pub fn sudoku_to_cnf(
 }
 
 #[inline(always)]
+/// Gives every variable (row, column and value combination) a unique identifier > 0
 pub fn cnf_identifier(row: i32, col: i32, val: i32) -> i32 {
-    // Creates cnf identifier from sudoku based on row, column and value
-    // So every row, column and value combination has a unique identifier
     (row - 1) * 9 * 9 + (col - 1) * 9 + val
 }
 
 #[inline(always)]
+/// Reverse CNF-identifier creation
+/// Return tuple of (row, col, val) from identifier
+/// Val will be negative for negative ids, positive otherwise
 pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
-    // Reverse CNF-identifier creation
-    // Return tuple of (row, col, val) from identifier
-    // Val will be negative for negative ids, positive otherwise
     let negation_multiplier = if identifier > 0 { 1 } else { -1 };
     identifier = identifier.abs() - 1;
     (
