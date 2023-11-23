@@ -106,12 +106,12 @@ impl SATApp {
                     // Create element for each constraint
                     for i in first_item..last_item {
                         if let Some(clause) = clause_iter.next() {
-                            // Construct a se LayoutJob for the whole constraint
+                            // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();
                             let mut identifiers = clause.iter().peekable();
 
-                            // Large while block just constructs the LayoutJob
+                            // While block constructs the LayoutJob piece by piece
                             while let Some(cnf_var) = identifiers.next() {
                                 Self::append_var_to_layout_job(
                                     cnf_var,
@@ -155,6 +155,7 @@ impl SATApp {
                                 self.rendered_constraints = self.state.get_filtered();
                             }
 
+                            // Highlight the selected element
                             if let Some(clicked_index) = clauses.get_clicked(&self.state) {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
@@ -213,7 +214,7 @@ impl SATApp {
         })
     }
 
-    /// Draw human readable version of cnf variables according to variable type
+    /// Append human readable version of a CNF variable to a LayoutJob, based on variable type
     pub fn append_var_to_layout_job(
         variable: &CnfVariable,
         text_job: &mut LayoutJob,
