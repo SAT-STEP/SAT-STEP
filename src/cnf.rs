@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use crate::app_state::EncodingType;
 
-/// Enum that (hopefully) fixes everything
+/// Enum that enables the app to handle different types of CNF variables
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum CnfVariable {
     Decimal {
@@ -62,6 +62,7 @@ impl CnfVariable {
         }
     }
 
+    /// Gets the CNF identifier of a variable
     pub fn to_cnf(&self) -> i32 {
         match self {
             Self::Decimal { row, col, value } => {
