@@ -23,7 +23,7 @@ use sudoku::string_from_grid;
 
 /// ConstraintList is used to store the learned cnf_clauses inside a `Rc<RefCell<Vec<Vec<i32>>>>`
 /// This allows for more flexibility with the ownership and borrowing system of Rust
-/// See: https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#having-multiple-owners-of-mutable-data-by-combining-rct-and-refcellt
+/// See: <https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#having-multiple-owners-of-mutable-data-by-combining-rct-and-refcellt>
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
