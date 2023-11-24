@@ -3,10 +3,10 @@
 use crate::cadical_wrapper::CadicalCallbackWrapper;
 use cadical::Solver;
 
-/// Returns a Vec of CNF clauses (stored as Vec<i32>) which fully
+/// Returns a Vec of CNF clauses (stored as `Vec<i32>`) which fully
 /// encodes the rules of sudoku, and the clues given as an argument.
 /// Check the link below for more details on the encoding:
-/// https://docs.google.com/document/u/0/d/1VMQQ-wGp8Ji-V3uGQBcjKqTwO-OnSFk2WjuArnd57Fk/mobilebasic
+/// <https://docs.google.com/document/u/0/d/1VMQQ-wGp8Ji-V3uGQBcjKqTwO-OnSFk2WjuArnd57Fk/mobilebasic>
 pub fn sudoku_to_cnf(clues: &[Vec<Option<i32>>]) -> Vec<Vec<i32>> {
     // Each vec inside represents one cnf "statement"
     let mut clauses: Vec<Vec<i32>> = Vec::new();
