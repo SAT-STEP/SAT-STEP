@@ -1,3 +1,5 @@
+//! Struct and GUI code for an individual sudoku cell
+
 use crate::{app_state::AppState, cnf::CnfVariable};
 use egui::{
     text::{LayoutJob, TextFormat},
@@ -16,9 +18,9 @@ pub struct SudokuCell {
     pub row: i32,
     pub col: i32,
     pub draw_big_number: bool, // Should the solved sudoku cell value be shown
-    pub clue: bool,            // Should the cell be darkened
+    pub clue: bool,            // Should the cell be darkened (is it a clue)
     pub part_of_conflict: bool, // Should the cell have highlighted borders
-    pub fixed: bool,
+    pub fixed: bool, // Is the value of the cell set by fixed literals (used for highlighting)
     pub eq_symbols: Vec<(String, CnfVariable)>,
     pub little_numbers: Vec<i32>,
     pub top_left: Pos2,
@@ -53,6 +55,7 @@ impl SudokuCell {
             }
         }
 
+        // Cell BG color
         if Some((self.row, self.col)) == app_state.selected_cell {
             ui.painter().rect_filled(rect, 0.0, Color32::LIGHT_BLUE);
         } else if self.clue {
@@ -66,6 +69,7 @@ impl SudokuCell {
         let size = self.bottom_right.x - self.top_left.x;
         let center = self.top_left + Vec2::new(size / 2.0, size / 2.0);
 
+        // Cell border highlight
         if self.part_of_conflict {
             let stroke = Stroke::new(2.0, Color32::YELLOW);
             ui.painter().rect_stroke(rect, 0.0, stroke)
@@ -97,15 +101,18 @@ impl SudokuCell {
         selection_changed
     }
 
-    /// Draw tooltip explaining eq constraints on hover
+    /// Draw tooltip explaining equality variables on hover
     fn eq_tooltip(&self, ui: &mut Ui, size: f32) {
         let mut eq_symbol_iter = self.eq_symbols.iter().peekable();
         let mut text = String::new();
+
         while let Some((char, variable)) = eq_symbol_iter.next() {
             if let CnfVariable::Equality {
                 bit_index, equal, ..
             } = variable
             {
+                // Get the two sets of values, by making use of the 'get_possible_numbers' method of CNF variables
+
                 let mut vec1: Vec<i32> = CnfVariable::Bit {
                     row: 0,
                     col: 0,
@@ -115,7 +122,9 @@ impl SudokuCell {
                 .get_possible_numbers()
                 .into_iter()
                 .collect();
+
                 vec1.sort();
+
                 let mut vec2: Vec<i32> = CnfVariable::Bit {
                     row: 0,
                     col: 0,
@@ -125,6 +134,7 @@ impl SudokuCell {
                 .get_possible_numbers()
                 .into_iter()
                 .collect();
+
                 vec2.sort();
 
                 if *equal {
@@ -132,6 +142,7 @@ impl SudokuCell {
                 } else {
                     text.push_str(format!("The value of one cell marked with {} belongs to \n{:?} and the other to {:?}", char, vec1, vec2).as_str())
                 }
+
                 if eq_symbol_iter.peek().is_some() {
                     text.push_str("\n\nOR\n\n")
                 }

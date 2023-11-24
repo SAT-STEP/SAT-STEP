@@ -1,3 +1,5 @@
+//! Interfacing with cadical
+
 use cadical::Callbacks;
 
 use crate::{ConstraintList, Trail};
@@ -45,7 +47,6 @@ impl Callbacks for CadicalCallbackWrapper {
 
     // called when a new derived clause is learnt
     fn learn_trail(&mut self, conflict_literals: &[i32], trail: &[i32]) {
-        self.trail
-            .push((conflict_literals[0], conflict_literals[1]), trail.to_vec())
+        self.trail.push(conflict_literals.to_vec(), trail.to_vec())
     }
 }

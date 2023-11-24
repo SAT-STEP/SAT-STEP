@@ -1,3 +1,5 @@
+//! GUI code for the sudoku grid
+
 use std::cmp;
 
 use egui::{Color32, Pos2, Ui, Vec2};
@@ -49,6 +51,7 @@ impl SATApp {
         self.draw_cells(ui, grid_origin, cell_size);
     }
 
+    /// Draw marker letting the user know they are inputting a sudoku
     fn draw_editor_label(&mut self, ui: &mut Ui, editor_label_origin: Pos2, cell_size: f32) {
         if self.state.editor_active {
             ui.painter().text(
@@ -120,7 +123,7 @@ impl SATApp {
         }
     }
 
-    /// Calculate and update position of each SudokuCell
+    /// Calculate position of each SudokuCell and draw the cell in that position
     fn draw_cells(&mut self, ui: &mut Ui, grid_origin: Pos2, cell_size: f32) {
         for row in 0..9 {
             for col in 0..9 {
@@ -140,6 +143,7 @@ impl SATApp {
                 self.sudoku[row][col].bottom_right = cell_bot_right;
 
                 // Draw returns true if a cell selection was changed
+                // Update the constraint list in that case
                 if self.sudoku[row][col].draw(ui, &mut self.state) {
                     self.rendered_constraints = self.state.get_filtered();
                 }
@@ -148,6 +152,7 @@ impl SATApp {
     }
 
     /// Prep cells for the update_conflict_info and update_selected_constraint functions
+    /// by clearing them of old data first
     fn reset_visualization_info(&mut self) {
         for row in self.sudoku.iter_mut() {
             for cell in row.iter_mut() {

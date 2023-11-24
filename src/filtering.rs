@@ -1,7 +1,9 @@
+//! For filtering the constraint list shown in the GUI
 use std::collections::{HashMap, HashSet};
 
 use crate::{app_state::EncodingType, cnf::CnfVariable, ConstraintList};
 
+/// Struct for filtering the constraint list
 pub struct ListFilter {
     constraints: ConstraintList,
     length_filter: HashSet<usize>,
@@ -39,7 +41,7 @@ impl ListFilter {
         (final_list[begin..stop].to_vec(), filtered_length)
     }
 
-    // Kept in case there is a need to reinit more things in future
+    /// Kept in case there is a need to reinit more things in future
     pub fn reinit(&mut self, encoding: &EncodingType) {
         self.create_cell_map(encoding);
     }
@@ -95,6 +97,7 @@ impl ListFilter {
         self.length_filter = filter_set;
     }
 
+    /// Filters the constraints by cell clicked through GUI
     pub fn by_cell(&mut self, row: i32, col: i32) {
         if let Some(cell_set) = self.cell_constraints.get(&(row, col)) {
             self.cell_filter = cell_set.clone()
@@ -109,6 +112,8 @@ impl ListFilter {
         self.cell_filter = (0..self.constraints.borrow().len()).collect();
     }
 
+    /// Get constraints that should be visualized in the sudoku, meaning all constraint literals
+    /// that are on the current or earlier pages.
     pub fn get_little_number_constraints(
         &self,
         page_number: usize,
@@ -130,6 +135,7 @@ impl ListFilter {
     }
 
     fn get_filtered_index_list(&self) -> Vec<usize> {
+        // Helps with applying the length filter.
         let mut final_set = self.length_filter.clone();
 
         // Add additional filters with && in the same closure

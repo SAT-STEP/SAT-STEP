@@ -1,3 +1,5 @@
+//! State info for the main app struct SATApp
+
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
@@ -45,15 +47,42 @@ impl EncodingType {
             EncodingType::Binary => binary_encoding::get_cell_value(solver, row, col),
         }
     }
+
+    pub fn fixed(
+        &self,
+        solver: &Solver<CadicalCallbackWrapper>,
+        row: i32,
+        col: i32,
+        val: i32,
+    ) -> bool {
+        match self {
+            EncodingType::Decimal { .. } => {
+                solver.fixed(decimal_encoding::cnf_identifier(row, col, val)) == 1
+            }
+            EncodingType::Binary => {
+                let mut value = 1;
+                for bit in 0..4 {
+                    let fix_val = solver.fixed(binary_encoding::cnf_identifier(row, col, bit));
+                    if fix_val == 0 {
+                        return false;
+                    } else if fix_val == 1 {
+                        value += 2i32.pow(bit as u32);
+                    }
+                }
+                value == val
+            }
+        }
+    }
 }
 
+/// Contains data relevant to app state
 pub struct AppState {
     filter: ListFilter,
     pub max_length: Option<i32>,
     pub max_length_input: String,
     pub selected_cell: Option<(i32, i32)>,
     pub clicked_constraint_index: Option<usize>,
-    pub conflict_literals: Option<[CnfVariable; 2]>,
+    pub conflict_literals: Option<Vec<CnfVariable>>,
     pub clicked_conflict_index: Option<usize>,
     pub trail: Option<Vec<CnfVariable>>,
     pub page_number: i32,
@@ -68,7 +97,6 @@ pub struct AppState {
     pub show_trail: bool,
     pub show_trail_view: bool,
     pub editor_active: bool,
-    pub encoding_rules_changed: bool,
     pub highlight_fixed_literals: bool,
 }
 
@@ -103,16 +131,19 @@ impl AppState {
             encoding,
             show_trail_view: false,
             editor_active: false,
-            encoding_rules_changed: false,
             highlight_fixed_literals: false,
         }
     }
 
+    /// Get the filtered list of constraints as CNF variables
+    /// Updates data that should be refreshed when constraints may have changed
     pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariable>> {
         let (list, length) = self
             .filter
             .get_filtered(self.page_number as usize, self.page_length);
+
         self.filtered_length = length;
+
         self.count_pages();
 
         self.update_little_number_constraints();
@@ -142,6 +173,8 @@ impl AppState {
         self.little_number_constraints.clear();
     }
 
+    /// Filters constraints by their length
+    /// Resets data that becomes invalid when the filtering changes
     pub fn filter_by_max_length(&mut self) {
         self.clear_trail();
         self.max_length = parse_numeric_input(self.max_length_input.as_str());
@@ -152,6 +185,8 @@ impl AppState {
         }
     }
 
+    /// Filters constraints that apply to a specific cell
+    /// Resets data that becomes invalid when the filtering changes
     pub fn select_cell(&mut self, row: i32, col: i32) {
         self.clear_trail();
         self.set_page_number(0);
@@ -169,6 +204,7 @@ impl AppState {
         };
     }
 
+    /// Also resets data that becomes invalid when the page changes
     pub fn set_page_length(&mut self) {
         self.clear_trail();
         let page_input = parse_numeric_input(&self.page_length_input);
@@ -181,6 +217,7 @@ impl AppState {
         }
     }
 
+    /// Also resets data that becomes invalid when the page changes
     pub fn set_page_number(&mut self, page_number: i32) {
         self.clear_trail();
         self.clicked_constraint_index = None;
@@ -189,6 +226,7 @@ impl AppState {
         self.page_number = std::cmp::max(self.page_number, 0);
     }
 
+    /// Also resets data that becomes invalid when the filtering changes
     pub fn clear_filters(&mut self) {
         self.set_page_number(0);
 
@@ -198,6 +236,7 @@ impl AppState {
         self.clear_trail();
     }
 
+    /// Also resets data that becomes invalid when the filtering changes
     pub fn clear_length(&mut self) {
         self.set_page_number(0);
 
@@ -206,6 +245,7 @@ impl AppState {
         self.filter.clear_length();
     }
 
+    /// Also resets data that becomes invalid when the filtering changes
     pub fn clear_cell(&mut self) {
         self.set_page_number(0);
 
@@ -232,13 +272,13 @@ impl AppState {
     pub fn set_trail(
         &mut self,
         index: usize,
-        conflict_literals: (CnfVariable, CnfVariable),
+        conflict_literals: Vec<CnfVariable>,
         trail: Vec<CnfVariable>,
     ) {
         self.clear_filters();
 
         self.clicked_conflict_index = Some(index);
-        self.conflict_literals = Some([conflict_literals.0, conflict_literals.1]);
+        self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
     }
 
