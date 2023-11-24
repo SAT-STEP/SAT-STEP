@@ -46,12 +46,15 @@ impl SATApp {
                 // todo, placeholder label for warning symbol
                 if self.state.show_warning.is_some() {
                     ui.add(
-                        Label::new(
-                            RichText::new(format!("{}", self.state.show_warning.as_ref().unwrap()))
-                                .size(text_scale),
-                        )
-                        .wrap(false),
+                        egui::Image::new(("../../assets/triangle_rgb.png"))
                     );
+                   // ui.add(
+                   //     Label::new(
+                   //         RichText::new(format!("{}", self.state.show_warning.as_ref().unwrap()))
+                   //             .size(text_scale),
+                   //     )
+                   //     .wrap(false),
+                   // );
                 }
             })
             .response
