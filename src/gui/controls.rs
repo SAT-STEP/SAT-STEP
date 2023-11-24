@@ -96,11 +96,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::P))
             {
                 self.state.editor_active = false;
-
-                if self.state.encoding_rules_changed {
-                    self.reset_cadical_and_solved_sudoku();
-                    self.state.encoding_rules_changed = !self.state.encoding_rules_changed;
-                }
+                self.reset_cadical_and_solved_sudoku();
 
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
@@ -340,10 +336,6 @@ impl SATApp {
                     RichText::new("Cell at most one").size(text_scale),
                 );
 
-                if cell_at_least_one_checkbox.clicked() || cell_at_most_one_checkbox.clicked() {
-                    self.state.encoding_rules_changed = true;
-                }
-
                 cell_at_least_one_checkbox.on_hover_text(
                     RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
                         .size(text_scale),
@@ -370,11 +362,6 @@ impl SATApp {
                     sudoku_has_unique_values,
                     RichText::new("Sudoku has unique values").size(text_scale)
                 );
-
-                if sudoku_has_all_values_checkbox.clicked() || sudoku_has_unique_values_checkbox.clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
 
                 sudoku_has_all_values_checkbox.on_hover_text(
                     RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")

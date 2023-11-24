@@ -10,7 +10,6 @@ use egui::Color32;
 use egui::Margin;
 use egui::RichText;
 
-use crate::cnf::decimal_encoding::cnf_identifier;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
     error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
@@ -85,7 +84,7 @@ impl SATApp {
             if add_new_clue {
                 self.sudoku[row as usize - 1][col as usize - 1].clue = true;
             }
-            if self.solver.fixed(cnf_identifier(row, col, val)) == 1 {
+            if self.state.encoding.fixed(&self.solver, row, col, val) {
                 self.sudoku[row as usize - 1][col as usize - 1].fixed = true;
             }
         } else {
