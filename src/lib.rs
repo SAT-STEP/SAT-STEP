@@ -19,7 +19,7 @@ use cadical::Solver;
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf::CnfVariable;
 use error::GenericError;
-use sudoku::{clues_from_string, string_from_grid};
+use sudoku::string_from_grid;
 
 /// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
 #[derive(Clone)]

@@ -362,7 +362,7 @@ impl<C: Callbacks> Solver<C> {
 
     /// Returns '1' if the literal is implied by the formula, '-1' if its
     /// negation is implied, or '0' if this is unclear at this point.
-    pub fn fixed(&mut self, literal: i32) -> i32 {
+    pub fn fixed(&self, literal: i32) -> i32 {
         unsafe { ccadical_fixed(self.ptr, literal) }
     }
 }

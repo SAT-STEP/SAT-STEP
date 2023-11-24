@@ -4,8 +4,12 @@ use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 use super::SATApp;
 
 use crate::{
-    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, string_from_grid,
-    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError, cnf_encoding_rules_ok
+    app_state::EncodingType,
+    cadical_wrapper::CadicalCallbackWrapper,
+    string_from_grid,
+    sudoku::get_sudoku,
+    sudoku::write_sudoku,
+    sudoku::{get_empty_sudoku, solve_sudoku},
 };
 
 impl SATApp {
@@ -45,16 +49,16 @@ impl SATApp {
 
                 // todo, placeholder label for warning symbol
                 if self.state.show_warning.is_some() {
-                    ui.add(
-                        egui::Image::new(("../../assets/triangle_rgb.png"))
-                    );
                    // ui.add(
-                   //     Label::new(
-                   //         RichText::new(format!("{}", self.state.show_warning.as_ref().unwrap()))
-                   //             .size(text_scale),
-                   //     )
-                   //     .wrap(false),
+                   //     egui::Image::new(("../../assets/triangle_rgb.png"))
                    // );
+                   ui.add(
+                       Label::new(
+                           RichText::new(format!("{}", self.state.show_warning.as_ref().unwrap()))
+                               .size(text_scale),
+                       )
+                       .wrap(false),
+                   );
                 }
             })
             .response
@@ -106,11 +110,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::P))
             {
                 self.state.editor_active = false;
-
-                if self.state.encoding_rules_changed {
-                    self.reset_cadical_and_solved_sudoku();
-                    self.state.encoding_rules_changed = !self.state.encoding_rules_changed;
-                }
+                self.reset_cadical_and_solved_sudoku();
 
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
@@ -136,20 +136,12 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::N))
             {
                 self.state.editor_active = true;
+                self.reset_cadical_and_solved_sudoku();
 
-                self.constraints.clear();
-                self.trail.clear();
-                self.state.reinit();
-                self.rendered_constraints = Vec::new();
-
-                let sudoku = self.get_empty_sudoku();
-
+                let sudoku = get_empty_sudoku();
                 match sudoku {
                     Ok(sudoku_vec) => {
                         self.sudoku_from_option_values(sudoku_vec, true);
-                        self.solver = Solver::with_config("plain").unwrap();
-                        self.solver
-                            .set_callbacks(Some(self.callback_wrapper.clone()));
                     }
                     Err(e) => {
                         self.current_error = Some(e);
@@ -157,6 +149,16 @@ impl SATApp {
                 }
 
                 self.state.selected_cell = Some((1, 1));
+            }
+
+            if ui
+                .button(RichText::new("Edit - E").size(text_scale))
+                .clicked()
+                || ctx.input(|i| i.key_pressed(Key::E))
+            {
+                self.reset_cadical_and_solved_sudoku();
+                self.state.selected_cell = Some((1, 1));
+                self.state.editor_active = true;
             }
 
             if self.state.editor_active {
@@ -217,6 +219,7 @@ impl SATApp {
                     }
                 }
             }
+
             if ui
                 .button(RichText::new("Save - S").size(text_scale))
                 .clicked()
@@ -356,10 +359,6 @@ impl SATApp {
                     RichText::new("Cell at most one").size(text_scale),
                 );
 
-                if cell_at_least_one_checkbox.clicked() || cell_at_most_one_checkbox.clicked() {
-                    self.state.encoding_rules_changed = true;
-                }
-
                 cell_at_least_one_checkbox.on_hover_text(
                     RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
                         .size(text_scale),
@@ -386,11 +385,6 @@ impl SATApp {
                     sudoku_has_unique_values,
                     RichText::new("Sudoku has unique values").size(text_scale)
                 );
-
-                if sudoku_has_all_values_checkbox.clicked() || sudoku_has_unique_values_checkbox.clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
 
                 sudoku_has_all_values_checkbox.on_hover_text(
                     RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")
@@ -553,20 +547,5 @@ impl SATApp {
                 RichText::new("Highlight fixed literals").size(text_scale),
             );
         })
-    }
-
-    fn get_empty_sudoku(&mut self) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
-        let empty = ".........
-        .........
-        .........
-        .........
-        .........
-        .........
-        .........
-        .........
-        ........."
-            .to_string();
-
-        crate::clues_from_string(empty, ".")
     }
 }

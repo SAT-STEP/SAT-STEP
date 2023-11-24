@@ -4,7 +4,7 @@ use sat_step::gui::{sudoku_cell::SudokuCell, SATApp};
 
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
-        min_window_size: Some(Vec2 {
+        viewport: egui::ViewportBuilder::default().with_min_inner_size(Vec2 {
             x: (550.0),
             y: (275.0),
         }),
