@@ -372,34 +372,6 @@ impl<C: Callbacks> Solver<C> {
         unsafe { ccadical_fixed(self.ptr, literal) }
     }
 
-    pub fn process_time(&mut self) -> f64 {
-        unsafe { ccadical_process_time(self.ptr) }
-    }
-
-    pub fn real_time(&mut self) -> f64 {
-        unsafe { ccadical_real_time(self.ptr) }
-    }
-
-    pub fn max_resident_set_size(&mut self) -> f64 {
-        unsafe { ccadical_max_resident_set_size(self.ptr) }
-    }
-
-    pub fn conflicts(&mut self) -> i64 {
-        unsafe { ccadical_conflicts(self.ptr) }
-    }
-
-    pub fn learned_clauses(&mut self) -> i64 {
-        unsafe { ccadical_learned_clauses(self.ptr) }
-    }
-
-    pub fn learned_literals(&mut self) -> i64 {
-        unsafe { ccadical_learned_literals(self.ptr) }
-    }
-
-    pub fn decisions(&mut self) -> i64 {
-        unsafe { ccadical_decisions(self.ptr) }
-    }
-
     pub fn stats(&mut self) -> CadicalStats {
         CadicalStats {
             process_time: unsafe { ccadical_process_time(self.ptr) },
