@@ -179,10 +179,12 @@ impl SudokuCell {
 
         littles.append(&mut nums);
 
-        println!(
+        // Remove red little literals/numbers, negatives, from trail, if there is at least one blue literal/number (positive)
+
+        /*         println!(
             "Cell: ({},{}), little numbers at first: {:?}",
             self.row, self.col, littles
-        );
+        ); */
 
         if app_state.show_trail_view {
             let mut positives: Vec<String> = Vec::new();
@@ -198,10 +200,10 @@ impl SudokuCell {
             }
         }
 
-        println!(
+        /*         println!(
             "Cell: ({},{}), little numbers after pruning: {:?}",
             self.row, self.col, littles
-        );
+        ); */
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);
