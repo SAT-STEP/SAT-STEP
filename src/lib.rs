@@ -6,6 +6,7 @@ mod error;
 mod filtering;
 pub mod gui;
 mod sudoku;
+mod statistics;
 
 #[cfg(test)]
 mod tests;

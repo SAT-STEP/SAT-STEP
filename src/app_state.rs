@@ -1,7 +1,7 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
-    parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
+    parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver, statistics::Statistics,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -71,6 +71,7 @@ pub struct AppState {
     pub encoding_rules_changed: bool,
     pub highlight_fixed_literals: bool,
     pub show_statistics: bool,
+    pub history: Vec<Statistics>,
 }
 
 impl AppState {
@@ -107,6 +108,7 @@ impl AppState {
             encoding_rules_changed: false,
             highlight_fixed_literals: false,
             show_statistics: false,
+            history: Vec::new(),
         }
     }
 
