@@ -23,6 +23,7 @@ impl SATApp {
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
+                self.statistics(ui, ctx, text_scale);
                 ui.end_row();
 
                 self.encoding_selection(ui, text_scale);
@@ -242,6 +243,14 @@ impl SATApp {
                 self.state.clicked_constraint_index = None;
                 self.state.show_trail_view = !self.state.show_trail_view;
             }
+
+            if ui.button(RichText::new("Statistics").size(text_scale)).clicked() {
+                self.state.show_statistics = true;
+            }
+
+            if ui.button(RichText::new("Process with all configurations").size(text_scale)).clicked() {
+            }
+
             if self.state.show_trail_view {
                 ui.add(Label::new(RichText::new("Trail").size(text_scale)));
 
@@ -279,6 +288,24 @@ impl SATApp {
                 ));
             }
         });
+    }
+
+    /// Show statistics
+    fn statistics(&mut self, ui: &mut Ui, ctx: &egui::Context, text_scale: f32) {
+        if self.state.show_statistics {
+            ctx.show_viewport_immediate(
+                egui::ViewportId::from_hash_of("immediate_viewport_statistics"),
+                egui::ViewportBuilder::default()
+                    .with_title("Statistics")
+                    .with_inner_size([550.0, 275.0]),
+                |ctx, _class| {
+                    
+                    if ctx.input(|i| i.viewport().close_requested()) {
+                        self.state.show_statistics = false;
+                    }
+                }
+            )
+        }
     }
 
     /// Row for CNF encoding related inputs
