@@ -1,3 +1,5 @@
+//! High-level GUI code. Most of the actual GUI is done is sub-modules under src/gui/
+
 mod conrollable_list;
 mod controls;
 pub mod sudoku_cell;

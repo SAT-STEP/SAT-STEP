@@ -1,3 +1,5 @@
+//! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
+
 use cadical::Solver;
 use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
@@ -13,7 +15,7 @@ use crate::{
 };
 
 impl SATApp {
-    /// Controls GUI element
+    /// GUI element for controls
     pub fn controls(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
@@ -50,6 +52,7 @@ impl SATApp {
             .response
     }
 
+    /// Buttons for the management of the sudoku itself (Open, New, Process, etc.)
     pub fn buttons(
         &mut self,
         ui: &mut Ui,
@@ -147,6 +150,7 @@ impl SATApp {
                 self.state.editor_active = true;
             }
 
+            // Handle key inputs for inputting/editing a sudoku
             if self.state.editor_active {
                 let keys = ctx.input(|i| i.events.clone());
                 for key in &keys {
@@ -317,7 +321,7 @@ impl SATApp {
         }
     }
 
-    /// CNF Encoding rules
+    /// Checkboxes for enabling/disabling CNF Encoding rules
     fn encoding_rules(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Veery ugly but I couldn't find a better alternative
         // Draw the first two checkboxes on one row, the last two on another row
@@ -376,7 +380,7 @@ impl SATApp {
         })
     }
 
-    // Row for filtering functionality
+    /// Row for filtering functionality
     fn filters(
         &mut self,
         ui: &mut Ui,
@@ -511,6 +515,8 @@ impl SATApp {
             }
         })
     }
+
+    /// Checkboxes for showing/hiding the solved sudoku and fixed literals
     fn show_solved_and_fixed(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             ui.checkbox(

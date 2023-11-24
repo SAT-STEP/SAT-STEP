@@ -21,7 +21,9 @@ use cnf::CnfVariable;
 use error::GenericError;
 use sudoku::string_from_grid;
 
-/// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
+/// ConstraintList is used to store the learned cnf_clauses inside a `Rc<RefCell<Vec<Vec<i32>>>>`
+/// This allows for more flexibility with the ownership and borrowing system of Rust
+/// See: <https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#having-multiple-owners-of-mutable-data-by-combining-rct-and-refcellt>
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
@@ -30,7 +32,7 @@ impl ConstraintList {
         Self(Rc::new(RefCell::new(Vec::new())))
     }
 
-    // for testing
+    /// TODO: rename to `from_constraints`
     pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
         Self(constraints)
     }
@@ -66,7 +68,7 @@ impl Default for ConstraintList {
     }
 }
 
-// Datastructure to hold conflict literals and trail data
+/// Datastructure to hold conflict literals and trail data
 #[derive(Clone)]
 pub struct Trail {
     pub conflict_literals: Rc<RefCell<Vec<Vec<i32>>>>,
@@ -123,7 +125,7 @@ impl Default for Trail {
     }
 }
 
-/// Parses the max_length filter input for applying the filter.
+/// Parses numeric inputs given by the user. Inputs are for the max_length filter and page length.
 pub fn parse_numeric_input(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {

@@ -1,3 +1,5 @@
+//! Tests for lib.rs
+
 use super::*;
 
 #[test]

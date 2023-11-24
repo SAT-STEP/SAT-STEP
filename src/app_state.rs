@@ -1,3 +1,5 @@
+//! State info for the main app struct SATApp
+
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
@@ -73,6 +75,7 @@ impl EncodingType {
     }
 }
 
+/// Contains data relevant to app state
 pub struct AppState {
     filter: ListFilter,
     pub max_length: Option<i32>,
@@ -132,11 +135,15 @@ impl AppState {
         }
     }
 
+    /// Get the filtered list of constraints as CNF variables
+    /// Updates data that should be refreshed when constraints may have changed
     pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariable>> {
         let (list, length) = self
             .filter
             .get_filtered(self.page_number as usize, self.page_length);
+
         self.filtered_length = length;
+
         self.count_pages();
 
         self.update_little_number_constraints();
@@ -166,6 +173,8 @@ impl AppState {
         self.little_number_constraints.clear();
     }
 
+    /// Filters constraints by their length
+    /// Resets data that becomes invalid when the filtering changes
     pub fn filter_by_max_length(&mut self) {
         self.clear_trail();
         self.max_length = parse_numeric_input(self.max_length_input.as_str());
@@ -176,6 +185,8 @@ impl AppState {
         }
     }
 
+    /// Filters constraints that apply to a specific cell
+    /// Resets data that becomes invalid when the filtering changes
     pub fn select_cell(&mut self, row: i32, col: i32) {
         self.clear_trail();
         self.set_page_number(0);
@@ -193,6 +204,7 @@ impl AppState {
         };
     }
 
+    /// Also resets data that becomes invalid when the page changes
     pub fn set_page_length(&mut self) {
         self.clear_trail();
         let page_input = parse_numeric_input(&self.page_length_input);
@@ -205,6 +217,7 @@ impl AppState {
         }
     }
 
+    /// Also resets data that becomes invalid when the page changes
     pub fn set_page_number(&mut self, page_number: i32) {
         self.clear_trail();
         self.clicked_constraint_index = None;
@@ -213,6 +226,7 @@ impl AppState {
         self.page_number = std::cmp::max(self.page_number, 0);
     }
 
+    /// Also resets data that becomes invalid when the filtering changes
     pub fn clear_filters(&mut self) {
         self.set_page_number(0);
 
@@ -222,6 +236,7 @@ impl AppState {
         self.clear_trail();
     }
 
+    /// Also resets data that becomes invalid when the filtering changes
     pub fn clear_length(&mut self) {
         self.set_page_number(0);
 
@@ -230,6 +245,7 @@ impl AppState {
         self.filter.clear_length();
     }
 
+    /// Also resets data that becomes invalid when the filtering changes
     pub fn clear_cell(&mut self) {
         self.set_page_number(0);
 
