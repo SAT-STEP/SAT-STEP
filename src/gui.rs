@@ -142,6 +142,7 @@ impl Default for SATApp {
 /// Trait used for running the app
 impl eframe::App for SATApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui_extras::install_image_loaders(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
             // per column
             let height = ui.available_height();
