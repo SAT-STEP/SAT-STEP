@@ -32,7 +32,7 @@ impl ConstraintList {
         Self(Rc::new(RefCell::new(Vec::new())))
     }
 
-    // for testing
+    /// TODO: rename to `from_constraints`
     pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
         Self(constraints)
     }
