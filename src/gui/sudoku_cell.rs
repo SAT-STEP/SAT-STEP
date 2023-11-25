@@ -179,14 +179,8 @@ impl SudokuCell {
 
         littles.append(&mut nums);
 
-        // Remove red little literals/numbers, negatives, from trail, if there is at least one blue literal/number (positive)
-
-        /*         println!(
-            "Cell: ({},{}), little numbers at first: {:?}",
-            self.row, self.col, littles
-        ); */
-
-        if app_state.show_trail_view {
+        // Remove red little literals/numbers (negatives) from trail when Decimal encoding, if there is at least one blue literal/number (positive)
+        if app_state.show_trail_view && app_state.get_encoding_type() == "Decimal" {
             let mut positives: Vec<String> = Vec::new();
             for little in littles.clone() {
                 let l: i32 = little.trim().parse().unwrap();
@@ -199,11 +193,6 @@ impl SudokuCell {
                 littles = positives;
             }
         }
-
-        /*         println!(
-            "Cell: ({},{}), little numbers after pruning: {:?}",
-            self.row, self.col, littles
-        ); */
 
         let font_id =
             egui::FontId::new(size * LITTLE_NUMBER_MULTIPLIER, egui::FontFamily::Monospace);

@@ -282,6 +282,13 @@ impl AppState {
         self.trail = Some(trail);
     }
 
+    pub fn get_encoding_type(&mut self) -> &str {
+        match self.encoding {
+            EncodingType::Decimal { .. } => "Decimal",
+            EncodingType::Binary => "Binary",
+        }
+    }
+
     pub fn quit(&mut self) {
         std::process::exit(0);
     }

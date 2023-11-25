@@ -289,10 +289,7 @@ impl SATApp {
         let old_encoding = self.state.encoding;
 
         ui.horizontal(|ui| {
-            let selected_text = match self.state.encoding {
-                EncodingType::Decimal { .. } => "Decimal",
-                EncodingType::Binary => "Binary",
-            };
+            let selected_text = self.state.get_encoding_type();
             egui::ComboBox::from_id_source(0)
                 .selected_text(
                     RichText::new(format!("{} based CNF encoding", selected_text)).size(text_scale),
