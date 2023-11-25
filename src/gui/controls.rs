@@ -1,5 +1,5 @@
 use cadical::Solver;
-use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui, vec2};
 
 use super::SATApp;
 
@@ -25,7 +25,7 @@ impl SATApp {
             .spacing([text_scale * 2.0, text_scale * 0.5])
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
-                self.warning_triangle(ui);
+                self.warning_triangle(ui, text_scale);
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
@@ -529,7 +529,7 @@ impl SATApp {
             );
         })
     }
-    fn warning_triangle(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
+    fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
 
         match self.state.encoding {
             EncodingType::Decimal { cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values } => {
@@ -542,8 +542,11 @@ impl SATApp {
 
         ui.horizontal(|ui| {
             if self.state.show_warning.is_some() {
+                let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
                 ui.add(
                     egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
+                    .fit_to_fraction(vec2(1.0, 1.0))
+                    .fit_to_exact_size(vec2(image_size, image_size))
                 );
             }
             else {
