@@ -20,7 +20,7 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
 
         egui::Grid::new("controls")
-            .num_columns(2)
+            .num_columns(1)
             .striped(true)
             .spacing([text_scale * 2.0, text_scale * 0.5])
             .show(ui, |ui| {
@@ -59,7 +59,7 @@ impl SATApp {
         text_scale: f32,
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui
                 .button(RichText::new("Open - O").size(text_scale))
                 .clicked()
