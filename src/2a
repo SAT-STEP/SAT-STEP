@@ -548,7 +548,7 @@ impl SATApp {
                     .fit_to_fraction(vec2(1.0, 1.0))
                     .fit_to_exact_size(vec2(image_size, image_size))
                 );
-                warning_img.on_hover_text(RichText::new(self.state.show_warning.clone().unwrap()).size(text_scale));
+                let 
             }
             else {
                 ui.label(RichText::new(""));
