@@ -4,6 +4,7 @@ mod cnf;
 mod ctrl_obj;
 mod error;
 mod filtering;
+mod warning;
 pub mod gui;
 mod sudoku;
 

@@ -13,6 +13,7 @@ use egui::RichText;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
     error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
+    warning::Warning,
 };
 
 /// Main app struct
@@ -148,7 +149,7 @@ impl eframe::App for SATApp {
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
 
-            self.state.show_warning = None;
+            self.state.show_warning = Warning::new();
 
             let mut error_open = true;
             if let Some(e) = &self.current_error {

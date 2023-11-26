@@ -534,21 +534,21 @@ impl SATApp {
         match self.state.encoding {
             EncodingType::Decimal { cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values } => {
                 if !cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values) {
-                    self.state.show_warning = Some("bad choice of cnf encoding rules".to_string());
+                    self.state.show_warning.set(Some("bad choice of cnf encoding rules".to_string()));
                 }
             }
             EncodingType::Binary => {}
         }
 
         ui.horizontal(|ui| {
-            if self.state.show_warning.is_some() {
+            if self.state.show_warning.is() {
                 let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
                 let warning_img = ui.add(
                     egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
                     .fit_to_fraction(vec2(1.0, 1.0))
                     .fit_to_exact_size(vec2(image_size, image_size))
                 );
-                warning_img.on_hover_text(RichText::new(self.state.show_warning.clone().unwrap()).size(text_scale));
+                warning_img.on_hover_text(RichText::new(self.state.show_warning.banner()).size(text_scale));
             }
             else {
                 ui.label(RichText::new(""));

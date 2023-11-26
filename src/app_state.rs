@@ -1,6 +1,7 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
+    warning::Warning,
     parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
 };
 
@@ -95,7 +96,7 @@ pub struct AppState {
     pub show_trail_view: bool,
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
-    pub show_warning: Option<String>,
+    pub show_warning: Warning,
 }
 
 impl AppState {
@@ -130,7 +131,7 @@ impl AppState {
             show_trail_view: false,
             editor_active: false,
             highlight_fixed_literals: false,
-            show_warning: None,
+            show_warning: Warning::new(),
         }
     }
 
