@@ -2,8 +2,8 @@
 - The code has been formatted witn rustfmt
 - The code 'passes' a check by the rust-clippy linter
 - The code is sufficiently automatically tested
-  - Every acceptance criterion for a user story is checked by a test
   - Code coverage  at least 60%
+- The code is well documented with comments and doc-comments (works well with cargo doc)  
 - Errors are handled appropriately in the whole codebase
 
 # Git branching
