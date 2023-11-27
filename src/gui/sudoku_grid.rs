@@ -225,10 +225,9 @@ impl SATApp {
                                     }
                                 }
                             }
-
                             self.sudoku[row as usize - 1][col as usize - 1]
                                 .little_numbers
-                                .extract_if(|x| !variable.get_possible_numbers().contains(x));
+                                .retain(|x| variable.get_possible_numbers().contains(x));
                             self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                             if self.state.get_encoding_type() == "Binary" {
                                 for row in self.sudoku.iter_mut() {
