@@ -1,8 +1,9 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
+    parse_numeric_input,
     warning::Warning,
-    parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
+    CadicalCallbackWrapper, ConstraintList, Solver,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]

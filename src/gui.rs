@@ -12,8 +12,7 @@ use egui::RichText;
 
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
-    error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
-    warning::Warning,
+    error::GenericError, gui::sudoku_cell::SudokuCell, warning::Warning, ConstraintList, Trail,
 };
 
 /// Main app struct

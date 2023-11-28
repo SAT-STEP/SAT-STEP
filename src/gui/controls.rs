@@ -1,13 +1,12 @@
 use cadical::Solver;
-use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui, vec2};
+use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use super::SATApp;
 
 use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
-    cnf_encoding_rules_ok,
-    string_from_grid,
+    cnf_encoding_rules_ok, string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
     sudoku::{get_empty_sudoku, solve_sudoku},
@@ -48,7 +47,6 @@ impl SATApp {
 
                 self.show_solved_and_fixed(ui, text_scale);
                 ui.end_row();
-
             })
             .response
     }
@@ -378,7 +376,6 @@ impl SATApp {
             }
             EncodingType::Binary => {}
         })
-        
     }
 
     // Row for filtering functionality
@@ -530,10 +527,19 @@ impl SATApp {
         })
     }
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-
         match self.state.encoding {
-            EncodingType::Decimal { cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values } => {
-                if !cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values) {
+            EncodingType::Decimal {
+                cell_at_least_one,
+                cell_at_most_one,
+                sudoku_has_all_values,
+                sudoku_has_unique_values,
+            } => {
+                if !cnf_encoding_rules_ok(
+                    cell_at_least_one,
+                    cell_at_most_one,
+                    sudoku_has_all_values,
+                    sudoku_has_unique_values,
+                ) {
                     self.state.show_warning.set(Some(
                         "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
                         .to_string()),
@@ -548,12 +554,13 @@ impl SATApp {
                 let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
                 let warning_img = ui.add(
                     egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
-                    .fit_to_fraction(vec2(1.0, 1.0))
-                    .fit_to_exact_size(vec2(image_size, image_size))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size)),
                 );
-                warning_img.on_hover_text(RichText::new(self.state.show_warning.banner()).size(text_scale));
-            }
-            else {
+                warning_img.on_hover_text(
+                    RichText::new(self.state.show_warning.banner()).size(text_scale),
+                );
+            } else {
                 ui.label(RichText::new(""));
             }
         })

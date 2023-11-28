@@ -73,14 +73,24 @@ fn test_encoding_rules_shouldbe_ok() {
     let sudoku_has_all_values = false;
     let sudoku_has_unique_values = true;
 
-    assert!(cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values));
+    assert!(cnf_encoding_rules_ok(
+        cell_at_least_one,
+        cell_at_most_one,
+        sudoku_has_all_values,
+        sudoku_has_unique_values
+    ));
 
     let cell_at_least_one = false;
     let cell_at_most_one = true;
     let sudoku_has_all_values = true;
     let sudoku_has_unique_values = false;
 
-    assert!(cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values));
+    assert!(cnf_encoding_rules_ok(
+        cell_at_least_one,
+        cell_at_most_one,
+        sudoku_has_all_values,
+        sudoku_has_unique_values
+    ));
 }
 
 #[test]
@@ -91,13 +101,22 @@ fn test_encoding_rules_shouldbe_not_ok() {
     let sudoku_has_all_values = false;
     let sudoku_has_unique_values = false;
 
-    assert!(!cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values));
+    assert!(!cnf_encoding_rules_ok(
+        cell_at_least_one,
+        cell_at_most_one,
+        sudoku_has_all_values,
+        sudoku_has_unique_values
+    ));
 
     let cell_at_least_one = true;
     let cell_at_most_one = false;
     let sudoku_has_all_values = false;
     let sudoku_has_unique_values = false;
 
-    assert!(!cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values));
-
+    assert!(!cnf_encoding_rules_ok(
+        cell_at_least_one,
+        cell_at_most_one,
+        sudoku_has_all_values,
+        sudoku_has_unique_values
+    ));
 }

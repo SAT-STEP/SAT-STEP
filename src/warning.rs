@@ -1,5 +1,8 @@
 #[derive(Clone)]
-pub struct Warning {text: Option<String>, priority: i32}
+pub struct Warning {
+    text: Option<String>,
+    priority: i32,
+}
 
 /// Struct for storing and setting warnings (not errors) to be shown to the user.
 /// priority is on a scale 0-5, with 0 being the highest priority. Warning is cleared in gui.rs fn update
@@ -18,22 +21,27 @@ impl Warning {
             self.priority = priority;
         }
     }
-    #[allow(unused_assignments)] 
-    pub fn is(&self) -> bool{
+    #[allow(unused_assignments)]
+    pub fn is(&self) -> bool {
         self.text.is_some()
     }
     pub fn banner(&self) -> String {
         if let Some(warning_text) = self.text.clone() {
-            return warning_text
+            return warning_text;
         }
         "".to_string()
     }
 }
 
+impl Default for Warning {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[cfg(test)]
 mod tests {
-    use super::*; 
+    use super::*;
 
     #[test]
     fn test_set_warning() {
@@ -51,5 +59,4 @@ mod tests {
 
         assert_eq!(warning.priority, 1)
     }
-
 }
