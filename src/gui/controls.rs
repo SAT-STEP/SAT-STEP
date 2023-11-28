@@ -536,7 +536,8 @@ impl SATApp {
                 if !cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values) {
                     self.state.show_warning.set(Some(
                         "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
-                        .to_string()));
+                        .to_string()),
+                        0); // priority of bad set of encoding constraints is set to 0, the highest
                 }
             }
             EncodingType::Binary => {}

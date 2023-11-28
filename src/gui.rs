@@ -151,6 +151,12 @@ impl eframe::App for SATApp {
 
             self.state.show_warning = Warning::new();
 
+            // If the solver's status is false, the solving has failed
+            // unwrap's default is true, because if the solver has no status, we don't want to show a warning
+            if !self.solver.status().unwrap_or(true) {
+                self.state.show_warning.set(Some("Solving failed. This may be because the sudoku is unsolveable, or because of an error.".to_string()), 1);
+            }
+
             let mut error_open = true;
             if let Some(e) = &self.current_error {
                 let default_margin = 10.0;
