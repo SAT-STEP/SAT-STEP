@@ -218,25 +218,32 @@ impl SATApp {
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
-                            if self.state.get_encoding_type() == "Binary" {
-                                for row in self.sudoku.iter_mut() {
-                                    for cell in row.iter_mut() {
-                                        cell.little_numbers = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
-                                    }
-                                }
-                            }
-                            self.sudoku[row as usize - 1][col as usize - 1]
-                                .little_numbers
-                                .retain(|x| variable.get_possible_numbers().contains(x));
-                            self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                            if self.state.get_encoding_type() == "Binary" {
-                                for row in self.sudoku.iter_mut() {
-                                    for cell in row.iter_mut() {
-                                        if cell.little_numbers.len() == 9 {
-                                            cell.little_numbers.clear();
+                            if self.state.show_trail_view {
+                                if self.state.get_encoding_type() == "Binary" {
+                                    for row in self.sudoku.iter_mut() {
+                                        for cell in row.iter_mut() {
+                                            cell.little_numbers = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
                                         }
                                     }
                                 }
+                                self.sudoku[row as usize - 1][col as usize - 1]
+                                    .little_numbers
+                                    .retain(|x| variable.get_possible_numbers().contains(x));
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                                if self.state.get_encoding_type() == "Binary" {
+                                    for row in self.sudoku.iter_mut() {
+                                        for cell in row.iter_mut() {
+                                            if cell.little_numbers.len() == 9 {
+                                                cell.little_numbers.clear();
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                self.sudoku[row as usize - 1][col as usize - 1]
+                                    .little_numbers
+                                    .extend(variable.get_possible_numbers().into_iter());
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                             }
                         }
                         CnfVariable::Decimal { row, col, value } => {
