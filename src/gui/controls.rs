@@ -534,7 +534,9 @@ impl SATApp {
         match self.state.encoding {
             EncodingType::Decimal { cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values } => {
                 if !cnf_encoding_rules_ok(cell_at_least_one, cell_at_most_one, sudoku_has_all_values, sudoku_has_unique_values) {
-                    self.state.show_warning.set(Some("bad choice of cnf encoding rules".to_string()));
+                    self.state.show_warning.set(Some(
+                        "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
+                        .to_string()));
                 }
             }
             EncodingType::Binary => {}
