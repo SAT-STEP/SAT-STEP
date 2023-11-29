@@ -169,6 +169,12 @@ impl SATApp {
     fn update_conflict_info(&mut self) {
         // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
         if self.state.clicked_constraint_index.is_none() {
+            let mut eq_symbols = (b'A'..=b'Z')
+                .chain(b'a'..=b'z')
+                .map(|c| String::from_utf8(vec![c]).unwrap())
+                .collect::<Vec<String>>()
+                .into_iter();
+
             // Used to get the intersection of "get_possible_numbers" for binary variables
             // Cleanup happens after the main "for variable" loop
             if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
@@ -237,6 +243,21 @@ impl SATApp {
                                 true;
                             self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict =
                                 true;
+
+                            if self.state.show_trail {
+                                let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+
+                                self.sudoku[*row as usize - 1][*col as usize - 1]
+                                    .eq_symbols
+                                    .push((symbol.clone(), conflict.clone(), true));
+                                self.sudoku[*row2 as usize - 1][*col2 as usize - 1]
+                                    .eq_symbols
+                                    .push((symbol, conflict.clone(), true));
+                                self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
+                                    false;
+                                self.sudoku[*row2 as usize - 1][*col2 as usize - 1]
+                                    .draw_big_number = false;
+                            }
                         }
                     }
                 }
@@ -245,7 +266,9 @@ impl SATApp {
             if self.state.show_trail {
                 for row in self.sudoku.iter_mut() {
                     for cell in row.iter_mut() {
-                        if self.state.get_encoding_type() == "Binary" && cell.little_numbers.len() == 9 {
+                        if self.state.get_encoding_type() == "Binary"
+                            && cell.little_numbers.len() == 9
+                        {
                             // Handle cleanup for binary encoding
                             cell.little_numbers.clear();
                         }
@@ -264,12 +287,6 @@ impl SATApp {
                         .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
                         .collect()
                 };
-
-                let mut eq_symbols = (b'A'..=b'Z')
-                    .chain(b'a'..=b'z')
-                    .map(|c| String::from_utf8(vec![c]).unwrap())
-                    .collect::<Vec<String>>()
-                    .into_iter();
 
                 // Used to get the intersection of "get_possible_numbers" for binary variables
                 // Cleanup happens after the main "for variable" loop
@@ -338,10 +355,10 @@ impl SATApp {
 
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .eq_symbols
-                                    .push((symbol.clone(), variable.clone()));
+                                    .push((symbol.clone(), variable.clone(), false));
                                 self.sudoku[row2 as usize - 1][col2 as usize - 1]
                                     .eq_symbols
-                                    .push((symbol, variable));
+                                    .push((symbol, variable, false));
                                 self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
                                     false;
                                 self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number =
@@ -424,10 +441,10 @@ impl SATApp {
 
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols
-                            .push((symbol.clone(), variable.clone()));
+                            .push((symbol.clone(), variable.clone(), false));
                         self.sudoku[row2 as usize - 1][col2 as usize - 1]
                             .eq_symbols
-                            .push((symbol, variable));
+                            .push((symbol, variable, false));
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                         self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
                     }
