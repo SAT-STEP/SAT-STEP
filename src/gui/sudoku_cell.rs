@@ -206,14 +206,15 @@ impl SudokuCell {
 
             let mut stroke = Stroke::NONE;
             if let Ok(val_i32) = val.parse::<i32>() {
-                if underlined.contains(&val_i32)
-                {
-                    if val_i32 > 0 {
-                        stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::BLUE)
-                    }
-                    else if val_i32 < 0 {
-                        stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::RED)
-                    }
+                if underlined.contains(&val_i32) {
+                    stroke = Stroke::new(
+                        size * UNDERLINE_MULTIPLIER,
+                        if val_i32 > 0 {
+                            Color32::BLUE
+                        } else {
+                            Color32::RED
+                        },
+                    );
                 }
             }
 
