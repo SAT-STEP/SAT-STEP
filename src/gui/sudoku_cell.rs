@@ -22,7 +22,7 @@ pub struct SudokuCell {
     pub part_of_conflict: bool, // Should the cell have highlighted borders
     pub fixed: bool, // Is the value of the cell set by fixed literals (used for highlighting)
     pub eq_symbols: Vec<(String, CnfVariable)>,
-    pub little_numbers: Vec<i32>,
+    pub little_numbers: Vec<(i32, bool)>, // Bool tells us if the variable should be underlined (such as if it is part of the conflict)
     pub top_left: Pos2,
     pub bottom_right: Pos2,
 }
@@ -156,16 +156,19 @@ impl SudokuCell {
     }
 
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
-    fn prepare_little_symbols(
-        &self,
-        text_job: &mut LayoutJob,
-        size: f32,
-    ) {
+    fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
+        let underlined: Vec<i32> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| if x.1 { x.0 } else { 0 })
+            .collect();
+
         let mut nums: Vec<String> = self
             .little_numbers
             .clone()
             .iter()
-            .map(|x| x.to_string())
+            .map(|x| x.0.to_string())
             .collect();
         let mut littles: Vec<String> = self
             .eq_symbols
@@ -206,6 +209,8 @@ impl SudokuCell {
                     font_id: font_id.clone(),
                     color: if val.parse::<i32>().is_err() {
                         Color32::YELLOW
+                    } else if underlined.contains(&val.parse::<i32>().unwrap()) {
+                        Color32::TEMPORARY_COLOR
                     } else if val.parse::<i32>().unwrap() > 0 {
                         Color32::BLUE
                     } else {

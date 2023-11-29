@@ -177,9 +177,14 @@ impl SATApp {
                             self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
                                 true;
                         }
-                        CnfVariable::Decimal { row, col, .. } => {
+                        CnfVariable::Decimal { row, col, value } => {
                             self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
                                 true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1]
+                                .little_numbers
+                                .push((-1 * *value, true));
+                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
+                                false;
                         }
                         CnfVariable::Equality {
                             row,
@@ -215,10 +220,22 @@ impl SATApp {
                     .collect::<Vec<String>>()
                     .into_iter();
 
+                // Used to get the intersection of "get_possible_numbers" for binary variables
+                // Cleanup happens after the main "for variable" loop
                 if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
                     for row in self.sudoku.iter_mut() {
                         for cell in row.iter_mut() {
-                            cell.little_numbers = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+                            cell.little_numbers = vec![
+                                (1, false),
+                                (2, false),
+                                (3, false),
+                                (4, false),
+                                (5, false),
+                                (6, false),
+                                (7, false),
+                                (8, false),
+                                (9, false),
+                            ];
                         }
                     }
                 }
@@ -229,20 +246,34 @@ impl SATApp {
                             if self.state.show_trail {
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .little_numbers
-                                    .retain(|x| variable.get_possible_numbers().contains(x));
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                                    .retain(|x| variable.get_possible_numbers().contains(&x.0));
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
+                                    false;
                             } else {
+                                let values = variable
+                                    .get_possible_numbers()
+                                    .into_iter()
+                                    .map(|x| (x, false));
+
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .little_numbers
-                                    .extend(variable.get_possible_numbers().into_iter());
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                                    .extend(values);
+
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
+                                    false;
                             }
                         }
                         CnfVariable::Decimal { row, col, value } => {
-                            self.sudoku[row as usize - 1][col as usize - 1]
+                            if !self.sudoku[row as usize - 1][col as usize - 1]
                                 .little_numbers
-                                .push(value);
-                            self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                                .contains(&(value, true))
+                            {
+                                self.sudoku[row as usize - 1][col as usize - 1]
+                                    .little_numbers
+                                    .push((value, false));
+                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
+                                    false;
+                            }
                         }
                         CnfVariable::Equality {
                             row,
@@ -274,14 +305,14 @@ impl SATApp {
                         for cell in row.iter_mut() {
                             // Remove red little literals/numbers (negatives) from trail when Decimal encoding, if there is at least one blue literal/number (positive)
                             if self.state.get_encoding_type() == "Decimal" {
-                                let mut positives: Vec<i32> = cell.little_numbers.clone();
-                                positives.retain(|&x| x> 0);
-                                
-                                if !positives.is_empty() {
-                                    cell.little_numbers = positives;
+                                let mut visible: Vec<(i32, bool)> = cell.little_numbers.clone();
+                                visible.retain(|&x| x.0 > 0 || x.1);
+
+                                if !visible.is_empty() {
+                                    cell.little_numbers = visible;
                                 }
-                            }
-                            else if cell.little_numbers.len() == 9 { // Handle cleanup for binary encoding
+                            } else if cell.little_numbers.len() == 9 {
+                                // Handle cleanup for binary encoding
                                 cell.little_numbers.clear();
                                 cell.draw_big_number = true;
                             }
@@ -315,15 +346,21 @@ impl SATApp {
             for variable in variables {
                 match variable {
                     CnfVariable::Bit { row, col, .. } => {
+                        let values = variable
+                            .get_possible_numbers()
+                            .into_iter()
+                            .map(|x| (x, false));
+
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .little_numbers
-                            .extend(variable.get_possible_numbers().into_iter());
+                            .extend(values);
+
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                     }
                     CnfVariable::Decimal { row, col, value } => {
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .little_numbers
-                            .push(value);
+                            .push((value, false));
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                     }
                     CnfVariable::Equality {
