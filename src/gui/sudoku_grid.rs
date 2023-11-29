@@ -237,7 +237,8 @@ impl SATApp {
                             col,
                             row2,
                             col2,
-                            ..
+                            bit_index,
+                            equal,
                         } => {
                             self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
                                 true;
@@ -246,13 +247,21 @@ impl SATApp {
 
                             if self.state.show_trail {
                                 let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+                                let var = CnfVariable::Equality {
+                                    row: *row,
+                                    col: *col,
+                                    row2: *row2,
+                                    col2: *col2,
+                                    bit_index: *bit_index,
+                                    equal: !equal,
+                                };
 
                                 self.sudoku[*row as usize - 1][*col as usize - 1]
                                     .eq_symbols
-                                    .push((symbol.clone(), conflict.clone(), true));
+                                    .push((symbol.clone(), var.clone(), true));
                                 self.sudoku[*row2 as usize - 1][*col2 as usize - 1]
                                     .eq_symbols
-                                    .push((symbol, conflict.clone(), true));
+                                    .push((symbol, var.clone(), true));
                                 self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
                                     false;
                                 self.sudoku[*row2 as usize - 1][*col2 as usize - 1]

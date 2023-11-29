@@ -213,7 +213,7 @@ impl SudokuCell {
             };
 
             let mut stroke = Stroke::NONE;
-            if underlined.contains(&val) {
+            if underlined.contains(val) {
                 stroke = Stroke::new(
                     size * UNDERLINE_MULTIPLIER,
                     if let Ok(val_i32) = val.parse::<i32>() {
