@@ -203,14 +203,20 @@ impl SudokuCell {
             } else {
                 (*val).to_string()
             };
+
             let mut stroke = Stroke::NONE;
-            let val_i32: i32 = val.parse().unwrap();
-            if val_i32 == self.value.unwrap() {
-                stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::BLUE)
+            if let Ok(val_i32) = val.parse::<i32>() {
+                if underlined.contains(&val_i32)
+                {
+                    if val_i32 > 0 {
+                        stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::BLUE)
+                    }
+                    else if val_i32 < 0 {
+                        stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::RED)
+                    }
+                }
             }
-            else if val_i32 < 0 && val_i32 != self.value.unwrap() * -1 {
-                stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::RED)
-            }
+
             text_job.append(
                 &text,
                 0.0,
@@ -218,8 +224,6 @@ impl SudokuCell {
                     font_id: font_id.clone(),
                     color: if val.parse::<i32>().is_err() {
                         Color32::YELLOW
-                    } else if underlined.contains(&val.parse::<i32>().unwrap()) {
-                        Color32::TEMPORARY_COLOR
                     } else if val.parse::<i32>().unwrap() > 0 {
                         Color32::BLUE
                     } else {
