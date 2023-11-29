@@ -269,10 +269,19 @@ impl SATApp {
                     }
                 }
 
-                if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
+                if self.state.show_trail {
                     for row in self.sudoku.iter_mut() {
                         for cell in row.iter_mut() {
-                            if cell.little_numbers.len() == 9 {
+                            // Remove red little literals/numbers (negatives) from trail when Decimal encoding, if there is at least one blue literal/number (positive)
+                            if self.state.get_encoding_type() == "Decimal" {
+                                let mut positives: Vec<i32> = cell.little_numbers.clone();
+                                positives.retain(|&x| x> 0);
+                                
+                                if !positives.is_empty() {
+                                    cell.little_numbers = positives;
+                                }
+                            }
+                            else if cell.little_numbers.len() == 9 { // Handle cleanup for binary encoding
                                 cell.little_numbers.clear();
                                 cell.draw_big_number = true;
                             }
