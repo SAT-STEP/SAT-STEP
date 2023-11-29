@@ -10,6 +10,7 @@ const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
 const LITTLE_NUMBER_MULTIPLIER: f32 = 0.225; // Of cell size
 const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.3; // Of cell size
 const TOOLTIP_MULTIPLIER: f32 = 0.3; // Of cell size
+const UNDERLINE_MULTIPLIER: f32 = 0.05; // Of cell size
 
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
@@ -195,6 +196,14 @@ impl SudokuCell {
             } else {
                 (*val).to_string()
             };
+            let mut stroke = Stroke::NONE;
+            let val_i32: i32 = val.parse().unwrap();
+            if val_i32 == self.value.unwrap() {
+                stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::BLUE)
+            }
+            else if val_i32 < 0 && val_i32 != self.value.unwrap() * -1 {
+                stroke = Stroke::new(size*UNDERLINE_MULTIPLIER, Color32::RED)
+            }
             text_job.append(
                 &text,
                 0.0,
@@ -207,6 +216,7 @@ impl SudokuCell {
                     } else {
                         Color32::RED
                     },
+                    underline: stroke,
                     ..Default::default()
                 },
             );
