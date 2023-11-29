@@ -169,22 +169,62 @@ impl SATApp {
     fn update_conflict_info(&mut self) {
         // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
         if self.state.clicked_constraint_index.is_none() {
+            // Used to get the intersection of "get_possible_numbers" for binary variables
+            // Cleanup happens after the main "for variable" loop
+            if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
+                for row in self.sudoku.iter_mut() {
+                    for cell in row.iter_mut() {
+                        cell.little_numbers = vec![
+                            (1, true),
+                            (2, true),
+                            (3, true),
+                            (4, true),
+                            (5, true),
+                            (6, true),
+                            (7, true),
+                            (8, true),
+                            (9, true),
+                        ];
+                    }
+                }
+            }
+
             // Find and mark cells affected by the conflict literals
             if let Some(conflicts) = &self.state.conflict_literals {
                 for conflict in conflicts {
                     match conflict {
-                        CnfVariable::Bit { row, col, .. } => {
+                        CnfVariable::Bit {
+                            row,
+                            col,
+                            bit_index,
+                            value,
+                        } => {
                             self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
                                 true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
+                                false;
+
+                            let possible_numbers = CnfVariable::Bit {
+                                row: *row,
+                                col: *col,
+                                bit_index: *bit_index,
+                                value: !value,
+                            }
+                            .get_possible_numbers();
+
+                            self.sudoku[*row as usize - 1][*col as usize - 1]
+                                .little_numbers
+                                .retain(|x| possible_numbers.contains(&x.0));
                         }
                         CnfVariable::Decimal { row, col, value } => {
                             self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
                                 true;
+                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
+                                false;
+
                             self.sudoku[*row as usize - 1][*col as usize - 1]
                                 .little_numbers
                                 .push((-1 * *value, true));
-                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
-                                false;
                         }
                         CnfVariable::Equality {
                             row,
@@ -197,6 +237,17 @@ impl SATApp {
                                 true;
                             self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict =
                                 true;
+                        }
+                    }
+                }
+            }
+
+            if self.state.show_trail {
+                for row in self.sudoku.iter_mut() {
+                    for cell in row.iter_mut() {
+                        if self.state.get_encoding_type() == "Binary" && cell.little_numbers.len() == 9 {
+                            // Handle cleanup for binary encoding
+                            cell.little_numbers.clear();
                         }
                     }
                 }
@@ -225,7 +276,7 @@ impl SATApp {
                 if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
                     for row in self.sudoku.iter_mut() {
                         for cell in row.iter_mut() {
-                            cell.little_numbers = vec![
+                            cell.little_numbers.extend(vec![
                                 (1, false),
                                 (2, false),
                                 (3, false),
@@ -235,7 +286,7 @@ impl SATApp {
                                 (7, false),
                                 (8, false),
                                 (9, false),
-                            ];
+                            ]);
                         }
                     }
                 }
@@ -314,7 +365,6 @@ impl SATApp {
                             } else if cell.little_numbers.len() == 9 {
                                 // Handle cleanup for binary encoding
                                 cell.little_numbers.clear();
-                                cell.draw_big_number = true;
                             }
                         }
                     }
