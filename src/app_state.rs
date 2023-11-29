@@ -3,6 +3,7 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
+    gui::sudoku_cell::SudokuCell,
     parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
 };
 
@@ -98,10 +99,11 @@ pub struct AppState {
     pub show_trail_view: bool,
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
+    sudoku: Vec<Vec<i32>>,
 }
 
 impl AppState {
-    pub fn new(constraints: ConstraintList) -> Self {
+    pub fn new(constraints: ConstraintList, sudoku: Vec<Vec<i32>>) -> Self {
         let mut filter = ListFilter::new(constraints.clone());
         let encoding = EncodingType::Decimal {
             cell_at_least_one: true,
@@ -132,6 +134,7 @@ impl AppState {
             show_trail_view: false,
             editor_active: false,
             highlight_fixed_literals: false,
+            sudoku,
         }
     }
 
@@ -299,7 +302,7 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut state = AppState::new(constraints.clone());
+        let mut state = AppState::new(constraints.clone(), vec![vec![0; 9]; 9]);
 
         let filtered = state.get_filtered();
         assert_eq!(filtered.len(), 3);
