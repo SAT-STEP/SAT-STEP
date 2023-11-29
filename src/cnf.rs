@@ -118,6 +118,16 @@ impl CnfVariable {
     }
 }
 
+/// Check if the encoding rules are enough for Cadial to properly solve a sudoku
+pub fn cnf_encoding_rules_ok(
+    cell_at_least_one: bool,
+    cell_at_most_one: bool,
+    sudoku_has_all_values: bool,
+    sudoku_has_unique_values: bool,
+) -> bool {
+    (cell_at_least_one && sudoku_has_unique_values) || (cell_at_most_one && sudoku_has_all_values)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

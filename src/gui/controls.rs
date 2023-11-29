@@ -6,7 +6,8 @@ use super::SATApp;
 use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
-    cnf_encoding_rules_ok, string_from_grid,
+    cnf::cnf_encoding_rules_ok,
+    string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
     sudoku::{get_empty_sudoku, solve_sudoku},

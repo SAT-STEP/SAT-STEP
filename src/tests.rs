@@ -68,6 +68,8 @@ fn test_trail() {
 #[test]
 fn test_encoding_rules_shouldbe_ok() {
     // Doesn't encompass all cases
+    use crate::cnf::cnf_encoding_rules_ok;
+
     let cell_at_least_one = true;
     let cell_at_most_one = false;
     let sudoku_has_all_values = false;
@@ -96,6 +98,8 @@ fn test_encoding_rules_shouldbe_ok() {
 #[test]
 fn test_encoding_rules_shouldbe_not_ok() {
     // Doesn't encompass all cases
+    use crate::cnf::cnf_encoding_rules_ok;
+
     let cell_at_least_one = true;
     let cell_at_most_one = true;
     let sudoku_has_all_values = false;

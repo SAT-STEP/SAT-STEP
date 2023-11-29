@@ -1,11 +1,11 @@
+/// Struct for storing and setting warnings (not errors) to be shown to the user.
+/// priority is on a scale 0-5, with 0 being the highest priority. Warning is cleared in gui.rs fn update
 #[derive(Clone)]
 pub struct Warning {
     text: Option<String>,
     priority: i32,
 }
 
-/// Struct for storing and setting warnings (not errors) to be shown to the user.
-/// priority is on a scale 0-5, with 0 being the highest priority. Warning is cleared in gui.rs fn update
 impl Warning {
     pub fn new() -> Self {
         Warning {
