@@ -236,51 +236,44 @@ impl SATApp {
     /// Controls for showing conflict literals and trails
     fn trail_view(&mut self, ui: &mut Ui, text_scale: f32) {
         ui.horizontal(|ui| {
-            let show_trail_text = if !self.state.show_trail_view {
+            /*             let show_trail_text = if !self.state.show_trail_view {
                 RichText::new("Show trail")
             } else {
                 RichText::new("Show learned constraints")
-            };
-            if ui.button(show_trail_text.size(text_scale)).clicked() {
+            }; */
+            /*             if ui.button(show_trail_text.size(text_scale)).clicked() {
                 self.state.clicked_constraint_index = None;
                 self.state.show_trail_view = !self.state.show_trail_view;
+            } */
+
+            ui.add(Label::new(RichText::new("Learned constraint").size(text_scale)));
+
+            let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
+            let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+            if response.clicked() {
+                self.state.show_trail = !self.state.show_trail;
+                response.mark_changed();
             }
-            if self.state.show_trail_view {
-                ui.add(Label::new(RichText::new("Trail").size(text_scale)));
+            response.widget_info(|| {
+                egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
+            });
 
-                let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
-                let (rect, mut response) =
-                    ui.allocate_exact_size(desired_size, egui::Sense::click());
-                if response.clicked() {
-                    self.state.show_trail = !self.state.show_trail;
-                    self.state.show_conflict_literals = !self.state.show_conflict_literals;
-                    response.mark_changed();
-                }
-                response.widget_info(|| {
-                    egui::WidgetInfo::selected(
-                        egui::WidgetType::Checkbox,
-                        self.state.show_trail,
-                        "",
-                    )
-                });
+            let how_on = ui
+                .ctx()
+                .animate_bool(response.id, !self.state.show_trail);
+            let visuals = ui.style().interact_selectable(&response, true);
+            let rect = rect.expand(visuals.expansion);
+            let radius = 0.5 * rect.height();
+            ui.painter()
+                .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
+            let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
+            let center = egui::pos2(circle_x, rect.center().y);
+            ui.painter()
+                .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
 
-                let how_on = ui
-                    .ctx()
-                    .animate_bool(response.id, self.state.show_conflict_literals);
-                let visuals = ui.style().interact_selectable(&response, true);
-                let rect = rect.expand(visuals.expansion);
-                let radius = 0.5 * rect.height();
-                ui.painter()
-                    .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
-                let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
-                let center = egui::pos2(circle_x, rect.center().y);
-                ui.painter()
-                    .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
-
-                ui.add(Label::new(
-                    RichText::new("Conflict literals/learned constraints").size(text_scale),
-                ));
-            }
+            ui.add(Label::new(
+                RichText::new("Trail with conflict literals").size(text_scale),
+            ));
         });
     }
 

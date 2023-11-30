@@ -168,7 +168,7 @@ impl SATApp {
     /// Update conflict booleans and little symbols related to conflicts in SudokuCells
     fn update_conflict_info(&mut self) {
         // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
-        if self.state.clicked_constraint_index.is_none() {
+        if self.state.show_trail {
             let mut eq_symbols = (b'A'..=b'Z')
                 .chain(b'a'..=b'z')
                 .map(|c| String::from_utf8(vec![c]).unwrap())
@@ -402,7 +402,7 @@ impl SATApp {
     /// Update little symbols from a selected constraint in SudokuCells
     fn update_selected_constraint(&mut self) {
         // Only do this if a constraint is not currently selected. That case is handled in update_conflict_info
-        if self.state.clicked_conflict_index.is_none() {
+        if !self.state.show_trail {
             let mut variables = Vec::new();
 
             // Visualize the clicked constraint, if there is one

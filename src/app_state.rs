@@ -95,7 +95,6 @@ pub struct AppState {
     pub encoding: EncodingType,
     pub show_conflict_literals: bool,
     pub show_trail: bool,
-    pub show_trail_view: bool,
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
 }
@@ -129,7 +128,6 @@ impl AppState {
             show_trail: true,
             little_number_constraints: Vec::new(),
             encoding,
-            show_trail_view: false,
             editor_active: false,
             highlight_fixed_literals: false,
         }

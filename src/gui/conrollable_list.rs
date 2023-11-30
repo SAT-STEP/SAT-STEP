@@ -91,17 +91,10 @@ impl SATApp {
 
                     let clauses_binding = self.rendered_constraints.clone();
 
-                    let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
+                    let clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
                         clauses: clauses_binding,
                         combiner: "v".to_string(),
                     });
-                    if self.state.show_trail_view {
-                        clauses = Box::new(ConflictList {
-                            clauses: self.trail.as_cnf(&self.state.encoding),
-                            combiner: "^".to_string(),
-                            trail: self.trail.clone(),
-                        });
-                    }
                     let binding = clauses.clauses(&self.state);
                     let mut clause_iter = binding.iter().skip(first_item);
 
