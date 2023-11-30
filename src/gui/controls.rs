@@ -248,7 +248,9 @@ impl SATApp {
                 self.state.show_trail_view = !self.state.show_trail_view;
             }
             if self.state.show_trail_view {
-                ui.add(Label::new(RichText::new("Trail").size(text_scale)));
+                ui.add(Label::new(
+                    RichText::new("Trail + Conflict literals").size(text_scale),
+                ));
 
                 let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
                 let (rect, mut response) =
@@ -280,7 +282,7 @@ impl SATApp {
                     .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
 
                 ui.add(Label::new(
-                    RichText::new("Conflict literals/learned constraints").size(text_scale),
+                    RichText::new("Learned constraint").size(text_scale),
                 ));
             }
         });
@@ -291,10 +293,7 @@ impl SATApp {
         let old_encoding = self.state.encoding;
 
         ui.horizontal(|ui| {
-            let selected_text = match self.state.encoding {
-                EncodingType::Decimal { .. } => "Decimal",
-                EncodingType::Binary => "Binary",
-            };
+            let selected_text = self.state.get_encoding_type();
             egui::ComboBox::from_id_source(0)
                 .selected_text(
                     RichText::new(format!("{} based CNF encoding", selected_text)).size(text_scale),

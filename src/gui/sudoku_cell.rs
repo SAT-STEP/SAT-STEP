@@ -10,6 +10,7 @@ const BIG_NUMBER_MULTIPLIER: f32 = 0.6; // Of cell size
 const LITTLE_NUMBER_MULTIPLIER: f32 = 0.225; // Of cell size
 const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.3; // Of cell size
 const TOOLTIP_MULTIPLIER: f32 = 0.3; // Of cell size
+const UNDERLINE_MULTIPLIER: f32 = 0.05; // Of cell size
 
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
@@ -21,8 +22,8 @@ pub struct SudokuCell {
     pub clue: bool,            // Should the cell be darkened (is it a clue)
     pub part_of_conflict: bool, // Should the cell have highlighted borders
     pub fixed: bool, // Is the value of the cell set by fixed literals (used for highlighting)
-    pub eq_symbols: Vec<(String, CnfVariable)>,
-    pub little_numbers: Vec<i32>,
+    pub eq_symbols: Vec<(String, CnfVariable, bool)>,
+    pub little_numbers: Vec<(i32, bool)>, // Bool tells us if the variable should be underlined (such as if it is part of the conflict)
     pub top_left: Pos2,
     pub bottom_right: Pos2,
 }
@@ -106,7 +107,7 @@ impl SudokuCell {
         let mut eq_symbol_iter = self.eq_symbols.iter().peekable();
         let mut text = String::new();
 
-        while let Some((char, variable)) = eq_symbol_iter.next() {
+        while let Some((char, variable, _)) = eq_symbol_iter.next() {
             if let CnfVariable::Equality {
                 bit_index, equal, ..
             } = variable
@@ -157,11 +158,26 @@ impl SudokuCell {
 
     /// Append fields `little_numbers` and `eq_symbols` into a LayoutJob that is ready to draw
     fn prepare_little_symbols(&self, text_job: &mut LayoutJob, size: f32) {
+        let mut underlined: Vec<String> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| if x.1 { x.0.to_string() } else { String::new() })
+            .collect();
+
+        underlined.extend(self.eq_symbols.iter().map(|tuple| {
+            if tuple.2 {
+                tuple.0.clone()
+            } else {
+                String::new()
+            }
+        }));
+
         let mut nums: Vec<String> = self
             .little_numbers
             .clone()
             .iter()
-            .map(|x| x.to_string())
+            .map(|x| x.0.to_string())
             .collect();
         let mut littles: Vec<String> = self
             .eq_symbols
@@ -195,6 +211,23 @@ impl SudokuCell {
             } else {
                 (*val).to_string()
             };
+
+            let mut stroke = Stroke::NONE;
+            if underlined.contains(val) {
+                stroke = Stroke::new(
+                    size * UNDERLINE_MULTIPLIER,
+                    if let Ok(val_i32) = val.parse::<i32>() {
+                        if val_i32 > 0 {
+                            Color32::BLUE
+                        } else {
+                            Color32::RED
+                        }
+                    } else {
+                        Color32::YELLOW
+                    },
+                );
+            }
+
             text_job.append(
                 &text,
                 0.0,
@@ -207,6 +240,7 @@ impl SudokuCell {
                     } else {
                         Color32::RED
                     },
+                    underline: stroke,
                     ..Default::default()
                 },
             );
