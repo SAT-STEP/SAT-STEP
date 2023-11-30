@@ -3,7 +3,7 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
-    parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
+    parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver, Trail,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -83,7 +83,6 @@ pub struct AppState {
     pub selected_cell: Option<(i32, i32)>,
     pub clicked_constraint_index: Option<usize>,
     pub conflict_literals: Option<Vec<CnfVariable>>,
-    pub clicked_conflict_index: Option<usize>,
     pub trail: Option<Vec<CnfVariable>>,
     pub page_number: i32,
     pub page_count: i32,
@@ -100,8 +99,8 @@ pub struct AppState {
 }
 
 impl AppState {
-    pub fn new(constraints: ConstraintList) -> Self {
-        let mut filter = ListFilter::new(constraints.clone());
+    pub fn new(constraints: ConstraintList, trails: Trail) -> Self {
+        let mut filter = ListFilter::new(constraints.clone(), trails.clone());
         let encoding = EncodingType::Decimal {
             cell_at_least_one: true,
             cell_at_most_one: false,
@@ -115,7 +114,6 @@ impl AppState {
             max_length_input: String::new(),
             selected_cell: None,
             clicked_constraint_index: None,
-            clicked_conflict_index: None,
             conflict_literals: None,
             trail: None,
             page_number: 0,
@@ -125,7 +123,7 @@ impl AppState {
             filtered_length: 0,
             show_solved_sudoku: true,
             show_conflict_literals: false,
-            show_trail: true,
+            show_trail: false,
             little_number_constraints: Vec::new(),
             encoding,
             editor_active: false,
@@ -135,8 +133,8 @@ impl AppState {
 
     /// Get the filtered list of constraints as CNF variables
     /// Updates data that should be refreshed when constraints may have changed
-    pub fn get_filtered(&mut self) -> Vec<Vec<CnfVariable>> {
-        let (list, length) = self
+    pub fn get_filtered(&mut self) -> (Vec<Vec<CnfVariable>>, Trail) {
+        let (list, trail, length) = self
             .filter
             .get_filtered(self.page_number as usize, self.page_length);
 
@@ -156,7 +154,7 @@ impl AppState {
             })
             .collect();
 
-        enum_constraints
+        (enum_constraints, trail)
     }
 
     pub fn reinit(&mut self) {
@@ -263,19 +261,14 @@ impl AppState {
 
     pub fn clear_trail(&mut self) {
         self.conflict_literals = None;
-        self.clicked_conflict_index = None;
         self.trail = None;
     }
 
     pub fn set_trail(
         &mut self,
-        index: usize,
         conflict_literals: Vec<CnfVariable>,
         trail: Vec<CnfVariable>,
     ) {
-        self.clear_filters();
-
-        self.clicked_conflict_index = Some(index);
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
     }
@@ -306,7 +299,7 @@ mod tests {
         ])));
         let mut state = AppState::new(constraints.clone());
 
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 3);
         assert_eq!(state.filtered_length, 3);
 
@@ -329,7 +322,7 @@ mod tests {
         assert_eq!(state.page_length_input, "100".to_string());
         assert_eq!(state.filtered_length, 0);
 
-        let filtered2 = state.get_filtered();
+        let filtered2 = state.get_filtered().0;
         assert_eq!(filtered2.len(), 3);
         assert_eq!(state.filtered_length, 3);
     }
@@ -343,7 +336,7 @@ mod tests {
         ])));
         let mut state = AppState::new(constraints.clone());
 
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 3);
         assert_eq!(state.filtered_length, 3);
 
@@ -354,7 +347,7 @@ mod tests {
         state.filter_by_max_length();
         assert_eq!(state.max_length, Some(4));
 
-        let filtered2 = state.get_filtered();
+        let filtered2 = state.get_filtered().0;
         assert_eq!(filtered2.len(), 1);
         assert_eq!(state.filtered_length, 1);
 
@@ -364,7 +357,7 @@ mod tests {
         // Invalid input should not change the situation at all
         state.max_length_input = "-1".to_string();
         state.filter_by_max_length();
-        let filtered3 = state.get_filtered();
+        let filtered3 = state.get_filtered().0;
         assert_eq!(filtered3, filtered2);
         assert_eq!(state.filtered_length, 1);
     }
@@ -379,7 +372,7 @@ mod tests {
         state.page_number = 1;
 
         state.select_cell(1, 2);
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 2);
         assert_eq!(state.filtered_length, 2);
         assert_eq!(state.selected_cell, Some((1, 2)));
@@ -473,7 +466,7 @@ mod tests {
         state.page_number = 1;
         state.clear_cell();
 
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 3);
         assert_eq!(state.filtered_length, 3);
         assert_eq!(state.selected_cell, None);
@@ -497,7 +490,7 @@ mod tests {
 
         state.clear_length();
 
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 3);
         assert_eq!(state.filtered_length, 3);
         assert_eq!(state.max_length, None);
@@ -523,7 +516,7 @@ mod tests {
         state.page_number = 1;
         state.clear_filters();
 
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 3);
         assert_eq!(state.filtered_length, 3);
         assert_eq!(state.selected_cell, None);
@@ -540,12 +533,12 @@ mod tests {
 
         state.page_length_input = "6".to_string();
         state.set_page_length();
-        let filtered = state.get_filtered();
+        let filtered = state.get_filtered().0;
         assert_eq!(filtered.len(), 6);
         assert_eq!(state.filtered_length, 10);
 
         state.set_page_number(1);
-        let filtered2 = state.get_filtered();
+        let filtered2 = state.get_filtered().0;
         assert_eq!(filtered2.len(), 4);
         assert_eq!(state.filtered_length, 10);
     }

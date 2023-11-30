@@ -11,7 +11,7 @@ use crate::{
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
-    sudoku::{get_empty_sudoku, solve_sudoku},
+    sudoku::{get_empty_sudoku, solve_sudoku}, Trail,
 };
 
 impl SATApp {
@@ -75,13 +75,14 @@ impl SATApp {
                         Ok(sudoku_vec) => {
                             self.sudoku_from_option_values(sudoku_vec, true);
                             self.constraints.clear();
-                            self.trail.clear();
+                            self.trails.clear();
                             self.rendered_constraints = Vec::new();
+                            self.rendered_trails = Trail::new();
                             self.state.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
                             self.callback_wrapper = CadicalCallbackWrapper::new(
                                 self.constraints.clone(),
-                                self.trail.clone(),
+                                self.trails.clone(),
                             );
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -111,7 +112,7 @@ impl SATApp {
                         self.sudoku_from_option_values(solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
-                        self.rendered_constraints = self.state.get_filtered();
+                        (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -236,16 +237,6 @@ impl SATApp {
     /// Controls for showing conflict literals and trails
     fn trail_view(&mut self, ui: &mut Ui, text_scale: f32) {
         ui.horizontal(|ui| {
-            /*             let show_trail_text = if !self.state.show_trail_view {
-                RichText::new("Show trail")
-            } else {
-                RichText::new("Show learned constraints")
-            }; */
-            /*             if ui.button(show_trail_text.size(text_scale)).clicked() {
-                self.state.clicked_constraint_index = None;
-                self.state.show_trail_view = !self.state.show_trail_view;
-            } */
-
             ui.add(Label::new(RichText::new("Learned constraint").size(text_scale)));
 
             let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
@@ -260,7 +251,7 @@ impl SATApp {
 
             let how_on = ui
                 .ctx()
-                .animate_bool(response.id, !self.state.show_trail);
+                .animate_bool(response.id, self.state.show_trail);
             let visuals = ui.style().interact_selectable(&response, true);
             let rect = rect.expand(visuals.expansion);
             let radius = 0.5 * rect.height();
@@ -399,7 +390,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 self.state.filter_by_max_length();
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
             if ui
                 .button(RichText::new("Clear - C").size(text_scale))
@@ -407,7 +398,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::C))
             {
                 self.state.clear_filters();
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
         })
     }
@@ -446,7 +437,7 @@ impl SATApp {
                 }
 
                 self.state.set_page_length();
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
         })
     }
@@ -463,7 +454,7 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(0);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
 
             if (ui.button(RichText::new("<").size(text_scale)).clicked()
@@ -471,7 +462,7 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
 
             ui.add(
@@ -492,7 +483,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_number + 1);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
 
             if (ui.button(RichText::new(">>").size(text_scale)).clicked()
@@ -501,7 +492,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_count - 1);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
         })
     }

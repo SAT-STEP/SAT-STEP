@@ -110,6 +110,10 @@ impl Trail {
         self.trail.borrow()[index].clone()
     }
 
+    pub fn literals_at_index(&self, index: usize) -> Vec<i32> {
+        self.conflict_literals.borrow()[index].clone()
+    }
+
     pub fn len(&self) -> usize {
         self.trail.borrow().len()
     }

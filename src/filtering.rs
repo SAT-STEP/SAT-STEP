@@ -1,22 +1,24 @@
 //! For filtering the constraint list shown in the GUI
 use std::collections::{HashMap, HashSet};
 
-use crate::{app_state::EncodingType, cnf::CnfVariable, ConstraintList};
+use crate::{app_state::EncodingType, cnf::CnfVariable, ConstraintList, Trail};
 
 /// Struct for filtering the constraint list
 pub struct ListFilter {
     constraints: ConstraintList,
+    trails: Trail,
     length_filter: HashSet<usize>,
     cell_filter: HashSet<usize>,
     cell_constraints: HashMap<(i32, i32), HashSet<usize>>,
 }
 
 impl ListFilter {
-    pub fn new(constraints: ConstraintList) -> Self {
+    pub fn new(constraints: ConstraintList, trails: Trail) -> Self {
         let length_filter = (0..constraints.len()).collect();
         let cell_filter = (0..constraints.len()).collect();
         Self {
             constraints,
+            trails,
             length_filter,
             cell_filter,
             cell_constraints: HashMap::new(),
@@ -27,18 +29,20 @@ impl ListFilter {
         &mut self,
         page_number: usize,
         page_length: usize,
-    ) -> (Vec<Vec<i32>>, usize) {
+    ) -> (Vec<Vec<i32>>, Trail, usize) {
         let index_list = self.get_filtered_index_list();
         let filtered_length = index_list.len();
 
         let mut final_list = Vec::new();
+        let mut final_trail = Trail::new(); 
         for index in index_list {
             final_list.push(self.constraints.borrow()[index].clone());
+            final_trail.push(self.trails.literals_at_index(index), self.trails.trail_at_index(index));
         }
 
         let begin: usize = std::cmp::min(final_list.len(), page_number * page_length);
         let stop: usize = std::cmp::min(final_list.len(), (page_number + 1) * page_length);
-        (final_list[begin..stop].to_vec(), filtered_length)
+        (final_list[begin..stop].to_vec(), final_trail, filtered_length)
     }
 
     /// Kept in case there is a need to reinit more things in future

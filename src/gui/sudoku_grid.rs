@@ -145,7 +145,7 @@ impl SATApp {
                 // Draw returns true if a cell selection was changed
                 // Update the constraint list in that case
                 if self.sudoku[row][col].draw(ui, &mut self.state) {
-                    self.rendered_constraints = self.state.get_filtered();
+                    (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
                 }
             }
         }
@@ -286,7 +286,7 @@ impl SATApp {
             }
 
             // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
-            if let Some(conflict_index) = self.state.clicked_conflict_index {
+            if let Some(conflict_index) = self.state.clicked_constraint_index {
                 let variables = if self.state.show_trail {
                     self.state.trail.clone().unwrap()
                 } else {
