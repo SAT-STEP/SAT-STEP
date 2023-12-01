@@ -179,6 +179,7 @@ impl SATApp {
                 variables = self.state.little_number_constraints.clone();
             }
 
+            // Interator that we can pull new letters from in order
             let mut eq_symbols = (b'A'..=b'Z')
                 .chain(b'a'..=b'z')
                 .map(|c| String::from_utf8(vec![c]).unwrap())
@@ -195,6 +196,8 @@ impl SATApp {
 
                         let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
                         cell.draw_big_number = false;
+
+                        // Add the possible values as little numbers, as any of them would satisfy the constraint
                         cell.little_numbers.extend(values);
                     }
                     CnfVariable::Decimal { row, col, value } => {
@@ -240,13 +243,13 @@ impl SATApp {
                             cell.part_of_conflict = true;
                             cell.draw_big_number = false;
 
-                            // Add the negations of conflict literals as underlined little numbers
+                            // Add the negations of conflict literals as underlined little numbers (so the user knows what the conflict was)
                             cell.little_numbers.push((-1 * *value, true));
                         }
                     }
                 }
 
-                // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
+                // Visualize the trail for the clicked constraint (if there is one)
                 if let Some(_conflict_index) = self.state.clicked_constraint_index {
                     let variables = self.state.trail.clone().unwrap();
 
@@ -265,6 +268,8 @@ impl SATApp {
                     for row in self.sudoku.iter_mut() {
                         for cell in row.iter_mut() {
                             let mut visible: Vec<(i32, bool)> = cell.little_numbers.clone();
+
+                            // Keep the positive values and underlined negative values (from conflict literals)
                             visible.retain(|&x| x.0 > 0 || x.1);
 
                             if !visible.is_empty() {
@@ -283,12 +288,17 @@ impl SATApp {
 
     /// Update conflict literal related info for binary encoded CNF
     fn update_binary_conflict_literals(&mut self) {
+        // Interator that we can pull new letters from in order
         let mut eq_symbols = (b'A'..=b'Z')
             .chain(b'a'..=b'z')
             .map(|c| String::from_utf8(vec![c]).unwrap())
             .collect::<Vec<String>>()
             .into_iter();
 
+        // Fill all cells with all numbers as underlined (part of conflict)
+        // We then remove the values that are not compatible with each literal
+        // We are left with only the values compatible with every literal in the cell
+        // Cells that don't have a literal that applies to them will get cleaned up afterwards
         for row in self.sudoku.iter_mut() {
             for cell in row.iter_mut() {
                 cell.little_numbers = vec![
@@ -315,6 +325,9 @@ impl SATApp {
                         bit_index,
                         value,
                     } => {
+                        // Get the possible values of the negation of the conflict literal
+                        // This is equivalent to adding the negations of conflict literals
+                        // as underlined little numbers in the decimal case
                         let possible_numbers = CnfVariable::Bit {
                             row: *row,
                             col: *col,
@@ -326,6 +339,8 @@ impl SATApp {
                         let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
                         cell.part_of_conflict = true;
                         cell.draw_big_number = false;
+
+                        // Only keep the numbers compatible with the negation of the conflict literal
                         cell.little_numbers
                             .retain(|x| possible_numbers.contains(&x.0));
                     }
@@ -337,6 +352,7 @@ impl SATApp {
                         bit_index,
                         equal,
                     } => {
+                        // EQ vars don't contribute to the little numbers, but are their on symbols
                         let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
                         let var = CnfVariable::Equality {
                             row: *row,
@@ -362,6 +378,7 @@ impl SATApp {
             }
         }
 
+        // Cells that don't have a literal that applies to them get emptied of unnecessary little numbers added at the start
         for row in self.sudoku.iter_mut() {
             for cell in row.iter_mut() {
                 if cell.little_numbers.len() == 9 {
@@ -377,8 +394,10 @@ impl SATApp {
         if let Some(_conflict_index) = self.state.clicked_constraint_index {
             let variables = self.state.trail.clone().unwrap();
 
-            // Used to get the intersection of "get_possible_numbers" for binary variables
-            // Cleanup happens after the main "for variable" loop
+            // Fill all cells with all numbers as not underlined (part of trail, but not conflict)
+            // We then remove the values that are not compatible with each variable of the trail
+            // We are left with only the values compatible with every variable
+            // Cells are not part of the trail will get cleaned up afterwards
             for row in self.sudoku.iter_mut() {
                 for cell in row.iter_mut() {
                     cell.little_numbers.extend(vec![
@@ -396,15 +415,17 @@ impl SATApp {
             }
 
             for variable in variables {
-                // EQ not visualized when part of a trail, as there are way too many of them
                 if let CnfVariable::Bit { row, col, .. } = variable {
                     let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
                     cell.draw_big_number = false;
+
+                    // Only keep the numbers compatible with this variable (that is part of the trail)
                     cell.little_numbers
                         .retain(|x| variable.get_possible_numbers().contains(&x.0));
                 }
             }
 
+            // Cells that are not part of the trail get emptied of unnecessary little numbers added at the start
             for row in self.sudoku.iter_mut() {
                 for cell in row.iter_mut() {
                     if cell.little_numbers.len() == 9 {
