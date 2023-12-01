@@ -5,7 +5,7 @@ use crate::{
     filtering::ListFilter,
     parse_numeric_input,
     warning::Warning,
-    CadicalCallbackWrapper, ConstraintList, Solver, Trail
+    CadicalCallbackWrapper, ConstraintList, Solver, Trail,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
