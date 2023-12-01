@@ -1,13 +1,14 @@
 //! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
 
 use cadical::Solver;
-use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use super::SATApp;
 
 use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
+    cnf::cnf_encoding_rules_ok,
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
@@ -24,9 +25,10 @@ impl SATApp {
         egui::Grid::new("controls")
             .num_columns(1)
             .striped(true)
-            .spacing([0.0, text_scale * 0.5])
+            .spacing([text_scale * 2.0, text_scale * 0.5])
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
+                self.warning_triangle(ui, text_scale);
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
@@ -60,7 +62,7 @@ impl SATApp {
         text_scale: f32,
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui
                 .button(RichText::new("Open - O").size(text_scale))
                 .clicked()
@@ -308,6 +310,7 @@ impl SATApp {
     fn encoding_rules(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Veery ugly but I couldn't find a better alternative
         // Draw the first two checkboxes on one row, the last two on another row
+
         ui.horizontal(|ui| match self.state.encoding {
             EncodingType::Decimal {
                 ref mut cell_at_least_one,
@@ -511,6 +514,45 @@ impl SATApp {
                 &mut self.state.highlight_fixed_literals,
                 RichText::new("Highlight fixed literals").size(text_scale),
             );
+        })
+    }
+    fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        match self.state.encoding {
+            EncodingType::Decimal {
+                cell_at_least_one,
+                cell_at_most_one,
+                sudoku_has_all_values,
+                sudoku_has_unique_values,
+            } => {
+                if !cnf_encoding_rules_ok(
+                    cell_at_least_one,
+                    cell_at_most_one,
+                    sudoku_has_all_values,
+                    sudoku_has_unique_values,
+                ) {
+                    self.state.show_warning.set(Some(
+                        "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
+                        .to_string()),
+                        0); // priority of bad set of encoding constraints is set to 0, the highest
+                }
+            }
+            EncodingType::Binary => {}
+        }
+
+        ui.horizontal(|ui| {
+            if self.state.show_warning.is() {
+                let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
+                let warning_img = ui.add(
+                    egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size)),
+                );
+                warning_img.on_hover_text(
+                    RichText::new(self.state.show_warning.banner()).size(text_scale),
+                );
+            } else {
+                ui.label(RichText::new(""));
+            }
         })
     }
 }
