@@ -109,34 +109,11 @@ impl SudokuCell {
 
         while let Some((char, variable, _)) = eq_symbol_iter.next() {
             if let CnfVariable::Equality {
-                bit_index, equal, ..
+                equal,..
             } = variable
             {
-                // Get the two sets of values, by making use of the 'get_possible_numbers' method of CNF variables
+                let (vec1, vec2) = variable.get_possible_groups();
 
-                let mut vec1: Vec<i32> = CnfVariable::Bit {
-                    row: 0,
-                    col: 0,
-                    bit_index: *bit_index,
-                    value: true,
-                }
-                .get_possible_numbers()
-                .into_iter()
-                .collect();
-
-                vec1.sort();
-
-                let mut vec2: Vec<i32> = CnfVariable::Bit {
-                    row: 0,
-                    col: 0,
-                    bit_index: *bit_index,
-                    value: false,
-                }
-                .get_possible_numbers()
-                .into_iter()
-                .collect();
-
-                vec2.sort();
 
                 if *equal {
                     text.push_str(format!("The values of the cells marked with {} belong to the same set,\n either {:?} or {:?}", char, vec1, vec2).as_str())

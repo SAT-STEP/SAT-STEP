@@ -309,7 +309,7 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut state = AppState::new(constraints.clone(), vec![vec![0; 9]; 9]);
+        let mut state = AppState::new(constraints.clone());
 
         let filtered = state.get_filtered();
         assert_eq!(filtered.len(), 3);
