@@ -122,6 +122,16 @@ impl CnfVariable {
     }
 }
 
+/// Check if the encoding rules are enough for Cadial to properly solve a sudoku
+pub fn cnf_encoding_rules_ok(
+    cell_at_least_one: bool,
+    cell_at_most_one: bool,
+    sudoku_has_all_values: bool,
+    sudoku_has_unique_values: bool,
+) -> bool {
+    (cell_at_least_one && sudoku_has_unique_values) || (cell_at_most_one && sudoku_has_all_values)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -246,5 +256,60 @@ mod tests {
             variable2.get_possible_numbers(),
             HashSet::from([1, 2, 5, 6, 9])
         );
+    }
+    #[test]
+    fn test_encoding_rules_shouldbe_ok() {
+        // Doesn't encompass all cases
+        let cell_at_least_one = true;
+        let cell_at_most_one = false;
+        let sudoku_has_all_values = false;
+        let sudoku_has_unique_values = true;
+
+        assert!(cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+
+        let cell_at_least_one = false;
+        let cell_at_most_one = true;
+        let sudoku_has_all_values = true;
+        let sudoku_has_unique_values = false;
+
+        assert!(cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+    }
+
+    #[test]
+    fn test_encoding_rules_shouldbe_not_ok() {
+        // Doesn't encompass all cases
+        let cell_at_least_one = true;
+        let cell_at_most_one = true;
+        let sudoku_has_all_values = false;
+        let sudoku_has_unique_values = false;
+
+        assert!(!cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+
+        let cell_at_least_one = true;
+        let cell_at_most_one = false;
+        let sudoku_has_all_values = false;
+        let sudoku_has_unique_values = false;
+
+        assert!(!cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
     }
 }

@@ -3,8 +3,14 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
+<<<<<<< HEAD
     gui::sudoku_cell::SudokuCell,
     parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
+=======
+    parse_numeric_input,
+    warning::Warning,
+    CadicalCallbackWrapper, ConstraintList, Solver,
+>>>>>>> development
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -100,6 +106,7 @@ pub struct AppState {
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
     sudoku: Vec<Vec<i32>>,
+    pub show_warning: Warning,
 }
 
 impl AppState {
@@ -135,6 +142,7 @@ impl AppState {
             editor_active: false,
             highlight_fixed_literals: false,
             sudoku,
+            show_warning: Warning::new(),
         }
     }
 
@@ -283,6 +291,13 @@ impl AppState {
         self.clicked_conflict_index = Some(index);
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
+    }
+
+    pub fn get_encoding_type(&mut self) -> &str {
+        match self.encoding {
+            EncodingType::Decimal { .. } => "Decimal",
+            EncodingType::Binary => "Binary",
+        }
     }
 
     pub fn quit(&mut self) {
