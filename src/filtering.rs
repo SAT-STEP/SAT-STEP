@@ -25,6 +25,7 @@ impl ListFilter {
         }
     }
 
+    /// Get the filtered and paged constraints and trails
     pub fn get_filtered(
         &mut self,
         page_number: usize,
@@ -44,10 +45,17 @@ impl ListFilter {
         let trail_index_list = index_list[begin..stop].to_vec();
         let mut final_trail = Trail::new();
         for index in trail_index_list {
-            final_trail.push(self.trails.literals_at_index(index), self.trails.trail_at_index(index));
+            final_trail.push(
+                self.trails.literals_at_index(index),
+                self.trails.trail_at_index(index),
+            );
         }
 
-        (final_list[begin..stop].to_vec(), final_trail, filtered_length)
+        (
+            final_list[begin..stop].to_vec(),
+            final_trail,
+            filtered_length,
+        )
     }
 
     /// Kept in case there is a need to reinit more things in future
@@ -172,22 +180,33 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
 
         filter.by_max_length(4);
-        let (filtered, filtered_length) = filter.get_filtered(0, 50);
-        assert_eq!(filtered.len(), 1);
-        assert_eq!(filtered_length, 1);
+        let (filtered_constraints, filtered_trails, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints.len(), 1);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(filtered_length, filtered_constraints.len());
 
         filter.by_max_length(5);
-        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
-        assert_eq!(filtered2.len(), 2);
-        assert_eq!(filtered_length2, 2);
+        let (filtered_constraints2, filtered_trails2, filtered_length2) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints2.len(), 2);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
+        assert_eq!(filtered_length2, filtered_constraints2.len());
 
         filter.by_max_length(1);
-        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
-        assert_eq!(filtered3.len(), 0);
-        assert_eq!(filtered_length3, 0);
+        let (filtered_constraints3, filtered_trails3, filtered_length3) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints3.len(), 0);
+        assert_eq!(filtered_trails3.len(), filtered_constraints3.len());
+        assert_eq!(filtered_length3, filtered_constraints3.len());
     }
 
     #[test]
@@ -197,7 +216,14 @@ mod tests {
             vec![10; 3],
             vec![10; 3],
         ])));
-        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
+
         let encoding = EncodingType::Decimal {
             cell_at_least_one: true,
             cell_at_most_one: true,
@@ -207,19 +233,24 @@ mod tests {
         filter.reinit(&encoding);
 
         filter.by_cell(1, 1);
-        let (filtered, filtered_length) = filter.get_filtered(0, 50);
-        assert_eq!(filtered.len(), 1);
-        assert_eq!(filtered_length, 1);
+        let (filtered_constraints, filtered_trails, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints.len(), 1);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(filtered_length, filtered_constraints.len());
 
         filter.by_cell(1, 2);
-        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
-        assert_eq!(filtered2.len(), 2);
-        assert_eq!(filtered_length2, 2);
+        let (filtered_constraints2, filtered_trails2, filtered_length2) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints2.len(), 2);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
+        assert_eq!(filtered_length2, filtered_constraints2.len());
 
         filter.by_cell(2, 2);
-        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
-        assert_eq!(filtered3.len(), 0);
-        assert_eq!(filtered_length3, 0);
+        let (filtered_constraints3, filtered_trails3, filtered_length3) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints3.len(), 0);
+        assert_eq!(filtered_trails3.len(), filtered_constraints3.len());
+        assert_eq!(filtered_length3, filtered_constraints3.len());
     }
 
     #[test]
@@ -229,23 +260,35 @@ mod tests {
             vec![5; 3],
             vec![5; 3],
         ])));
-        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
+
         filter.reinit(&EncodingType::Binary);
 
         filter.by_cell(1, 1);
-        let (filtered, filtered_length) = filter.get_filtered(0, 50);
-        assert_eq!(filtered.len(), 1);
-        assert_eq!(filtered_length, 1);
+        let (filtered_constraints, filtered_trails, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints.len(), 1);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(filtered_length, filtered_constraints.len());
 
         filter.by_cell(1, 2);
-        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
-        assert_eq!(filtered2.len(), 2);
-        assert_eq!(filtered_length2, 2);
+        let (filtered_constraints2, filtered_trails2, filtered_length2) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints2.len(), 2);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
+        assert_eq!(filtered_length2, filtered_constraints2.len());
 
         filter.by_cell(2, 2);
-        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
-        assert_eq!(filtered3.len(), 0);
-        assert_eq!(filtered_length3, 0);
+        let (filtered_constraints3, filtered_trails3, filtered_length3) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints3.len(), 0);
+        assert_eq!(filtered_trails3.len(), filtered_constraints3.len());
+        assert_eq!(filtered_length3, filtered_constraints3.len());
     }
 
     #[test]
@@ -255,7 +298,14 @@ mod tests {
             vec![1; 3],
             vec![10; 3],
         ])));
-        let mut filter: ListFilter = ListFilter::new(constraints);
+
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
+
         let encoding = EncodingType::Decimal {
             cell_at_least_one: true,
             cell_at_most_one: true,
@@ -265,60 +315,77 @@ mod tests {
         filter.reinit(&encoding);
 
         filter.by_cell(1, 1);
-        let (filtered, filtered_length) = filter.get_filtered(0, 50);
-        assert_eq!(filtered.len(), 2);
-        assert_eq!(filtered_length, 2);
+        let (filtered_constraints, filtered_trails, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints.len(), 2);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(filtered_length, filtered_constraints.len());
 
         filter.by_max_length(3);
-        let (filtered2, filtered_length2) = filter.get_filtered(0, 50);
-        assert_eq!(filtered2.len(), 1);
-        assert_eq!(filtered_length2, 1);
+        let (filtered_constraints2, filtered_trails2, filtered_length2) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints2.len(), 1);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
+        assert_eq!(filtered_length2, filtered_constraints2.len());
 
         filter.clear_cell();
-        let (cleared, cleared_length) = filter.get_filtered(0, 50);
-        assert_eq!(cleared.len(), 2);
-        assert_eq!(cleared_length, 2);
+        let (cleared_constraints, cleared_trails, cleared_length) = filter.get_filtered(0, 50);
+        assert_eq!(cleared_constraints.len(), 2);
+        assert_eq!(cleared_trails.len(), cleared_constraints.len());
+        assert_eq!(cleared_length, cleared_constraints.len());
 
         filter.clear_length();
-        let (cleared2, cleared_length2) = filter.get_filtered(0, 50);
-        assert_eq!(cleared2.len(), 3);
-        assert_eq!(cleared_length2, 3);
+        let (cleared_constraints2, cleared_trails2, cleared_length2) = filter.get_filtered(0, 50);
+        assert_eq!(cleared_constraints2.len(), 3);
+        assert_eq!(cleared_trails2.len(), cleared_constraints2.len());
+        assert_eq!(cleared_length2, cleared_constraints2.len());
 
         let _ = filter.by_cell(1, 1);
         filter.by_max_length(3);
-        let (filtered3, filtered_length3) = filter.get_filtered(0, 50);
-        assert_eq!(filtered3.len(), 1);
-        assert_eq!(filtered_length3, 1);
+        let (filtered_constraints3, filtered_trails3, filtered_length3) =
+            filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints3.len(), 1);
+        assert_eq!(filtered_trails3.len(), filtered_constraints3.len());
+        assert_eq!(filtered_length3, filtered_constraints3.len());
 
         filter.clear_length();
         filter.clear_cell();
-        let (cleared3, cleared_length3) = filter.get_filtered(0, 50);
-        assert_eq!(cleared3.len(), 3);
-        assert_eq!(cleared_length3, 3);
+        let (cleared_constraints3, cleared_trails3, cleared_length3) = filter.get_filtered(0, 50);
+        assert_eq!(cleared_constraints3.len(), 3);
+        assert_eq!(cleared_trails3.len(), cleared_constraints3.len());
+        assert_eq!(cleared_length3, cleared_constraints3.len());
     }
 
     #[test]
     fn test_paging_system() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
-        let mut filter: ListFilter = ListFilter::new(constraints.clone());
 
-        let (filtered, filtered_length) = filter.get_filtered(0, 50);
-        assert_eq!(filtered.len(), 10);
+        let mut trails = Trail::new();
+        for i in 0..10 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
+
+        let (filtered_constraints, filtered_trails, filtered_length) = filter.get_filtered(0, 50);
+        assert_eq!(filtered_constraints.len(), 10);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
         assert_eq!(filtered_length, 10);
 
-        let (filtered2, filtered_length2) = filter.get_filtered(0, 6);
-        assert_eq!(filtered2.len(), 6);
+        let (filtered_constraints2, filtered_trails2, filtered_length2) = filter.get_filtered(0, 6);
+        assert_eq!(filtered_constraints2.len(), 6);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
         assert_eq!(filtered_length2, 10);
 
-        let (filtered3, filtered_length3) = filter.get_filtered(1, 6);
-        assert_eq!(filtered3.len(), 4);
+        let (filtered_constraints3, filtered_trails3, filtered_length3) = filter.get_filtered(1, 6);
+        assert_eq!(filtered_constraints3.len(), 4);
+        assert_eq!(filtered_trails3.len(), filtered_constraints3.len());
         assert_eq!(filtered_length3, 10);
     }
 
     #[test]
     fn test_get_little_number_constraints() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
-        let filter: ListFilter = ListFilter::new(constraints.clone());
+        let filter: ListFilter = ListFilter::new(constraints.clone(), Trail::new());
 
         let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
         assert_eq!(filtered_little_number_constraints.len(), 10);
@@ -327,7 +394,7 @@ mod tests {
     #[test]
     fn test_get_no_little_number_constraints() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0, 0]; 10])));
-        let filter: ListFilter = ListFilter::new(constraints.clone());
+        let filter: ListFilter = ListFilter::new(constraints.clone(), Trail::new());
 
         let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
         assert_eq!(filtered_little_number_constraints.len(), 0);
@@ -342,7 +409,7 @@ mod tests {
             vec![0; 5],
             vec![0],
         ])));
-        let filter: ListFilter = ListFilter::new(constraints.clone());
+        let filter: ListFilter = ListFilter::new(constraints.clone(), Trail::new());
 
         let filtered_little_number_constraints = filter.get_little_number_constraints(0, 50);
         assert_eq!(filtered_little_number_constraints.len(), 2);
@@ -357,7 +424,7 @@ mod tests {
             vec![0; 5],
             vec![0],
         ])));
-        let filter: ListFilter = ListFilter::new(constraints.clone());
+        let filter: ListFilter = ListFilter::new(constraints.clone(), Trail::new());
 
         let index_list = filter.get_filtered_index_list();
         assert_eq!(index_list, vec![0, 1, 2, 3, 4]);
@@ -372,7 +439,7 @@ mod tests {
             vec![0; 5],
             vec![0],
         ])));
-        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), Trail::new());
 
         filter.by_max_length(1);
 
@@ -387,7 +454,7 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut filter: ListFilter = ListFilter::new(constraints.clone());
+        let mut filter: ListFilter = ListFilter::new(constraints.clone(), Trail::new());
 
         filter.by_max_length(1);
 

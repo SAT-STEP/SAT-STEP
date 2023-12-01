@@ -131,7 +131,8 @@ impl AppState {
         }
     }
 
-    /// Get the filtered list of constraints as CNF variables
+    /// Get the filtered and paged list of constraints as CNF variables
+    /// Get the filtered and paged list of trails as a single Trail struct
     /// Updates data that should be refreshed when constraints may have changed
     pub fn get_filtered(&mut self) -> (Vec<Vec<CnfVariable>>, Trail) {
         let (list, trail, length) = self
@@ -264,11 +265,7 @@ impl AppState {
         self.trail = None;
     }
 
-    pub fn set_trail(
-        &mut self,
-        conflict_literals: Vec<CnfVariable>,
-        trail: Vec<CnfVariable>,
-    ) {
+    pub fn set_trail(&mut self, conflict_literals: Vec<CnfVariable>, trail: Vec<CnfVariable>) {
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
     }

@@ -11,7 +11,8 @@ use crate::{
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
-    sudoku::{get_empty_sudoku, solve_sudoku}, Trail,
+    sudoku::{get_empty_sudoku, solve_sudoku},
+    Trail,
 };
 
 impl SATApp {
@@ -112,7 +113,8 @@ impl SATApp {
                         self.sudoku_from_option_values(solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
-                        (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
+                        (self.rendered_constraints, self.rendered_trails) =
+                            self.state.get_filtered();
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -237,7 +239,9 @@ impl SATApp {
     /// Controls for showing conflict literals and trails
     fn trail_view(&mut self, ui: &mut Ui, text_scale: f32) {
         ui.horizontal(|ui| {
-            ui.add(Label::new(RichText::new("Learned constraint").size(text_scale)));
+            ui.add(Label::new(
+                RichText::new("Learned constraint").size(text_scale),
+            ));
 
             let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
             let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
@@ -249,9 +253,7 @@ impl SATApp {
                 egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
             });
 
-            let how_on = ui
-                .ctx()
-                .animate_bool(response.id, self.state.show_trail);
+            let how_on = ui.ctx().animate_bool(response.id, self.state.show_trail);
             let visuals = ui.style().interact_selectable(&response, true);
             let rect = rect.expand(visuals.expansion);
             let radius = 0.5 * rect.height();

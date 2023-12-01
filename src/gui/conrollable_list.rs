@@ -146,7 +146,8 @@ impl SATApp {
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
                                 clauses.clicked(&mut self.state, i);
-                                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
+                                (self.rendered_constraints, self.rendered_trails) =
+                                    self.state.get_filtered();
                             }
 
                             // Highlight the selected element

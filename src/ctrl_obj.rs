@@ -40,7 +40,7 @@ impl ControllableObj for ConstraintList {
                         .iter()
                         .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                         .collect();
-    
+
                     state.set_trail(enum_literals, enum_trail);
                 }
             }
