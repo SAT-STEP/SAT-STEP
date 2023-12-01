@@ -297,11 +297,18 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut state = AppState::new(constraints.clone());
 
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 3);
-        assert_eq!(state.filtered_length, 3);
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
+
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 3);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(state.filtered_length, filtered_constraints.len());
 
         state.page_number = 1;
         state.page_length_input = "2".to_string();
@@ -322,9 +329,10 @@ mod tests {
         assert_eq!(state.page_length_input, "100".to_string());
         assert_eq!(state.filtered_length, 0);
 
-        let filtered2 = state.get_filtered().0;
-        assert_eq!(filtered2.len(), 3);
-        assert_eq!(state.filtered_length, 3);
+        let (filtered_constraints2, filtered_trails2) = state.get_filtered();
+        assert_eq!(filtered_constraints2.len(), 3);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
+        assert_eq!(state.filtered_length, filtered_constraints2.len());
     }
 
     #[test]
@@ -334,11 +342,18 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut state = AppState::new(constraints.clone());
 
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 3);
-        assert_eq!(state.filtered_length, 3);
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
+
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 3);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(state.filtered_length, filtered_constraints.len());
 
         state.clicked_constraint_index = Some(1);
         state.page_number = 1;
@@ -347,9 +362,10 @@ mod tests {
         state.filter_by_max_length();
         assert_eq!(state.max_length, Some(4));
 
-        let filtered2 = state.get_filtered().0;
-        assert_eq!(filtered2.len(), 1);
-        assert_eq!(state.filtered_length, 1);
+        let (filtered_constraints2, filtered_trails2) = state.get_filtered();
+        assert_eq!(filtered_constraints2.len(), 1);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
+        assert_eq!(state.filtered_length, filtered_constraints2.len());
 
         assert_eq!(state.clicked_constraint_index, None);
         assert_eq!(state.page_number, 0);
@@ -357,24 +373,32 @@ mod tests {
         // Invalid input should not change the situation at all
         state.max_length_input = "-1".to_string();
         state.filter_by_max_length();
-        let filtered3 = state.get_filtered().0;
-        assert_eq!(filtered3, filtered2);
-        assert_eq!(state.filtered_length, 1);
+        let (filtered_constraints3, filtered_trails3) = state.get_filtered();
+        assert_eq!(filtered_constraints3.len(), 1);
+        assert_eq!(filtered_trails3.len(), filtered_constraints3.len());
+        assert_eq!(state.filtered_length, filtered_constraints3.len());
     }
 
     #[test]
     fn test_select_cell() {
         let constraints =
             ConstraintList::_new(Rc::new(RefCell::new(vec![vec![1], vec![10], vec![10]])));
-        let mut state = AppState::new(constraints.clone());
+
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
 
         state.clicked_constraint_index = Some(1);
         state.page_number = 1;
 
         state.select_cell(1, 2);
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 2);
-        assert_eq!(state.filtered_length, 2);
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 2);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(state.filtered_length, filtered_constraints.len());
         assert_eq!(state.selected_cell, Some((1, 2)));
         assert_eq!(state.clicked_constraint_index, None);
         assert_eq!(state.page_number, 0);
@@ -383,7 +407,7 @@ mod tests {
     #[test]
     fn test_count_pages() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
-        let mut state: AppState = AppState::new(constraints);
+        let mut state: AppState = AppState::new(constraints, Trail::new());
 
         assert_eq!(state.page_count, 0);
 
@@ -410,7 +434,13 @@ mod tests {
     #[test]
     fn test_set_page_length() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
-        let mut state: AppState = AppState::new(constraints);
+
+        let mut trails = Trail::new();
+        for i in 0..10 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state: AppState = AppState::new(constraints, trails);
         state.get_filtered();
 
         state.page_length_input = "A".to_string();
@@ -432,7 +462,14 @@ mod tests {
     #[test]
     fn test_set_page_number() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
-        let mut state: AppState = AppState::new(constraints);
+
+        let mut trails = Trail::new();
+        for i in 0..10 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state: AppState = AppState::new(constraints, trails);
+
         state.get_filtered();
 
         state.set_page_number(-1);
@@ -459,16 +496,23 @@ mod tests {
     fn test_cell_clearing() {
         let constraints =
             ConstraintList::_new(Rc::new(RefCell::new(vec![vec![1], vec![10], vec![10]])));
-        let mut state: AppState = AppState::new(constraints);
+        let mut trails = Trail::new();
+
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
 
         state.select_cell(1, 1);
         state.clicked_constraint_index = Some(1);
         state.page_number = 1;
         state.clear_cell();
 
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 3);
-        assert_eq!(state.filtered_length, 3);
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 3);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(state.filtered_length, filtered_constraints.len());
         assert_eq!(state.selected_cell, None);
         assert_eq!(state.clicked_constraint_index, None);
         assert_eq!(state.page_number, 0);
@@ -481,7 +525,13 @@ mod tests {
             vec![10; 3],
             vec![10; 3],
         ])));
-        let mut state: AppState = AppState::new(constraints);
+
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
 
         state.max_length_input = "4".to_string();
         state.filter_by_max_length();
@@ -490,9 +540,10 @@ mod tests {
 
         state.clear_length();
 
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 3);
-        assert_eq!(state.filtered_length, 3);
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 3);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(state.filtered_length, filtered_constraints.len());
         assert_eq!(state.max_length, None);
         assert_eq!(state.max_length_input, "".to_string());
         assert_eq!(state.clicked_constraint_index, None);
@@ -507,7 +558,12 @@ mod tests {
             vec![10; 3],
         ])));
 
-        let mut state: AppState = AppState::new(constraints);
+        let mut trails = Trail::new();
+        for i in 0..3 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
 
         state.max_length_input = "4".to_string();
         state.filter_by_max_length();
@@ -516,9 +572,10 @@ mod tests {
         state.page_number = 1;
         state.clear_filters();
 
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 3);
-        assert_eq!(state.filtered_length, 3);
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 3);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
+        assert_eq!(state.filtered_length, filtered_constraints.len());
         assert_eq!(state.selected_cell, None);
         assert_eq!(state.max_length, None);
         assert_eq!(state.max_length_input, "".to_string());
@@ -529,17 +586,24 @@ mod tests {
     #[test]
     fn test_paging_system() {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
-        let mut state = AppState::new(constraints.clone());
+        let mut trails = Trail::new();
+        for i in 0..10 {
+            trails.push(vec![i], vec![i]);
+        }
+
+        let mut state = AppState::new(constraints.clone(), trails);
 
         state.page_length_input = "6".to_string();
         state.set_page_length();
-        let filtered = state.get_filtered().0;
-        assert_eq!(filtered.len(), 6);
+        let (filtered_constraints, filtered_trails) = state.get_filtered();
+        assert_eq!(filtered_constraints.len(), 6);
+        assert_eq!(filtered_trails.len(), filtered_constraints.len());
         assert_eq!(state.filtered_length, 10);
 
         state.set_page_number(1);
-        let filtered2 = state.get_filtered().0;
-        assert_eq!(filtered2.len(), 4);
+        let (filtered_constraints2, filtered_trails2) = state.get_filtered();
+        assert_eq!(filtered_constraints2.len(), 4);
+        assert_eq!(filtered_trails2.len(), filtered_constraints2.len());
         assert_eq!(state.filtered_length, 10);
     }
 
@@ -551,7 +615,7 @@ mod tests {
             vec![0; 5],
             vec![0],
         ])));
-        let mut state = AppState::new(constraints.clone());
+        let mut state = AppState::new(constraints.clone(), Trail::new());
 
         state.page_number = 0;
         state.page_length = 50;
@@ -570,7 +634,7 @@ mod tests {
             vec![0; 5],
             vec![0],
         ])));
-        let mut state = AppState::new(constraints.clone());
+        let mut state = AppState::new(constraints.clone(), Trail::new());
 
         state.page_number = 0;
         state.page_length = 50;
@@ -587,7 +651,7 @@ mod tests {
             vec![0; 3],
             vec![0; 5],
         ])));
-        let mut state = AppState::new(constraints.clone());
+        let mut state = AppState::new(constraints.clone(), Trail::new());
 
         state.page_number = 0;
         state.page_length = 50;
