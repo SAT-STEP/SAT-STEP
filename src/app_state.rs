@@ -3,14 +3,9 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
-<<<<<<< HEAD
     gui::sudoku_cell::SudokuCell,
     parse_numeric_input, CadicalCallbackWrapper, ConstraintList, Solver,
-=======
-    parse_numeric_input,
     warning::Warning,
-    CadicalCallbackWrapper, ConstraintList, Solver,
->>>>>>> development
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
