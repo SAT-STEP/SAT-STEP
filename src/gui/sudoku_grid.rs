@@ -320,7 +320,6 @@ impl SATApp {
                 for variable in variables {
                     match variable {
                         CnfVariable::Bit { row, col, .. } => {
-
                             if self.state.show_trail {
                                 self.sudoku[row as usize - 1][col as usize - 1]
                                     .little_numbers
@@ -429,17 +428,16 @@ impl SATApp {
                             .into_iter()
                             .map(|x| (x, { x == cell.value.unwrap_or(0) }));
 
-                        cell
-                            .little_numbers
-                            .extend(values);
+                        cell.little_numbers.extend(values);
 
                         cell.draw_big_number = false;
                     }
                     CnfVariable::Decimal { row, col, value } => {
                         let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
-                        cell
-                            .little_numbers
-                            .push((value, {value == cell.value.unwrap_or(0) || (value < 0 && value != cell.value.unwrap_or(0) * -1)}));
+                        cell.little_numbers.push((value, {
+                            value == cell.value.unwrap_or(0)
+                                || (value < 0 && value != -cell.value.unwrap_or(0))
+                        }));
 
                         cell.draw_big_number = false;
                     }
@@ -452,28 +450,29 @@ impl SATApp {
                         ..
                     } => {
                         let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
-                        
-                        let cell1_value =  self.sudoku[row as usize - 1][col as usize - 1].value.unwrap_or(0);
-                        let cell2_value =  self.sudoku[row2 as usize - 1][col2 as usize - 1].value.unwrap_or(0);
-                        
+
+                        let cell1_value = self.sudoku[row as usize - 1][col as usize - 1]
+                            .value
+                            .unwrap_or(0);
+                        let cell2_value = self.sudoku[row2 as usize - 1][col2 as usize - 1]
+                            .value
+                            .unwrap_or(0);
+
                         let (vec1, vec2) = variable.get_possible_groups();
                         let mut underline = false;
+                        #[allow(clippy::collapsible_else_if)]
                         if equal {
-                            if vec1.contains(&cell1_value) && vec1.contains(&cell2_value) {
+                            if vec1.contains(&cell1_value) && vec1.contains(&cell2_value)
+                                || vec2.contains(&cell1_value) && vec2.contains(&cell2_value)
+                            {
                                 underline = true;
                             }
-                            else if vec2.contains(&cell1_value) && vec2.contains(&cell2_value) {
+                        } else {
+                            if vec1.contains(&cell1_value) && vec2.contains(&cell2_value)
+                                || vec2.contains(&cell1_value) && vec1.contains(&cell2_value)
+                            {
                                 underline = true;
                             }
-                        }
-                        else {
-                            if vec1.contains(&cell1_value) && vec2.contains(&cell2_value) {
-                                underline = true;
-                            }
-                            else if vec2.contains(&cell1_value) && vec1.contains(&cell2_value) {
-                                underline = true;
-                            }
-                            
                         }
                         self.sudoku[row as usize - 1][col as usize - 1]
                             .eq_symbols

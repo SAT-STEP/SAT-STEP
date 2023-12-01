@@ -108,12 +108,8 @@ impl SudokuCell {
         let mut text = String::new();
 
         while let Some((char, variable, _)) = eq_symbol_iter.next() {
-            if let CnfVariable::Equality {
-                equal,..
-            } = variable
-            {
+            if let CnfVariable::Equality { equal, .. } = variable {
                 let (vec1, vec2) = variable.get_possible_groups();
-
 
                 if *equal {
                     text.push_str(format!("The values of the cells marked with {} belong to the same set,\n either {:?} or {:?}", char, vec1, vec2).as_str())
