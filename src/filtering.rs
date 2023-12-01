@@ -34,14 +34,19 @@ impl ListFilter {
         let filtered_length = index_list.len();
 
         let mut final_list = Vec::new();
-        let mut final_trail = Trail::new(); 
-        for index in index_list {
-            final_list.push(self.constraints.borrow()[index].clone());
-            final_trail.push(self.trails.literals_at_index(index), self.trails.trail_at_index(index));
+        for index in &index_list {
+            final_list.push(self.constraints.borrow()[*index].clone());
         }
 
         let begin: usize = std::cmp::min(final_list.len(), page_number * page_length);
         let stop: usize = std::cmp::min(final_list.len(), (page_number + 1) * page_length);
+
+        let trail_index_list = index_list[begin..stop].to_vec();
+        let mut final_trail = Trail::new();
+        for index in trail_index_list {
+            final_trail.push(self.trails.literals_at_index(index), self.trails.trail_at_index(index));
+        }
+
         (final_list[begin..stop].to_vec(), final_trail, filtered_length)
     }
 

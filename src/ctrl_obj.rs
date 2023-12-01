@@ -66,17 +66,8 @@ impl ControllableObj for ConstraintList {
     fn get_clicked(&self, state: &AppState) -> Option<usize> {
         state.clicked_constraint_index
     }
-    fn clauses(&self, state: &AppState) -> Vec<Vec<CnfVariable>> {
-        if state.show_trail {
-            let start = (state.page_number) as usize * state.page_length;
-            let end = (state.page_number + 1) as usize * state.page_length;
-    
-            self.clauses.clone()
-                [std::cmp::min(start, self.clauses.len())..std::cmp::min(end, self.clauses.len())]
-                .to_vec()
-        } else {
-            self.clauses.clone()   
-        }
+    fn clauses(&self, _state: &AppState) -> Vec<Vec<CnfVariable>> {
+        self.clauses.clone()
     }
     fn combiner(&self) -> String {
         self.combiner.clone()
