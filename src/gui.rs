@@ -36,7 +36,7 @@ impl SATApp {
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let state = AppState::new(constraints.clone(), sudoku.iter().map(|line| line.iter().map(|cell| cell.value.unwrap()).collect::<Vec<i32>>()).collect::<Vec<Vec<i32>>>());
+        let state = AppState::new(constraints.clone());
         let current_error = None;
         Self {
             sudoku,
@@ -126,7 +126,7 @@ impl Default for SATApp {
         let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let state = AppState::new(constraints.clone(), vec![vec![0; 9]; 9]);
+        let state = AppState::new(constraints.clone());
         let current_error = None;
         Self {
             sudoku: Vec::new(),

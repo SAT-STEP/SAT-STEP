@@ -434,9 +434,11 @@ impl SATApp {
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                     }
                     CnfVariable::Decimal { row, col, value } => {
-                        self.sudoku[row as usize - 1][col as usize - 1]
+                        let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                        cell
                             .little_numbers
-                            .push((value, false));
+                            .push((value, {value == cell.value.unwrap_or(0) || (value < 0 && value != cell.value.unwrap_or(0) * -1)}));
+
                         self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                     }
                     CnfVariable::Equality {
