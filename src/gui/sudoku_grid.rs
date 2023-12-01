@@ -193,17 +193,14 @@ impl SATApp {
                             .into_iter()
                             .map(|x| (x, false));
 
-                        self.sudoku[row as usize - 1][col as usize - 1]
-                            .little_numbers
-                            .extend(values);
-
-                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                        let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                        cell.draw_big_number = false;
+                        cell.little_numbers.extend(values);
                     }
                     CnfVariable::Decimal { row, col, value } => {
-                        self.sudoku[row as usize - 1][col as usize - 1]
-                            .little_numbers
-                            .push((value, false));
-                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
+                        let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                        cell.draw_big_number = false;
+                        cell.little_numbers.push((value, false));
                     }
                     CnfVariable::Equality {
                         row,
@@ -214,14 +211,15 @@ impl SATApp {
                     } => {
                         let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
 
-                        self.sudoku[row as usize - 1][col as usize - 1]
+                        let cell1 = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                        cell1.draw_big_number = false;
+                        cell1
                             .eq_symbols
                             .push((symbol.clone(), variable.clone(), false));
-                        self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                            .eq_symbols
-                            .push((symbol, variable, false));
-                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                        self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
+
+                        let cell2 = &mut self.sudoku[row2 as usize - 1][col2 as usize - 1];
+                        cell2.draw_big_number = false;
+                        cell2.eq_symbols.push((symbol, variable, false));
                     }
                 }
             }
@@ -230,7 +228,7 @@ impl SATApp {
 
     /// Update conflict booleans and little symbols related to trails in SudokuCells
     fn update_trail_info(&mut self) {
-        // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
+        // Only do this if we are visualizing a trail (and not a constraint). That case is handled in update_selected_constraint
         if self.state.show_trail {
             // Done in an if-else (instead of handling both cases in the matches), because having the decimal and binary code mixed got way too complex
             if self.state.get_encoding_type() == "Decimal" {
@@ -238,14 +236,12 @@ impl SATApp {
                 if let Some(conflicts) = &self.state.conflict_literals {
                     for conflict in conflicts {
                         if let CnfVariable::Decimal { row, col, value } = conflict {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
-                                true;
-                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
-                                false;
+                            let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                            cell.part_of_conflict = true;
+                            cell.draw_big_number = false;
 
-                            self.sudoku[*row as usize - 1][*col as usize - 1]
-                                .little_numbers
-                                .push((-1 * *value, true));
+                            // Add the negations of conflict literals as underlined little numbers
+                            cell.little_numbers.push((-1 * *value, true));
                         }
                     }
                 }
@@ -256,15 +252,11 @@ impl SATApp {
 
                     for variable in variables {
                         if let CnfVariable::Decimal { row, col, value } = variable {
-                            if !self.sudoku[row as usize - 1][col as usize - 1]
-                                .little_numbers
-                                .contains(&(value, true))
-                            {
-                                self.sudoku[row as usize - 1][col as usize - 1]
-                                    .little_numbers
-                                    .push((value, false));
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
-                                    false;
+                            let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+
+                            if !cell.little_numbers.contains(&(value, true)) {
+                                cell.draw_big_number = false;
+                                cell.little_numbers.push((value, false));
                             }
                         }
                     }
@@ -289,6 +281,7 @@ impl SATApp {
         }
     }
 
+    /// Update conflict literal related info for binary encoded CNF
     fn update_binary_conflict_literals(&mut self) {
         let mut eq_symbols = (b'A'..=b'Z')
             .chain(b'a'..=b'z')
@@ -322,9 +315,6 @@ impl SATApp {
                         bit_index,
                         value,
                     } => {
-                        self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
-                        self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number = false;
-
                         let possible_numbers = CnfVariable::Bit {
                             row: *row,
                             col: *col,
@@ -333,8 +323,10 @@ impl SATApp {
                         }
                         .get_possible_numbers();
 
-                        self.sudoku[*row as usize - 1][*col as usize - 1]
-                            .little_numbers
+                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        cell.part_of_conflict = true;
+                        cell.draw_big_number = false;
+                        cell.little_numbers
                             .retain(|x| possible_numbers.contains(&x.0));
                     }
                     CnfVariable::Equality {
@@ -345,9 +337,6 @@ impl SATApp {
                         bit_index,
                         equal,
                     } => {
-                        self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict = true;
-                        self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict = true;
-
                         let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
                         let var = CnfVariable::Equality {
                             row: *row,
@@ -358,14 +347,15 @@ impl SATApp {
                             equal: !equal,
                         };
 
-                        self.sudoku[*row as usize - 1][*col as usize - 1]
-                            .eq_symbols
-                            .push((symbol.clone(), var.clone(), true));
-                        self.sudoku[*row2 as usize - 1][*col2 as usize - 1]
-                            .eq_symbols
-                            .push((symbol, var.clone(), true));
-                        self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number = false;
-                        self.sudoku[*row2 as usize - 1][*col2 as usize - 1].draw_big_number = false;
+                        let cell1 = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        cell1.part_of_conflict = true;
+                        cell1.draw_big_number = false;
+                        cell1.eq_symbols.push((symbol.clone(), var.clone(), true));
+
+                        let cell2 = &mut self.sudoku[*row2 as usize - 1][*col2 as usize - 1];
+                        cell2.part_of_conflict = true;
+                        cell2.draw_big_number = false;
+                        cell2.eq_symbols.push((symbol, var.clone(), true));
                     }
                     _ => (),
                 }
@@ -381,6 +371,7 @@ impl SATApp {
         }
     }
 
+    /// Update trail related info for binary encoded CNF (should be called after update_binary_conflict_literals)
     fn update_binary_trail(&mut self) {
         // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
         if let Some(_conflict_index) = self.state.clicked_constraint_index {
@@ -407,10 +398,10 @@ impl SATApp {
             for variable in variables {
                 // EQ not visualized when part of a trail, as there are way too many of them
                 if let CnfVariable::Bit { row, col, .. } = variable {
-                    self.sudoku[row as usize - 1][col as usize - 1]
-                        .little_numbers
+                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    cell.draw_big_number = false;
+                    cell.little_numbers
                         .retain(|x| variable.get_possible_numbers().contains(&x.0));
-                    self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
                 }
             }
 
