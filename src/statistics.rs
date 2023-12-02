@@ -1,7 +1,7 @@
 use crate::app_state::EncodingType;
 use cadical::CadicalStats;
 
-
+#[derive(Debug)]
 pub struct Statistics {
     pub process_time: f64,
     pub real_time: f64,

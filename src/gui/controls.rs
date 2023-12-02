@@ -1,11 +1,11 @@
 use cadical::Solver;
-use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{FontId, Key, Label, Response, RichText, ScrollArea, TextStyle, Ui};
 
 use super::SATApp;
 
 use crate::{
-    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, string_from_grid,
-    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError,
+    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, statistics::Statistics,
+    string_from_grid, sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError,
 };
 
 impl SATApp {
@@ -23,7 +23,7 @@ impl SATApp {
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
-                self.statistics(ui, ctx, text_scale);
+                self.statistics(ctx);
                 ui.end_row();
 
                 self.encoding_selection(ui, text_scale);
@@ -67,7 +67,7 @@ impl SATApp {
                     let sudoku_result = get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
-                            self.sudoku_from_option_values(sudoku_vec, true);
+                            self.sudoku_from_option_values(&sudoku_vec, true);
                             self.constraints.clear();
                             self.trail.clear();
                             self.rendered_constraints = Vec::new();
@@ -110,10 +110,18 @@ impl SATApp {
 
                 match solve_result {
                     Ok(solved) => {
-                        self.sudoku_from_option_values(solved, false);
+                        self.sudoku_from_option_values(&solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
                         self.rendered_constraints = self.state.get_filtered();
+
+                        let cadical_stats = self.solver.stats();
+                        let stats = Statistics::from_cadical_stats(
+                            cadical_stats,
+                            self.state.encoding,
+                            solved,
+                        );
+                        self.state.history.push(stats);
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -137,7 +145,7 @@ impl SATApp {
 
                 match sudoku {
                     Ok(sudoku_vec) => {
-                        self.sudoku_from_option_values(sudoku_vec, true);
+                        self.sudoku_from_option_values(&sudoku_vec, true);
                         self.solver = Solver::with_config("plain").unwrap();
                         self.solver
                             .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -244,12 +252,17 @@ impl SATApp {
                 self.state.show_trail_view = !self.state.show_trail_view;
             }
 
-            if ui.button(RichText::new("Statistics").size(text_scale)).clicked() {
+            if ui
+                .button(RichText::new("Statistics").size(text_scale))
+                .clicked()
+            {
                 self.state.show_statistics = true;
             }
 
-            if ui.button(RichText::new("Process with all configurations").size(text_scale)).clicked() {
-            }
+            if ui
+                .button(RichText::new("Process with all configurations").size(text_scale))
+                .clicked()
+            {}
 
             if self.state.show_trail_view {
                 ui.add(Label::new(RichText::new("Trail").size(text_scale)));
@@ -291,7 +304,7 @@ impl SATApp {
     }
 
     /// Show statistics
-    fn statistics(&mut self, ui: &mut Ui, ctx: &egui::Context, text_scale: f32) {
+    fn statistics(&mut self, ctx: &egui::Context) {
         if self.state.show_statistics {
             ctx.show_viewport_immediate(
                 egui::ViewportId::from_hash_of("immediate_viewport_statistics"),
@@ -299,11 +312,89 @@ impl SATApp {
                     .with_title("Statistics")
                     .with_inner_size([550.0, 275.0]),
                 |ctx, _class| {
-                    
                     if ctx.input(|i| i.viewport().close_requested()) {
                         self.state.show_statistics = false;
                     }
-                }
+
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        let text_scale = (ui.available_width() / 35.0).max(10.0);
+                        ui.vertical(|ui| {
+                            ScrollArea::vertical()
+                                .auto_shrink([false; 2])
+                                .stick_to_bottom(false)
+                                .show_viewport(ui, |ui, _viewport| {
+                                    for his in self.state.history.iter() {
+                                        for row in his.sudoku.iter() {
+                                            let st: Vec<u8> = row
+                                                .iter()
+                                                .map(|n| n.unwrap() as u8 + b'0')
+                                                .collect();
+                                            let st = std::str::from_utf8(&st).unwrap();
+
+                                            ui.label(
+                                                RichText::new(format!("{st}")).size(text_scale / 1.5),
+                                            );
+                                        }
+
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Process time: {:.2}s",
+                                                his.process_time
+                                            ))
+                                            .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Real time: {:.2}s",
+                                                his.real_time
+                                            ))
+                                            .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Memory usage: {:.2}mb",
+                                                his.max_resident_set_size_mb
+                                            ))
+                                            .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!("Conflicts: {}", his.conflicts))
+                                                .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Learned clauses: {}",
+                                                his.learned_clauses
+                                            ))
+                                            .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Learned literals: {}",
+                                                his.learned_literals
+                                            ))
+                                            .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!("Decisions: {}", his.decisions))
+                                                .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!("Restarts: {}", his.restarts))
+                                                .size(text_scale),
+                                        );
+                                        ui.label(
+                                            RichText::new(format!(
+                                                "Encoding: {:?}\n",
+                                                his.encoding
+                                            ))
+                                            .size(text_scale),
+                                        );
+                                    }
+                                });
+                        });
+                    });
+                },
             )
         }
     }
