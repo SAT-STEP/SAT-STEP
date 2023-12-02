@@ -7,7 +7,7 @@ use egui::{
 use std::ops::Add;
 
 use crate::cnf::CnfVariable;
-use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
+use crate::ctrl_obj::{ConstraintList, ControllableObj};
 
 use super::SATApp;
 
@@ -89,19 +89,11 @@ impl SATApp {
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                    let clauses_binding = self.rendered_constraints.clone();
-
-                    let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
-                        clauses: clauses_binding,
+                    let clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
+                        clauses: self.rendered_constraints.clone(),
+                        trail: self.rendered_trails.clone(),
                         combiner: "v".to_string(),
                     });
-                    if self.state.show_trail_view {
-                        clauses = Box::new(ConflictList {
-                            clauses: self.trail.as_cnf(&self.state.encoding),
-                            combiner: "^".to_string(),
-                            trail: self.trail.clone(),
-                        });
-                    }
                     let binding = clauses.clauses(&self.state);
                     let mut clause_iter = binding.iter().skip(first_item);
 
@@ -154,7 +146,8 @@ impl SATApp {
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
                                 clauses.clicked(&mut self.state, i);
-                                self.rendered_constraints = self.state.get_filtered();
+                                (self.rendered_constraints, self.rendered_trails) =
+                                    self.state.get_filtered();
                             }
 
                             // Highlight the selected element
