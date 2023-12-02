@@ -319,12 +319,37 @@ impl SATApp {
                     ("~EQ", Color32::RED)
                 };
 
+                let cell1_value = ready_sudoku[*row as usize - 1][*col as usize - 1]
+                    .value
+                    .unwrap_or(0);
+                let cell2_value = ready_sudoku[*row2 as usize - 1][*col2 as usize - 1]
+                    .value
+                    .unwrap_or(0);
+
+                let (vec1, vec2) = variable.get_possible_groups();
+
+                #[allow(clippy::collapsible_else_if)]
+                if *equal {
+                    if vec1.contains(&cell1_value) && vec1.contains(&cell2_value)
+                        || vec2.contains(&cell1_value) && vec2.contains(&cell2_value)
+                    {
+                        underline = Stroke::new(small_font.size*underline_multiplier,color);
+                    }
+                } else {
+                    if vec1.contains(&cell1_value) && vec2.contains(&cell2_value)
+                        || vec2.contains(&cell1_value) && vec1.contains(&cell2_value)
+                    {
+                        underline = Stroke::new(small_font.size*underline_multiplier,color);
+                    }
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -334,6 +359,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );
