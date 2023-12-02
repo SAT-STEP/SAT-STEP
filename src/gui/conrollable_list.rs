@@ -2,7 +2,7 @@
 
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Stroke, Align,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Stroke,
 };
 use std::ops::Add;
 
@@ -228,6 +228,8 @@ impl SATApp {
         text_color: Color32,
     ) {
         let mut underline = Stroke::NONE;
+        let underline_multiplier = 0.1;
+
         match variable {
             CnfVariable::Decimal { row, col, value } => {
                 let (lead_char, color) = if *value > 0 {
@@ -236,8 +238,9 @@ impl SATApp {
                     ("~", Color32::RED)
                 };
 
-                if *value == ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0) {
-                    underline = Stroke::new(1.0,Color32::GREEN);
+                if *value == ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0) ||
+                    (*value < 0 && *value != -ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0)) {
+                    underline = Stroke::new(small_font.size*underline_multiplier,color);
                 }
 
                 text_job.append(
