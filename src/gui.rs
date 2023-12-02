@@ -21,10 +21,11 @@ use crate::{
 pub struct SATApp {
     sudoku: Vec<Vec<SudokuCell>>,
     constraints: ConstraintList,
-    trail: Trail,
+    trails: Trail,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
     rendered_constraints: Vec<Vec<CnfVariable>>,
+    rendered_trails: Trail,
     state: AppState,
     current_error: Option<GenericError>,
 }
@@ -32,19 +33,20 @@ pub struct SATApp {
 impl SATApp {
     pub fn new(sudoku: Vec<Vec<SudokuCell>>) -> Self {
         let constraints = ConstraintList::new();
-        let trail = Trail::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
+        let trails = Trail::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trails.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let state = AppState::new(constraints.clone());
+        let state = AppState::new(constraints.clone(), trails.clone());
         let current_error = None;
         Self {
             sudoku,
             constraints,
-            trail,
+            trails,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
+            rendered_trails: Trail::new(),
             state,
             current_error,
         }
@@ -97,12 +99,12 @@ impl SATApp {
 
     fn reset_cadical_and_solved_sudoku(&mut self) {
         self.constraints.clear();
-        self.trail.clear();
+        self.trails.clear();
         self.rendered_constraints.clear();
         self.state.reinit();
         self.solver = Solver::with_config("plain").unwrap();
         self.callback_wrapper =
-            CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
+            CadicalCallbackWrapper::new(self.constraints.clone(), self.trails.clone());
         self.solver
             .set_callbacks(Some(self.callback_wrapper.clone()));
 
@@ -122,19 +124,20 @@ impl SATApp {
 impl Default for SATApp {
     fn default() -> Self {
         let constraints = ConstraintList::new();
-        let trail = Trail::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
+        let trails = Trail::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trails.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let state = AppState::new(constraints.clone());
+        let state = AppState::new(constraints.clone(), trails.clone());
         let current_error = None;
         Self {
             sudoku: Vec::new(),
             constraints,
-            trail,
+            trails,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
+            rendered_trails: Trail::new(),
             state,
             current_error,
         }

@@ -45,8 +45,8 @@ impl SATApp {
             );
 
         self.reset_visualization_info();
-        self.update_conflict_info();
         self.update_selected_constraint();
+        self.update_trail_info();
 
         self.draw_cells(ui, grid_origin, cell_size);
     }
@@ -145,7 +145,7 @@ impl SATApp {
                 // Draw returns true if a cell selection was changed
                 // Update the constraint list in that case
                 if self.sudoku[row][col].draw(ui, &mut self.state) {
-                    self.rendered_constraints = self.state.get_filtered();
+                    (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
                 }
             }
         }
@@ -165,323 +165,303 @@ impl SATApp {
         }
     }
 
-    /// Update conflict booleans and little symbols related to conflicts in SudokuCells
-    fn update_conflict_info(&mut self) {
-        // Only do this if a constraint is not currently selected. That case is handled in update_selected_constraint
-        if self.state.clicked_constraint_index.is_none() {
-            let mut eq_symbols = (b'A'..=b'Z')
-                .chain(b'a'..=b'z')
-                .map(|c| String::from_utf8(vec![c]).unwrap())
-                .collect::<Vec<String>>()
-                .into_iter();
+    /// Update little symbols from a selected constraint in SudokuCells
+    fn update_selected_constraint(&mut self) {
+        // Only do this if we are visualizing a constraint (and not a trail). That case is handled in update_trail_info
+        if self.state.show_trail {
+            return;
+        }
 
-            // Used to get the intersection of "get_possible_numbers" for binary variables
-            // Cleanup happens after the main "for variable" loop
-            if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
-                for row in self.sudoku.iter_mut() {
-                    for cell in row.iter_mut() {
-                        cell.little_numbers = vec![
-                            (1, true),
-                            (2, true),
-                            (3, true),
-                            (4, true),
-                            (5, true),
-                            (6, true),
-                            (7, true),
-                            (8, true),
-                            (9, true),
-                        ];
-                    }
+        let mut variables = Vec::new();
+
+        // Visualize the clicked constraint, if there is one
+        // Otherwise show literals learned so far as little numbers, if we are not showing the solved sudoku
+        if let Some(constraint_index) = self.state.clicked_constraint_index {
+            variables = self.rendered_constraints[constraint_index].clone();
+        } else if !self.state.show_solved_sudoku {
+            variables = self.state.little_number_constraints.clone();
+        }
+
+        // Interator that we can pull new letters from in order
+        let mut eq_symbols = (b'A'..=b'Z')
+            .chain(b'a'..=b'z')
+            .map(|c| String::from_utf8(vec![c]).unwrap())
+            .collect::<Vec<String>>()
+            .into_iter();
+
+        for variable in variables {
+            match variable {
+                CnfVariable::Bit { row, col, .. } => {
+                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+
+                    let values = variable
+                        .get_possible_numbers()
+                        .into_iter()
+                        .map(|x| (x, { x == cell.value.unwrap_or(0) }));
+
+                    cell.draw_big_number = false;
+
+                    // Add the possible values as little numbers, as any of them would satisfy the constraint
+                    cell.little_numbers.extend(values);
                 }
-            }
+                CnfVariable::Decimal { row, col, value } => {
+                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
 
-            // Find and mark cells affected by the conflict literals
-            if let Some(conflicts) = &self.state.conflict_literals {
-                for conflict in conflicts {
-                    match conflict {
-                        CnfVariable::Bit {
-                            row,
-                            col,
-                            bit_index,
-                            value,
-                        } => {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
-                                true;
-                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
-                                false;
+                    cell.little_numbers.push((value, {
+                        value == cell.value.unwrap_or(0)
+                            || (value < 0 && value != -cell.value.unwrap_or(0))
+                    }));
 
-                            let possible_numbers = CnfVariable::Bit {
-                                row: *row,
-                                col: *col,
-                                bit_index: *bit_index,
-                                value: !value,
-                            }
-                            .get_possible_numbers();
-
-                            self.sudoku[*row as usize - 1][*col as usize - 1]
-                                .little_numbers
-                                .retain(|x| possible_numbers.contains(&x.0));
-                        }
-                        CnfVariable::Decimal { row, col, value } => {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
-                                true;
-                            self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
-                                false;
-
-                            self.sudoku[*row as usize - 1][*col as usize - 1]
-                                .little_numbers
-                                .push((-1 * *value, true));
-                        }
-                        CnfVariable::Equality {
-                            row,
-                            col,
-                            row2,
-                            col2,
-                            bit_index,
-                            equal,
-                        } => {
-                            self.sudoku[*row as usize - 1][*col as usize - 1].part_of_conflict =
-                                true;
-                            self.sudoku[*row2 as usize - 1][*col2 as usize - 1].part_of_conflict =
-                                true;
-
-                            if self.state.show_trail {
-                                let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
-                                let var = CnfVariable::Equality {
-                                    row: *row,
-                                    col: *col,
-                                    row2: *row2,
-                                    col2: *col2,
-                                    bit_index: *bit_index,
-                                    equal: !equal,
-                                };
-
-                                self.sudoku[*row as usize - 1][*col as usize - 1]
-                                    .eq_symbols
-                                    .push((symbol.clone(), var.clone(), true));
-                                self.sudoku[*row2 as usize - 1][*col2 as usize - 1]
-                                    .eq_symbols
-                                    .push((symbol, var.clone(), true));
-                                self.sudoku[*row as usize - 1][*col as usize - 1].draw_big_number =
-                                    false;
-                                self.sudoku[*row2 as usize - 1][*col2 as usize - 1]
-                                    .draw_big_number = false;
-                            }
-                        }
-                    }
+                    cell.draw_big_number = false;
                 }
-            }
+                CnfVariable::Equality {
+                    row,
+                    col,
+                    row2,
+                    col2,
+                    equal,
+                    ..
+                } => {
+                    let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
 
-            if self.state.show_trail {
-                for row in self.sudoku.iter_mut() {
-                    for cell in row.iter_mut() {
-                        if self.state.get_encoding_type() == "Binary"
-                            && cell.little_numbers.len() == 9
+                    let cell1_value = self.sudoku[row as usize - 1][col as usize - 1]
+                        .value
+                        .unwrap_or(0);
+                    let cell2_value = self.sudoku[row2 as usize - 1][col2 as usize - 1]
+                        .value
+                        .unwrap_or(0);
+
+                    let (vec1, vec2) = variable.get_possible_groups();
+                    let mut underline = false;
+
+                    if equal {
+                        if (vec1.contains(&cell1_value) && vec1.contains(&cell2_value))
+                            || (vec2.contains(&cell1_value) && vec2.contains(&cell2_value))
                         {
-                            // Handle cleanup for binary encoding
-                            cell.little_numbers.clear();
+                            underline = true;
                         }
+                    } else if (vec1.contains(&cell1_value) && vec2.contains(&cell2_value))
+                        || (vec2.contains(&cell1_value) && vec1.contains(&cell2_value))
+                    {
+                        underline = true;
                     }
-                }
-            }
 
-            // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
-            if let Some(conflict_index) = self.state.clicked_conflict_index {
-                let variables = if self.state.show_trail {
-                    self.state.trail.clone().unwrap()
-                } else {
-                    self.constraints.borrow()[conflict_index]
-                        .clone()
-                        .iter()
-                        .map(|x| CnfVariable::from_cnf(*x, &self.state.encoding))
-                        .collect()
-                };
+                    let cell1 = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    cell1.draw_big_number = false;
+                    cell1
+                        .eq_symbols
+                        .push((symbol.clone(), variable.clone(), underline));
 
-                // Used to get the intersection of "get_possible_numbers" for binary variables
-                // Cleanup happens after the main "for variable" loop
-                if self.state.show_trail && self.state.get_encoding_type() == "Binary" {
-                    for row in self.sudoku.iter_mut() {
-                        for cell in row.iter_mut() {
-                            cell.little_numbers.extend(vec![
-                                (1, false),
-                                (2, false),
-                                (3, false),
-                                (4, false),
-                                (5, false),
-                                (6, false),
-                                (7, false),
-                                (8, false),
-                                (9, false),
-                            ]);
-                        }
-                    }
-                }
-
-                for variable in variables {
-                    match variable {
-                        CnfVariable::Bit { row, col, .. } => {
-                            if self.state.show_trail {
-                                self.sudoku[row as usize - 1][col as usize - 1]
-                                    .little_numbers
-                                    .retain(|x| variable.get_possible_numbers().contains(&x.0));
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
-                                    false;
-                            } else {
-                                let values = variable
-                                    .get_possible_numbers()
-                                    .into_iter()
-                                    .map(|x| (x, false));
-
-                                self.sudoku[row as usize - 1][col as usize - 1]
-                                    .little_numbers
-                                    .extend(values);
-
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
-                                    false;
-                            }
-                        }
-                        CnfVariable::Decimal { row, col, value } => {
-                            if !self.sudoku[row as usize - 1][col as usize - 1]
-                                .little_numbers
-                                .contains(&(value, true))
-                            {
-                                self.sudoku[row as usize - 1][col as usize - 1]
-                                    .little_numbers
-                                    .push((value, false));
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
-                                    false;
-                            }
-                        }
-                        CnfVariable::Equality {
-                            row,
-                            col,
-                            row2,
-                            col2,
-                            ..
-                        } => {
-                            if !self.state.show_trail {
-                                let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
-
-                                self.sudoku[row as usize - 1][col as usize - 1]
-                                    .eq_symbols
-                                    .push((symbol.clone(), variable.clone(), false));
-                                self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                                    .eq_symbols
-                                    .push((symbol, variable, false));
-                                self.sudoku[row as usize - 1][col as usize - 1].draw_big_number =
-                                    false;
-                                self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number =
-                                    false;
-                            }
-                        }
-                    }
-                }
-
-                if self.state.show_trail {
-                    for row in self.sudoku.iter_mut() {
-                        for cell in row.iter_mut() {
-                            // Remove red little literals/numbers (negatives) from trail when Decimal encoding, if there is at least one blue literal/number (positive)
-                            if self.state.get_encoding_type() == "Decimal" {
-                                let mut visible: Vec<(i32, bool)> = cell.little_numbers.clone();
-                                visible.retain(|&x| x.0 > 0 || x.1);
-
-                                if !visible.is_empty() {
-                                    cell.little_numbers = visible;
-                                }
-                            } else if cell.little_numbers.len() == 9 {
-                                // Handle cleanup for binary encoding
-                                cell.little_numbers.clear();
-                            }
-                        }
-                    }
+                    let cell2 = &mut self.sudoku[row2 as usize - 1][col2 as usize - 1];
+                    cell2.draw_big_number = false;
+                    cell2.eq_symbols.push((symbol, variable, underline));
                 }
             }
         }
     }
 
-    /// Update little symbols from a selected constraint in SudokuCells
-    fn update_selected_constraint(&mut self) {
-        // Only do this if a constraint is not currently selected. That case is handled in update_conflict_info
-        if self.state.clicked_conflict_index.is_none() {
-            let mut variables = Vec::new();
+    /// Update conflict booleans and little symbols related to trails in SudokuCells
+    fn update_trail_info(&mut self) {
+        // Only do this if we are visualizing a trail (and not a constraint). That case is handled in update_selected_constraint
+        if !self.state.show_trail {
+            return;
+        }
+        // Done in an if-else (instead of handling both cases in the matches), because having the decimal and binary code mixed got way too complex
+        if self.state.get_encoding_type() == "Decimal" {
+            // Find and mark cells affected by the conflict literals
+            if let Some(conflicts) = &self.state.conflict_literals {
+                for conflict in conflicts {
+                    if let CnfVariable::Decimal { row, col, value } = conflict {
+                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        cell.part_of_conflict = true;
+                        cell.draw_big_number = false;
 
-            // Visualize the clicked constraint, if there is one
-            // Otherwise show literals learned so far as little numbers, if we are not showing the solved sudoku
-            if let Some(constraint_index) = self.state.clicked_constraint_index {
-                variables = self.rendered_constraints[constraint_index].clone();
-            } else if !self.state.show_solved_sudoku {
-                variables = self.state.little_number_constraints.clone();
+                        // Add the negations of conflict literals as underlined little numbers (so the user knows what the conflict was)
+                        cell.little_numbers.push((-1 * *value, true));
+                    }
+                }
             }
 
-            let mut eq_symbols = (b'A'..=b'Z')
-                .chain(b'a'..=b'z')
-                .map(|c| String::from_utf8(vec![c]).unwrap())
-                .collect::<Vec<String>>()
-                .into_iter();
+            // Visualize the trail for the clicked constraint (if there is one)
+            if let Some(_conflict_index) = self.state.clicked_constraint_index {
+                let variables = self.state.trail.clone().unwrap();
 
-            for variable in variables {
-                match variable {
-                    CnfVariable::Bit { row, col, .. } => {
+                for variable in variables {
+                    if let CnfVariable::Decimal { row, col, value } = variable {
                         let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
-                        let values = variable
-                            .get_possible_numbers()
-                            .into_iter()
-                            .map(|x| (x, { x == cell.value.unwrap_or(0) }));
 
-                        cell.little_numbers.extend(values);
-
-                        cell.draw_big_number = false;
+                        if !cell.little_numbers.contains(&(value, true)) {
+                            cell.draw_big_number = false;
+                            cell.little_numbers.push((value, false));
+                        }
                     }
-                    CnfVariable::Decimal { row, col, value } => {
-                        let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
-                        cell.little_numbers.push((value, {
-                            value == cell.value.unwrap_or(0)
-                                || (value < 0 && value != -cell.value.unwrap_or(0))
-                        }));
+                }
 
+                // Remove red little literals/numbers (negatives) from cell, if there is at least one blue literal/number (positive) in it
+                for row in self.sudoku.iter_mut() {
+                    for cell in row.iter_mut() {
+                        let mut visible: Vec<(i32, bool)> = cell.little_numbers.clone();
+
+                        // Keep the positive values and underlined negative values (from conflict literals)
+                        visible.retain(|&x| x.0 > 0 || x.1);
+
+                        if !visible.is_empty() {
+                            cell.little_numbers = visible;
+                        }
+                    }
+                }
+            }
+        } else {
+            // Binary handled in two separate functions, as the code is more complex than the decimal case
+            self.update_binary_conflict_literals();
+            self.update_binary_trail();
+        }
+    }
+
+    /// Update conflict literal related info for binary encoded CNF
+    fn update_binary_conflict_literals(&mut self) {
+        // Interator that we can pull new letters from in order
+        let mut eq_symbols = (b'A'..=b'Z')
+            .chain(b'a'..=b'z')
+            .map(|c| String::from_utf8(vec![c]).unwrap())
+            .collect::<Vec<String>>()
+            .into_iter();
+
+        // Fill all cells with all numbers as underlined (part of conflict)
+        // We then remove the values that are not compatible with each literal
+        // We are left with only the values compatible with every literal in the cell
+        // Cells that don't have a literal that applies to them will get cleaned up afterwards
+        for row in self.sudoku.iter_mut() {
+            for cell in row.iter_mut() {
+                cell.little_numbers = vec![
+                    (1, true),
+                    (2, true),
+                    (3, true),
+                    (4, true),
+                    (5, true),
+                    (6, true),
+                    (7, true),
+                    (8, true),
+                    (9, true),
+                ];
+            }
+        }
+
+        // Find and mark cells affected by the conflict literals
+        if let Some(conflicts) = &self.state.conflict_literals {
+            for conflict in conflicts {
+                match conflict {
+                    CnfVariable::Bit {
+                        row,
+                        col,
+                        bit_index,
+                        value,
+                    } => {
+                        // Get the possible values of the negation of the conflict literal
+                        // This is equivalent to adding the negations of conflict literals
+                        // as underlined little numbers in the decimal case
+                        let possible_numbers = CnfVariable::Bit {
+                            row: *row,
+                            col: *col,
+                            bit_index: *bit_index,
+                            value: !value,
+                        }
+                        .get_possible_numbers();
+
+                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        cell.part_of_conflict = true;
                         cell.draw_big_number = false;
+
+                        // Only keep the numbers compatible with the negation of the conflict literal
+                        cell.little_numbers
+                            .retain(|x| possible_numbers.contains(&x.0));
                     }
                     CnfVariable::Equality {
                         row,
                         col,
                         row2,
                         col2,
+                        bit_index,
                         equal,
-                        ..
                     } => {
+                        // EQ vars don't contribute to the little numbers, but are their on symbols
                         let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+                        let var = CnfVariable::Equality {
+                            row: *row,
+                            col: *col,
+                            row2: *row2,
+                            col2: *col2,
+                            bit_index: *bit_index,
+                            equal: !equal,
+                        };
 
-                        let cell1_value = self.sudoku[row as usize - 1][col as usize - 1]
-                            .value
-                            .unwrap_or(0);
-                        let cell2_value = self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                            .value
-                            .unwrap_or(0);
+                        let cell1 = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        cell1.part_of_conflict = true;
+                        cell1.draw_big_number = false;
+                        cell1.eq_symbols.push((symbol.clone(), var.clone(), true));
 
-                        let (vec1, vec2) = variable.get_possible_groups();
-                        let mut underline = false;
-                        #[allow(clippy::collapsible_else_if)]
-                        if equal {
-                            if vec1.contains(&cell1_value) && vec1.contains(&cell2_value)
-                                || vec2.contains(&cell1_value) && vec2.contains(&cell2_value)
-                            {
-                                underline = true;
-                            }
-                        } else {
-                            if vec1.contains(&cell1_value) && vec2.contains(&cell2_value)
-                                || vec2.contains(&cell1_value) && vec1.contains(&cell2_value)
-                            {
-                                underline = true;
-                            }
-                        }
-                        self.sudoku[row as usize - 1][col as usize - 1]
-                            .eq_symbols
-                            .push((symbol.clone(), variable.clone(), underline));
-                        self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                            .eq_symbols
-                            .push((symbol, variable, underline));
-                        self.sudoku[row as usize - 1][col as usize - 1].draw_big_number = false;
-                        self.sudoku[row2 as usize - 1][col2 as usize - 1].draw_big_number = false;
+                        let cell2 = &mut self.sudoku[*row2 as usize - 1][*col2 as usize - 1];
+                        cell2.part_of_conflict = true;
+                        cell2.draw_big_number = false;
+                        cell2.eq_symbols.push((symbol, var.clone(), true));
+                    }
+                    _ => (),
+                }
+            }
+        }
+
+        // Cells that don't have a literal that applies to them get emptied of unnecessary little numbers added at the start
+        for row in self.sudoku.iter_mut() {
+            for cell in row.iter_mut() {
+                if cell.little_numbers.len() == 9 {
+                    cell.little_numbers.clear();
+                }
+            }
+        }
+    }
+
+    /// Update trail related info for binary encoded CNF (should be called after update_binary_conflict_literals)
+    fn update_binary_trail(&mut self) {
+        // Visualize the clicked conflict (if there is one) in one of two ways (trail or the learned constraint)
+        if let Some(_conflict_index) = self.state.clicked_constraint_index {
+            let variables = self.state.trail.clone().unwrap();
+
+            // Fill all cells with all numbers as not underlined (part of trail, but not conflict)
+            // We then remove the values that are not compatible with each variable of the trail
+            // We are left with only the values compatible with every variable
+            // Cells are not part of the trail will get cleaned up afterwards
+            for row in self.sudoku.iter_mut() {
+                for cell in row.iter_mut() {
+                    cell.little_numbers.extend(vec![
+                        (1, false),
+                        (2, false),
+                        (3, false),
+                        (4, false),
+                        (5, false),
+                        (6, false),
+                        (7, false),
+                        (8, false),
+                        (9, false),
+                    ]);
+                }
+            }
+
+            for variable in variables {
+                if let CnfVariable::Bit { row, col, .. } = variable {
+                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    cell.draw_big_number = false;
+
+                    // Only keep the numbers compatible with this variable (that is part of the trail)
+                    cell.little_numbers
+                        .retain(|x| variable.get_possible_numbers().contains(&x.0));
+                }
+            }
+
+            // Cells that are not part of the trail get emptied of unnecessary little numbers added at the start
+            for row in self.sudoku.iter_mut() {
+                for cell in row.iter_mut() {
+                    if cell.little_numbers.len() == 9 {
+                        cell.little_numbers.clear();
                     }
                 }
             }
