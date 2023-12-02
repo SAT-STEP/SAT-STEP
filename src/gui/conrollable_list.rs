@@ -2,7 +2,8 @@
 
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Stroke,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, Stroke, TextStyle,
+    Ui, Vec2,
 };
 use std::ops::Add;
 
@@ -230,7 +231,7 @@ impl SATApp {
         let mut underline = Stroke::NONE;
         let underline_multiplier = 0.1;
         //0.25 fixes float division error from float to pixels
-        let line_height = Some(small_font.size+(large_font.size-small_font.size)/2.0+0.25);
+        let line_height = Some(small_font.size + (large_font.size - small_font.size) / 2.0 + 0.25);
 
         match variable {
             CnfVariable::Decimal { row, col, value } => {
@@ -240,9 +241,17 @@ impl SATApp {
                     ("~", Color32::RED)
                 };
 
-                if *value == ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0) ||
-                    (*value < 0 && *value != -ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0)) {
-                    underline = Stroke::new(small_font.size*underline_multiplier,color);
+                if *value
+                    == ready_sudoku[*row as usize - 1][*col as usize - 1]
+                        .value
+                        .unwrap_or(0)
+                    || (*value < 0
+                        && *value
+                            != -ready_sudoku[*row as usize - 1][*col as usize - 1]
+                                .value
+                                .unwrap_or(0))
+                {
+                    underline = Stroke::new(small_font.size * underline_multiplier, color);
                 }
 
                 text_job.append(
@@ -261,7 +270,7 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
-                        line_height, 
+                        line_height,
                         underline,
                         ..Default::default()
                     },
@@ -279,9 +288,13 @@ impl SATApp {
                     ("~B", Color32::RED)
                 };
 
-                if variable.get_possible_numbers().contains(&ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0)) {
-                    underline = Stroke::new(small_font.size*underline_multiplier,color);
-                } 
+                if variable.get_possible_numbers().contains(
+                    &ready_sudoku[*row as usize - 1][*col as usize - 1]
+                        .value
+                        .unwrap_or(0),
+                ) {
+                    underline = Stroke::new(small_font.size * underline_multiplier, color);
+                }
 
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
@@ -299,7 +312,7 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
-                        line_height, 
+                        line_height,
                         underline,
                         ..Default::default()
                     },
@@ -333,13 +346,13 @@ impl SATApp {
                     if vec1.contains(&cell1_value) && vec1.contains(&cell2_value)
                         || vec2.contains(&cell1_value) && vec2.contains(&cell2_value)
                     {
-                        underline = Stroke::new(small_font.size*underline_multiplier,color);
+                        underline = Stroke::new(small_font.size * underline_multiplier, color);
                     }
                 } else {
                     if vec1.contains(&cell1_value) && vec2.contains(&cell2_value)
                         || vec2.contains(&cell1_value) && vec1.contains(&cell2_value)
                     {
-                        underline = Stroke::new(small_font.size*underline_multiplier,color);
+                        underline = Stroke::new(small_font.size * underline_multiplier, color);
                     }
                 }
 
