@@ -4,8 +4,8 @@ use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
     parse_numeric_input,
-    warning::Warning,
     statistics::Statistics,
+    warning::Warning,
     CadicalCallbackWrapper, ConstraintList, Solver, Trail,
 };
 

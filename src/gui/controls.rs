@@ -9,11 +9,12 @@ use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
     cnf::cnf_encoding_rules_ok,
+    statistics::Statistics,
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
     sudoku::{get_empty_sudoku, solve_sudoku},
-    Trail, statistics::Statistics,
+    Trail,
 };
 
 impl SATApp {
@@ -113,9 +114,6 @@ impl SATApp {
                     &mut self.solver,
                     &self.state.encoding,
                 );
-
-                let stats = self.solver.stats();
-                println!("{:?}", stats);
 
                 match solve_result {
                     Ok(solved) => {
@@ -272,10 +270,8 @@ impl SATApp {
                 egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
             });
 
-
             let how_on = ui.ctx().animate_bool(response.id, self.state.show_trail);
             let visuals = ui.style().interact_selectable(&response, true);
-            let rect = rect.expand(visuals.expansion);
             let radius = 0.5 * rect.height();
             ui.painter()
                 .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
@@ -295,15 +291,15 @@ impl SATApp {
         ui.horizontal(|ui| {
             if ui
                 .button(RichText::new("Statistics").size(text_scale))
-                    .clicked()
-                    {
-                        self.state.show_statistics = true;
-                    }
+                .clicked()
+            {
+                self.state.show_statistics = true;
+            }
 
-            if ui
-                .button(RichText::new("Process with all configurations").size(text_scale))
-                    .clicked()
-                    {}
+            // if ui
+            //     .button(RichText::new("Process with all configurations").size(text_scale))
+            //         .clicked()
+            //         {}
         });
 
         if self.state.show_statistics {
@@ -332,9 +328,7 @@ impl SATApp {
                                                 .collect();
                                             let st = std::str::from_utf8(&st).unwrap();
 
-                                            ui.label(
-                                                RichText::new(format!("{st}")).size(text_scale / 1.5),
-                                            );
+                                            ui.label(RichText::new(st).size(text_scale / 1.5));
                                         }
 
                                         ui.label(

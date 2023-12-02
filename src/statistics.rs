@@ -15,9 +15,12 @@ pub struct Statistics {
     pub sudoku: Vec<Vec<Option<i32>>>,
 }
 
-
 impl Statistics {
-    pub fn from_cadical_stats(stats: CadicalStats, encoding: EncodingType, sudoku: Vec<Vec<Option<i32>>>) -> Self {
+    pub fn from_cadical_stats(
+        stats: CadicalStats,
+        encoding: EncodingType,
+        sudoku: Vec<Vec<Option<i32>>>,
+    ) -> Self {
         Self {
             process_time: stats.process_time,
             real_time: stats.real_time,

@@ -64,11 +64,7 @@ impl SATApp {
         sudoku
     }
 
-    pub fn sudoku_from_option_values(
-        &mut self,
-        sudoku: &Vec<Vec<Option<i32>>>,
-        add_new_clues: bool,
-    ) {
+    pub fn sudoku_from_option_values(&mut self, sudoku: &[Vec<Option<i32>>], add_new_clues: bool) {
         for (row_index, row) in sudoku.iter().enumerate() {
             for (col_index, value) in row.iter().enumerate() {
                 self.set_cell(

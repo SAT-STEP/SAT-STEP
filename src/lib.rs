@@ -5,8 +5,8 @@ mod ctrl_obj;
 mod error;
 mod filtering;
 pub mod gui;
-mod sudoku;
 mod statistics;
+mod sudoku;
 mod warning;
 
 #[cfg(test)]
