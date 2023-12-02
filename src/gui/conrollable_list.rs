@@ -1,3 +1,5 @@
+//! GUI for listing 'controllable objects' (constraints, conflicts)
+
 use egui::{
     text::{LayoutJob, TextFormat},
     Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
@@ -5,7 +7,7 @@ use egui::{
 use std::ops::Add;
 
 use crate::cnf::CnfVariable;
-use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
+use crate::ctrl_obj::{ConstraintList, ControllableObj};
 
 use super::SATApp;
 
@@ -87,31 +89,23 @@ impl SATApp {
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                    let clauses_binding = self.rendered_constraints.clone();
-
-                    let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
-                        clauses: clauses_binding,
+                    let clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
+                        clauses: self.rendered_constraints.clone(),
+                        trail: self.rendered_trails.clone(),
                         combiner: "v".to_string(),
                     });
-                    if self.state.show_trail_view {
-                        clauses = Box::new(ConflictList {
-                            clauses: self.trail.as_cnf(&self.state.encoding),
-                            combiner: "^".to_string(),
-                            trail: self.trail.clone(),
-                        });
-                    }
                     let binding = clauses.clauses(&self.state);
                     let mut clause_iter = binding.iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
                         if let Some(clause) = clause_iter.next() {
-                            // Construct a se LayoutJob for the whole constraint
+                            // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();
                             let mut identifiers = clause.iter().peekable();
 
-                            // Large while block just constructs the LayoutJob
+                            // While block constructs the LayoutJob piece by piece
                             while let Some(cnf_var) = identifiers.next() {
                                 Self::append_var_to_layout_job(
                                     cnf_var,
@@ -152,9 +146,11 @@ impl SATApp {
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
                                 clauses.clicked(&mut self.state, i);
-                                self.rendered_constraints = self.state.get_filtered();
+                                (self.rendered_constraints, self.rendered_trails) =
+                                    self.state.get_filtered();
                             }
 
+                            // Highlight the selected element
                             if let Some(clicked_index) = clauses.get_clicked(&self.state) {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
@@ -213,7 +209,7 @@ impl SATApp {
         })
     }
 
-    /// Draw human readable version of cnf variables according to variable type
+    /// Append human readable version of a CNF variable to a LayoutJob, based on variable type
     pub fn append_var_to_layout_job(
         variable: &CnfVariable,
         text_job: &mut LayoutJob,

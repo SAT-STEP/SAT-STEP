@@ -1,3 +1,5 @@
+//! Functions focused on the Sudoku puzzle itself
+
 use crate::{app_state::EncodingType, CadicalCallbackWrapper, GenericError, Solver};
 use std::{fs, path::Path};
 
@@ -27,6 +29,7 @@ pub fn solve_sudoku(
     Err(String::from("Solving sudoku failed!"))
 }
 
+/// Read sudoku from file
 pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
     let sudoku_result = fs::read_to_string(filename);
     match sudoku_result {
@@ -37,6 +40,7 @@ pub fn get_sudoku(filename: String) -> Result<Vec<Vec<Option<i32>>>, GenericErro
     }
 }
 
+/// Write sudoku to file
 pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
     let save_result = fs::write(path.display().to_string(), sudoku);
     match save_result {
@@ -47,11 +51,26 @@ pub fn write_sudoku(sudoku: String, path: &Path) -> Result<(), GenericError> {
     }
 }
 
+pub fn get_empty_sudoku() -> Result<Vec<Vec<Option<i32>>>, GenericError> {
+    let empty = ".........
+        .........
+        .........
+        .........
+        .........
+        .........
+        .........
+        .........
+        ........."
+        .to_string();
+
+    clues_from_string(empty, ".")
+}
+
+/// Returns a 2D Vec from string to represent clues found in sudoku
 pub fn clues_from_string(
     buf: String,
     empty_value: &str,
 ) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
-    // Creates 2d Vec from string to represent clues found in sudoku
     let mut clues: Vec<Vec<Option<i32>>> = Vec::with_capacity(9);
     if buf.lines().collect::<Vec<&str>>().len() < 9 {
         return Err(GenericError {
@@ -79,6 +98,7 @@ pub fn clues_from_string(
     Ok(clues)
 }
 
+/// Returns a properly formatted string representation of the gived sudoku grid
 pub fn string_from_grid(grid: Vec<Vec<Option<i32>>>) -> String {
     let mut return_string = String::new();
     for row in grid.iter().take(9) {
@@ -536,5 +556,15 @@ mod tests {
         };
         let solved = solve_sudoku(&sudoku, &mut solver, &encoding);
         assert!(solved.is_err());
+    }
+
+    #[test]
+    fn test_get_empty_sudoku() {
+        let sudoku = get_empty_sudoku();
+        assert_eq!(sudoku.is_ok(), true);
+        if let Ok(sudoku) = sudoku {
+            assert_eq!(sudoku[0][0], None);
+            assert_eq!(sudoku[8][8], None);
+        }
     }
 }
