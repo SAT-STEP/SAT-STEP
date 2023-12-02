@@ -2,12 +2,13 @@
 
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2, Stroke, Align,
 };
 use std::ops::Add;
 
 use crate::cnf::CnfVariable;
 use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
+use crate::gui::SudokuCell;
 
 use super::SATApp;
 
@@ -116,6 +117,7 @@ impl SATApp {
                             // While block constructs the LayoutJob piece by piece
                             while let Some(cnf_var) = identifiers.next() {
                                 Self::append_var_to_layout_job(
+                                    self.sudoku.clone(),
                                     cnf_var,
                                     &mut text_job,
                                     &large_font,
@@ -218,12 +220,14 @@ impl SATApp {
 
     /// Append human readable version of a CNF variable to a LayoutJob, based on variable type
     pub fn append_var_to_layout_job(
+        ready_sudoku: Vec<Vec<SudokuCell>>,
         variable: &CnfVariable,
         text_job: &mut LayoutJob,
         large_font: &FontId,
         small_font: &FontId,
         text_color: Color32,
     ) {
+        let mut underline = Stroke::NONE;
         match variable {
             CnfVariable::Decimal { row, col, value } => {
                 let (lead_char, color) = if *value > 0 {
@@ -232,12 +236,17 @@ impl SATApp {
                     ("~", Color32::RED)
                 };
 
+                if *value == ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0) {
+                    underline = Stroke::new(1.0,Color32::GREEN);
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, value.abs()),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -247,7 +256,10 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height: Some(small_font.size+(large_font.size-small_font.size)/2.0+0.25), 
+                        underline,
                         ..Default::default()
+                        //0.25 fixes float division error from float to pixels
                     },
                 );
             }
