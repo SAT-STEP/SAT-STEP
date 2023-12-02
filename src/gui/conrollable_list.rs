@@ -229,6 +229,8 @@ impl SATApp {
     ) {
         let mut underline = Stroke::NONE;
         let underline_multiplier = 0.1;
+        //0.25 fixes float division error from float to pixels
+        let line_height = Some(small_font.size+(large_font.size-small_font.size)/2.0+0.25);
 
         match variable {
             CnfVariable::Decimal { row, col, value } => {
@@ -259,10 +261,9 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
-                        line_height: Some(small_font.size+(large_font.size-small_font.size)/2.0+0.25), 
+                        line_height, 
                         underline,
                         ..Default::default()
-                        //0.25 fixes float division error from float to pixels
                     },
                 );
             }
@@ -278,12 +279,17 @@ impl SATApp {
                     ("~B", Color32::RED)
                 };
 
+                if variable.get_possible_numbers().contains(&ready_sudoku[*row as usize - 1][*col as usize - 1].value.unwrap_or(0)) {
+                    underline = Stroke::new(small_font.size*underline_multiplier,color);
+                } 
+
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -293,6 +299,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height, 
+                        underline,
                         ..Default::default()
                     },
                 );
