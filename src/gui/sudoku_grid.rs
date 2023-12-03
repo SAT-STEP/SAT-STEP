@@ -192,12 +192,13 @@ impl SATApp {
         for variable in variables {
             match variable {
                 CnfVariable::Bit { row, col, .. } => {
+                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+
                     let values = variable
                         .get_possible_numbers()
                         .into_iter()
-                        .map(|x| (x, false));
+                        .map(|x| (x, { x == cell.value.unwrap_or(0) }));
 
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
                     cell.draw_big_number = false;
 
                     // Add the possible values as little numbers, as any of them would satisfy the constraint
@@ -205,27 +206,55 @@ impl SATApp {
                 }
                 CnfVariable::Decimal { row, col, value } => {
                     let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+
+                    cell.little_numbers.push((value, {
+                        value == cell.value.unwrap_or(0)
+                            || (value < 0 && value != -cell.value.unwrap_or(0))
+                    }));
+
                     cell.draw_big_number = false;
-                    cell.little_numbers.push((value, false));
                 }
                 CnfVariable::Equality {
                     row,
                     col,
                     row2,
                     col2,
+                    equal,
                     ..
                 } => {
                     let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
+
+                    let cell1_value = self.sudoku[row as usize - 1][col as usize - 1]
+                        .value
+                        .unwrap_or(0);
+                    let cell2_value = self.sudoku[row2 as usize - 1][col2 as usize - 1]
+                        .value
+                        .unwrap_or(0);
+
+                    let (vec1, vec2) = variable.get_possible_groups();
+                    let mut underline = false;
+
+                    if equal {
+                        if (vec1.contains(&cell1_value) && vec1.contains(&cell2_value))
+                            || (vec2.contains(&cell1_value) && vec2.contains(&cell2_value))
+                        {
+                            underline = true;
+                        }
+                    } else if (vec1.contains(&cell1_value) && vec2.contains(&cell2_value))
+                        || (vec2.contains(&cell1_value) && vec1.contains(&cell2_value))
+                    {
+                        underline = true;
+                    }
 
                     let cell1 = &mut self.sudoku[row as usize - 1][col as usize - 1];
                     cell1.draw_big_number = false;
                     cell1
                         .eq_symbols
-                        .push((symbol.clone(), variable.clone(), false));
+                        .push((symbol.clone(), variable.clone(), underline));
 
                     let cell2 = &mut self.sudoku[row2 as usize - 1][col2 as usize - 1];
                     cell2.draw_big_number = false;
-                    cell2.eq_symbols.push((symbol, variable, false));
+                    cell2.eq_symbols.push((symbol, variable, underline));
                 }
             }
         }
