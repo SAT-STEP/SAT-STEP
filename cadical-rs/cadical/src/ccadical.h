@@ -31,7 +31,7 @@ void ccadical_set_learn (CCaDiCaL *,
 
 // PAAVO:
 void ccadical_set_learn_trail (CCaDiCaL *,
-  void * state, void (*trail)(void * state, int * conflict_literals, unsigned long size, int * trail));
+  void * state, void (*trail)(void * state, unsigned long conflict_size, int * conflict_literals, unsigned long size, int * trail));
 /*------------------------------------------------------------------------*/
 
 // Non-IPASIR conformant 'C' functions.

@@ -1,3 +1,5 @@
+//! High-level GUI code. Most of the actual GUI is done is sub-modules under src/gui/
+
 mod conrollable_list;
 mod controls;
 pub mod sudoku_cell;
@@ -10,20 +12,20 @@ use egui::Color32;
 use egui::Margin;
 use egui::RichText;
 
-use crate::cnf::decimal_encoding::cnf_identifier;
 use crate::{
     app_state::AppState, cadical_wrapper::CadicalCallbackWrapper, cnf::CnfVariable,
-    error::GenericError, gui::sudoku_cell::SudokuCell, ConstraintList, Trail,
+    error::GenericError, gui::sudoku_cell::SudokuCell, warning::Warning, ConstraintList, Trail,
 };
 
 /// Main app struct
 pub struct SATApp {
     sudoku: Vec<Vec<SudokuCell>>,
     constraints: ConstraintList,
-    trail: Trail,
+    trails: Trail,
     callback_wrapper: CadicalCallbackWrapper,
     solver: Solver<CadicalCallbackWrapper>,
     rendered_constraints: Vec<Vec<CnfVariable>>,
+    rendered_trails: Trail,
     state: AppState,
     current_error: Option<GenericError>,
 }
@@ -31,19 +33,20 @@ pub struct SATApp {
 impl SATApp {
     pub fn new(sudoku: Vec<Vec<SudokuCell>>) -> Self {
         let constraints = ConstraintList::new();
-        let trail = Trail::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
+        let trails = Trail::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trails.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let state = AppState::new(constraints.clone());
+        let state = AppState::new(constraints.clone(), trails.clone());
         let current_error = None;
         Self {
             sudoku,
             constraints,
-            trail,
+            trails,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
+            rendered_trails: Trail::new(),
             state,
             current_error,
         }
@@ -85,7 +88,7 @@ impl SATApp {
             if add_new_clue {
                 self.sudoku[row as usize - 1][col as usize - 1].clue = true;
             }
-            if self.solver.fixed(cnf_identifier(row, col, val)) == 1 {
+            if self.state.encoding.fixed(&self.solver, row, col, val) {
                 self.sudoku[row as usize - 1][col as usize - 1].fixed = true;
             }
         } else {
@@ -96,12 +99,12 @@ impl SATApp {
 
     fn reset_cadical_and_solved_sudoku(&mut self) {
         self.constraints.clear();
-        self.trail.clear();
+        self.trails.clear();
         self.rendered_constraints.clear();
         self.state.reinit();
         self.solver = Solver::with_config("plain").unwrap();
         self.callback_wrapper =
-            CadicalCallbackWrapper::new(self.constraints.clone(), self.trail.clone());
+            CadicalCallbackWrapper::new(self.constraints.clone(), self.trails.clone());
         self.solver
             .set_callbacks(Some(self.callback_wrapper.clone()));
 
@@ -121,19 +124,20 @@ impl SATApp {
 impl Default for SATApp {
     fn default() -> Self {
         let constraints = ConstraintList::new();
-        let trail = Trail::new();
-        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trail.clone());
+        let trails = Trail::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), trails.clone());
         let mut solver = cadical::Solver::with_config("plain").unwrap();
         solver.set_callbacks(Some(callback_wrapper.clone()));
-        let state = AppState::new(constraints.clone());
+        let state = AppState::new(constraints.clone(), trails.clone());
         let current_error = None;
         Self {
             sudoku: Vec::new(),
             constraints,
-            trail,
+            trails,
             callback_wrapper,
             solver,
             rendered_constraints: Vec::new(),
+            rendered_trails: Trail::new(),
             state,
             current_error,
         }
@@ -143,10 +147,19 @@ impl Default for SATApp {
 /// Trait used for running the app
 impl eframe::App for SATApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui_extras::install_image_loaders(ctx);
         egui::CentralPanel::default().show(ctx, |ui| {
             // per column
             let height = ui.available_height();
             let width = ui.available_width() / 2.0;
+
+            self.state.show_warning = Warning::new();
+
+            // If the solver's status is false, the solving has failed
+            // unwrap's default is true, because if the solver has no status, we don't want to show a warning
+            if !self.solver.status().unwrap_or(true) {
+                self.state.show_warning.set(Some("Solving failed. This may be because the sudoku is unsolveable, or because of an error.".to_string()), 1);
+            }
 
             let mut error_open = true;
             if let Some(e) = &self.current_error {

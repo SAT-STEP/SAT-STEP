@@ -1,3 +1,6 @@
+//! Code that the rest of the app can use for dealing with CNF variables.
+//! Using code from sub-modules directly should not be needed
+
 pub mod binary_encoding;
 pub mod decimal_encoding;
 
@@ -5,7 +8,7 @@ use std::collections::HashSet;
 
 use crate::app_state::EncodingType;
 
-/// Enum that (hopefully) fixes everything
+/// Enum that enables the app to handle different types of CNF variables
 #[derive(Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum CnfVariable {
     Decimal {
@@ -62,6 +65,7 @@ impl CnfVariable {
         }
     }
 
+    /// Gets the CNF identifier of a variable
     pub fn to_cnf(&self) -> i32 {
         match self {
             Self::Decimal { row, col, value } => {
@@ -116,11 +120,57 @@ impl CnfVariable {
             }
         }
     }
+
+    /// Get the two sets of values, by making use of the 'get_possible_numbers' method of CNF variables
+    pub fn get_possible_groups(&self) -> (Vec<i32>, Vec<i32>) {
+        match self {
+            Self::Equality { bit_index, .. } => {
+                let mut vec1: Vec<i32> = CnfVariable::Bit {
+                    row: 0,
+                    col: 0,
+                    bit_index: *bit_index,
+                    value: true,
+                }
+                .get_possible_numbers()
+                .into_iter()
+                .collect();
+
+                vec1.sort();
+
+                let mut vec2: Vec<i32> = CnfVariable::Bit {
+                    row: 0,
+                    col: 0,
+                    bit_index: *bit_index,
+                    value: false,
+                }
+                .get_possible_numbers()
+                .into_iter()
+                .collect();
+
+                vec2.sort();
+                (vec1, vec2)
+            }
+            Self::Decimal { .. } => (Vec::new(), Vec::new()),
+            Self::Bit { .. } => (Vec::new(), Vec::new()),
+        }
+    }
+}
+
+/// Check if the encoding rules are enough for Cadial to properly solve a sudoku
+pub fn cnf_encoding_rules_ok(
+    cell_at_least_one: bool,
+    cell_at_most_one: bool,
+    sudoku_has_all_values: bool,
+    sudoku_has_unique_values: bool,
+) -> bool {
+    (cell_at_least_one && sudoku_has_unique_values) || (cell_at_most_one && sudoku_has_all_values)
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
+    use crate::cnf::binary_encoding::eq_cnf_identifier;
 
     #[test]
     fn test_to_cnf_and_back_bit() {
@@ -242,5 +292,90 @@ mod tests {
             variable2.get_possible_numbers(),
             HashSet::from([1, 2, 5, 6, 9])
         );
+    }
+    #[test]
+    fn test_encoding_rules_shouldbe_ok() {
+        // Doesn't encompass all cases
+        let cell_at_least_one = true;
+        let cell_at_most_one = false;
+        let sudoku_has_all_values = false;
+        let sudoku_has_unique_values = true;
+
+        assert!(cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+
+        let cell_at_least_one = false;
+        let cell_at_most_one = true;
+        let sudoku_has_all_values = true;
+        let sudoku_has_unique_values = false;
+
+        assert!(cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+    }
+
+    #[test]
+    fn test_encoding_rules_shouldbe_not_ok() {
+        // Doesn't encompass all cases
+        let cell_at_least_one = true;
+        let cell_at_most_one = true;
+        let sudoku_has_all_values = false;
+        let sudoku_has_unique_values = false;
+
+        assert!(!cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+
+        let cell_at_least_one = true;
+        let cell_at_most_one = false;
+        let sudoku_has_all_values = false;
+        let sudoku_has_unique_values = false;
+
+        assert!(!cnf_encoding_rules_ok(
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values
+        ));
+    }
+    #[test]
+    fn test_get_possible_groups() {
+        let test_var1 =
+            CnfVariable::from_cnf(eq_cnf_identifier(4, 6, 7, 3, 0), &EncodingType::Binary);
+        let (vec3, vec4) = test_var1.get_possible_groups();
+
+        assert_eq!(vec![2, 4, 6, 8], vec3);
+        assert_eq!(vec![1, 3, 5, 7, 9], vec4);
+
+        let test_var2 =
+            CnfVariable::from_cnf(eq_cnf_identifier(5, 2, 9, 8, 1), &EncodingType::Binary);
+        let (vec5, vec6) = test_var2.get_possible_groups();
+
+        assert_eq!(vec![3, 4, 7, 8], vec5);
+        assert_eq!(vec![1, 2, 5, 6, 9], vec6);
+
+        let test_var3 =
+            CnfVariable::from_cnf(eq_cnf_identifier(3, 5, 1, 9, 2), &EncodingType::Binary);
+        let (vec7, vec8) = test_var3.get_possible_groups();
+
+        assert_eq!(vec![5, 6, 7, 8], vec7);
+        assert_eq!(vec![1, 2, 3, 4, 9], vec8);
+
+        let test_var4 =
+            CnfVariable::from_cnf(eq_cnf_identifier(1, 1, 2, 2, 3), &EncodingType::Binary);
+        let (vec1, vec2) = test_var4.get_possible_groups();
+
+        assert_eq!(vec![9], vec1);
+        assert_eq!((1..=8).collect::<Vec<i32>>(), vec2);
     }
 }

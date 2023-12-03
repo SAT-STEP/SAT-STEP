@@ -1,3 +1,5 @@
+//! Tests for lib.rs
+
 use super::*;
 
 #[test]
@@ -49,12 +51,12 @@ fn test_constraint_list() {
 
 #[test]
 fn test_trail() {
-    let conflict_literals = vec![(100, 101), (300, 301)];
+    let conflict_literals = vec![vec![100, 101], vec![300, 301]];
     let trail_data = vec![vec![1, 2, 3], vec![4, 5, 6]];
     let mut trail = Trail::new();
 
-    trail.push(conflict_literals[0], trail_data[0].clone());
-    trail.push(conflict_literals[1], trail_data[1].clone());
+    trail.push(conflict_literals[0].clone(), trail_data[0].clone());
+    trail.push(conflict_literals[1].clone(), trail_data[1].clone());
     assert_eq!(trail.len(), 2);
     assert_eq!(trail.trail_at_index(1), vec![4, 5, 6]);
     assert_eq!(trail.is_empty(), false);

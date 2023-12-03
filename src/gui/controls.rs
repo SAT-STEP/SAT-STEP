@@ -1,15 +1,23 @@
+//! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
+
 use cadical::Solver;
-use egui::{FontId, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use super::SATApp;
 
 use crate::{
-    app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, string_from_grid,
-    sudoku::get_sudoku, sudoku::solve_sudoku, sudoku::write_sudoku, GenericError,
+    app_state::EncodingType,
+    cadical_wrapper::CadicalCallbackWrapper,
+    cnf::cnf_encoding_rules_ok,
+    string_from_grid,
+    sudoku::get_sudoku,
+    sudoku::write_sudoku,
+    sudoku::{get_empty_sudoku, solve_sudoku},
+    Trail,
 };
 
 impl SATApp {
-    /// Controls GUI element
+    /// GUI element for controls
     pub fn controls(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
@@ -17,9 +25,10 @@ impl SATApp {
         egui::Grid::new("controls")
             .num_columns(1)
             .striped(true)
-            .spacing([0.0, text_scale * 0.5])
+            .spacing([text_scale * 2.0, text_scale * 0.5])
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
+                self.warning_triangle(ui, text_scale);
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
@@ -46,13 +55,14 @@ impl SATApp {
             .response
     }
 
+    /// Buttons for the management of the sudoku itself (Open, New, Process, etc.)
     pub fn buttons(
         &mut self,
         ui: &mut Ui,
         text_scale: f32,
         ctx: &egui::Context,
     ) -> egui::InnerResponse<()> {
-        ui.horizontal(|ui| {
+        ui.horizontal_wrapped(|ui| {
             if ui
                 .button(RichText::new("Open - O").size(text_scale))
                 .clicked()
@@ -68,13 +78,14 @@ impl SATApp {
                         Ok(sudoku_vec) => {
                             self.sudoku_from_option_values(sudoku_vec, true);
                             self.constraints.clear();
-                            self.trail.clear();
+                            self.trails.clear();
                             self.rendered_constraints = Vec::new();
+                            self.rendered_trails = Trail::new();
                             self.state.reinit();
                             self.solver = Solver::with_config("plain").unwrap();
                             self.callback_wrapper = CadicalCallbackWrapper::new(
                                 self.constraints.clone(),
-                                self.trail.clone(),
+                                self.trails.clone(),
                             );
                             self.solver
                                 .set_callbacks(Some(self.callback_wrapper.clone()));
@@ -92,11 +103,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::P))
             {
                 self.state.editor_active = false;
-
-                if self.state.encoding_rules_changed {
-                    self.reset_cadical_and_solved_sudoku();
-                    self.state.encoding_rules_changed = !self.state.encoding_rules_changed;
-                }
+                self.reset_cadical_and_solved_sudoku();
 
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
@@ -108,7 +115,8 @@ impl SATApp {
                         self.sudoku_from_option_values(solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
-                        self.rendered_constraints = self.state.get_filtered();
+                        (self.rendered_constraints, self.rendered_trails) =
+                            self.state.get_filtered();
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -122,20 +130,12 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::N))
             {
                 self.state.editor_active = true;
+                self.reset_cadical_and_solved_sudoku();
 
-                self.constraints.clear();
-                self.trail.clear();
-                self.state.reinit();
-                self.rendered_constraints = Vec::new();
-
-                let sudoku = self.get_empty_sudoku();
-
+                let sudoku = get_empty_sudoku();
                 match sudoku {
                     Ok(sudoku_vec) => {
                         self.sudoku_from_option_values(sudoku_vec, true);
-                        self.solver = Solver::with_config("plain").unwrap();
-                        self.solver
-                            .set_callbacks(Some(self.callback_wrapper.clone()));
                     }
                     Err(e) => {
                         self.current_error = Some(e);
@@ -145,6 +145,17 @@ impl SATApp {
                 self.state.selected_cell = Some((1, 1));
             }
 
+            if ui
+                .button(RichText::new("Edit - E").size(text_scale))
+                .clicked()
+                || ctx.input(|i| i.key_pressed(Key::E))
+            {
+                self.reset_cadical_and_solved_sudoku();
+                self.state.selected_cell = Some((1, 1));
+                self.state.editor_active = true;
+            }
+
+            // Handle key inputs for inputting/editing a sudoku
             if self.state.editor_active {
                 let keys = ctx.input(|i| i.events.clone());
                 for key in &keys {
@@ -203,6 +214,7 @@ impl SATApp {
                     }
                 }
             }
+
             if ui
                 .button(RichText::new("Save - S").size(text_scale))
                 .clicked()
@@ -229,51 +241,34 @@ impl SATApp {
     /// Controls for showing conflict literals and trails
     fn trail_view(&mut self, ui: &mut Ui, text_scale: f32) {
         ui.horizontal(|ui| {
-            let show_trail_text = if !self.state.show_trail_view {
-                RichText::new("Show trail")
-            } else {
-                RichText::new("Show learned constraints")
-            };
-            if ui.button(show_trail_text.size(text_scale)).clicked() {
-                self.state.clicked_constraint_index = None;
-                self.state.show_trail_view = !self.state.show_trail_view;
+            ui.add(Label::new(
+                RichText::new("Learned constraint").size(text_scale),
+            ));
+
+            let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
+            let (rect, mut response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
+            if response.clicked() {
+                self.state.show_trail = !self.state.show_trail;
+                response.mark_changed();
             }
-            if self.state.show_trail_view {
-                ui.add(Label::new(RichText::new("Trail").size(text_scale)));
+            response.widget_info(|| {
+                egui::WidgetInfo::selected(egui::WidgetType::Checkbox, self.state.show_trail, "")
+            });
 
-                let desired_size = 1.1 * text_scale * egui::vec2(2.0, 1.0);
-                let (rect, mut response) =
-                    ui.allocate_exact_size(desired_size, egui::Sense::click());
-                if response.clicked() {
-                    self.state.show_trail = !self.state.show_trail;
-                    self.state.show_conflict_literals = !self.state.show_conflict_literals;
-                    response.mark_changed();
-                }
-                response.widget_info(|| {
-                    egui::WidgetInfo::selected(
-                        egui::WidgetType::Checkbox,
-                        self.state.show_trail,
-                        "",
-                    )
-                });
+            let how_on = ui.ctx().animate_bool(response.id, self.state.show_trail);
+            let visuals = ui.style().interact_selectable(&response, true);
+            let rect = rect.expand(visuals.expansion);
+            let radius = 0.5 * rect.height();
+            ui.painter()
+                .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
+            let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
+            let center = egui::pos2(circle_x, rect.center().y);
+            ui.painter()
+                .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
 
-                let how_on = ui
-                    .ctx()
-                    .animate_bool(response.id, self.state.show_conflict_literals);
-                let visuals = ui.style().interact_selectable(&response, true);
-                let rect = rect.expand(visuals.expansion);
-                let radius = 0.5 * rect.height();
-                ui.painter()
-                    .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
-                let circle_x = egui::lerp((rect.left() + radius)..=(rect.right() - radius), how_on);
-                let center = egui::pos2(circle_x, rect.center().y);
-                ui.painter()
-                    .circle(center, 0.75 * radius, visuals.bg_fill, visuals.fg_stroke);
-
-                ui.add(Label::new(
-                    RichText::new("Conflict literals/learned constraints").size(text_scale),
-                ));
-            }
+            ui.add(Label::new(
+                RichText::new("Trail with conflict literals").size(text_scale),
+            ));
         });
     }
 
@@ -282,10 +277,7 @@ impl SATApp {
         let old_encoding = self.state.encoding;
 
         ui.horizontal(|ui| {
-            let selected_text = match self.state.encoding {
-                EncodingType::Decimal { .. } => "Decimal",
-                EncodingType::Binary => "Binary",
-            };
+            let selected_text = self.state.get_encoding_type();
             egui::ComboBox::from_id_source(0)
                 .selected_text(
                     RichText::new(format!("{} based CNF encoding", selected_text)).size(text_scale),
@@ -314,34 +306,34 @@ impl SATApp {
         }
     }
 
-    /// CNF Encoding rules
+    /// Checkboxes for enabling/disabling CNF Encoding rules
     fn encoding_rules(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         // Veery ugly but I couldn't find a better alternative
         // Draw the first two checkboxes on one row, the last two on another row
+
         ui.horizontal(|ui| match self.state.encoding {
             EncodingType::Decimal {
                 ref mut cell_at_least_one,
                 ref mut cell_at_most_one,
                 ..
             } => {
-                if ui
-                    .checkbox(
-                        cell_at_least_one,
-                        RichText::new("Cell atleast one").size(text_scale),
-                    )
-                    .clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
-                if ui
-                    .checkbox(
-                        cell_at_most_one,
-                        RichText::new("Cell at most one").size(text_scale),
-                    )
-                    .clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
+                let cell_at_least_one_checkbox = ui.checkbox(
+                    cell_at_least_one,
+                    RichText::new("Cell at least one").size(text_scale),
+                );
+                let cell_at_most_one_checkbox = ui.checkbox(
+                    cell_at_most_one,
+                    RichText::new("Cell at most one").size(text_scale),
+                );
+
+                cell_at_least_one_checkbox.on_hover_text(
+                    RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
+                        .size(text_scale),
+                );
+                cell_at_most_one_checkbox.on_hover_text(
+                    RichText::new("A cell CAN be empty.\nA cell CAN NOT have multiple values.")
+                        .size(text_scale),
+                );
             }
             EncodingType::Binary => {}
         });
@@ -352,30 +344,29 @@ impl SATApp {
                 ref mut sudoku_has_unique_values,
                 ..
             } => {
-                if ui
-                    .checkbox(
-                        sudoku_has_all_values,
-                        RichText::new("Sudoku has all values").size(text_scale),
-                    )
-                    .clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
-                if ui
-                    .checkbox(
-                        sudoku_has_unique_values,
-                        RichText::new("Sudoku has unique values").size(text_scale),
-                    )
-                    .clicked()
-                {
-                    self.state.encoding_rules_changed = true;
-                }
+                let sudoku_has_all_values_checkbox = ui.checkbox(
+                    sudoku_has_all_values,
+                    RichText::new("Sudoku has all values").size(text_scale)
+                );
+                let sudoku_has_unique_values_checkbox = ui.checkbox(
+                    sudoku_has_unique_values,
+                    RichText::new("Sudoku has unique values").size(text_scale)
+                );
+
+                sudoku_has_all_values_checkbox.on_hover_text(
+                    RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")
+                    .size(text_scale)
+                );
+                sudoku_has_unique_values_checkbox.on_hover_text(
+                    RichText::new("No row/col/sub-grid can have duplicates.\nA value can apper once, or not at all.")
+                    .size(text_scale)
+                );
             }
             EncodingType::Binary => {}
         })
     }
 
-    // Row for filtering functionality
+    /// Row for filtering functionality
     fn filters(
         &mut self,
         ui: &mut Ui,
@@ -404,7 +395,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::Enter))
             {
                 self.state.filter_by_max_length();
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
             if ui
                 .button(RichText::new("Clear - C").size(text_scale))
@@ -412,7 +403,7 @@ impl SATApp {
                 || ctx.input(|i| i.key_pressed(Key::C))
             {
                 self.state.clear_filters();
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
         })
     }
@@ -451,7 +442,7 @@ impl SATApp {
                 }
 
                 self.state.set_page_length();
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
         })
     }
@@ -468,7 +459,7 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(0);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
 
             if (ui.button(RichText::new("<").size(text_scale)).clicked()
@@ -476,7 +467,7 @@ impl SATApp {
                 && self.state.page_number > 0
             {
                 self.state.set_page_number(self.state.page_number - 1);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
 
             ui.add(
@@ -497,7 +488,7 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_number + 1);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
 
             if (ui.button(RichText::new(">>").size(text_scale)).clicked()
@@ -506,10 +497,12 @@ impl SATApp {
                 && self.state.page_number < self.state.page_count - 1
             {
                 self.state.set_page_number(self.state.page_count - 1);
-                self.rendered_constraints = self.state.get_filtered();
+                (self.rendered_constraints, self.rendered_trails) = self.state.get_filtered();
             }
         })
     }
+
+    /// Checkboxes for showing/hiding the solved sudoku and fixed literals
     fn show_solved_and_fixed(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             ui.checkbox(
@@ -523,19 +516,43 @@ impl SATApp {
             );
         })
     }
+    fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        match self.state.encoding {
+            EncodingType::Decimal {
+                cell_at_least_one,
+                cell_at_most_one,
+                sudoku_has_all_values,
+                sudoku_has_unique_values,
+            } => {
+                if !cnf_encoding_rules_ok(
+                    cell_at_least_one,
+                    cell_at_most_one,
+                    sudoku_has_all_values,
+                    sudoku_has_unique_values,
+                ) {
+                    self.state.show_warning.set(Some(
+                        "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
+                        .to_string()),
+                        0); // priority of bad set of encoding constraints is set to 0, the highest
+                }
+            }
+            EncodingType::Binary => {}
+        }
 
-    fn get_empty_sudoku(&mut self) -> Result<Vec<Vec<Option<i32>>>, GenericError> {
-        let empty = ".........
-        .........
-        .........
-        .........
-        .........
-        .........
-        .........
-        .........
-        ........."
-            .to_string();
-
-        crate::clues_from_string(empty, ".")
+        ui.horizontal(|ui| {
+            if self.state.show_warning.is() {
+                let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
+                let warning_img = ui.add(
+                    egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size)),
+                );
+                warning_img.on_hover_text(
+                    RichText::new(self.state.show_warning.banner()).size(text_scale),
+                );
+            } else {
+                ui.label(RichText::new(""));
+            }
+        })
     }
 }

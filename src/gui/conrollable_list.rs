@@ -1,11 +1,15 @@
+//! GUI for listing 'controllable objects' (constraints, conflicts)
+
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, Stroke, TextStyle,
+    Ui, Vec2,
 };
 use std::ops::Add;
 
 use crate::cnf::CnfVariable;
-use crate::ctrl_obj::{ConflictList, ConstraintList, ControllableObj};
+use crate::ctrl_obj::{ConstraintList, ControllableObj};
+use crate::gui::SudokuCell;
 
 use super::SATApp;
 
@@ -87,33 +91,26 @@ impl SATApp {
                     let first_item = (viewport.min.y / row_height).floor().at_least(0.0) as usize;
                     let last_item = (viewport.max.y / row_height).ceil() as usize + 1;
 
-                    let clauses_binding = self.rendered_constraints.clone();
-
-                    let mut clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
-                        clauses: clauses_binding,
+                    let clauses: Box<dyn ControllableObj> = Box::new(ConstraintList {
+                        clauses: self.rendered_constraints.clone(),
+                        trail: self.rendered_trails.clone(),
                         combiner: "v".to_string(),
                     });
-                    if self.state.show_trail_view {
-                        clauses = Box::new(ConflictList {
-                            clauses: self.trail.as_cnf(&self.state.encoding),
-                            combiner: "^".to_string(),
-                            trail: self.trail.clone(),
-                        });
-                    }
                     let binding = clauses.clauses(&self.state);
                     let mut clause_iter = binding.iter().skip(first_item);
 
                     // Create element for each constraint
                     for i in first_item..last_item {
                         if let Some(clause) = clause_iter.next() {
-                            // Construct a se LayoutJob for the whole constraint
+                            // Construct a single LayoutJob for the whole constraint
                             // LayoutJob needed to allow for all the formatting we want in a single element
                             let mut text_job = LayoutJob::default();
                             let mut identifiers = clause.iter().peekable();
 
-                            // Large while block just constructs the LayoutJob
+                            // While block constructs the LayoutJob piece by piece
                             while let Some(cnf_var) = identifiers.next() {
                                 Self::append_var_to_layout_job(
+                                    self.sudoku.clone(),
                                     cnf_var,
                                     &mut text_job,
                                     &large_font,
@@ -152,9 +149,11 @@ impl SATApp {
                             let rect_action = ui.allocate_rect(galley_rect, egui::Sense::click());
                             if rect_action.clicked() {
                                 clauses.clicked(&mut self.state, i);
-                                self.rendered_constraints = self.state.get_filtered();
+                                (self.rendered_constraints, self.rendered_trails) =
+                                    self.state.get_filtered();
                             }
 
+                            // Highlight the selected element
                             if let Some(clicked_index) = clauses.get_clicked(&self.state) {
                                 if clicked_index == i {
                                     ui.painter().rect_filled(
@@ -213,14 +212,20 @@ impl SATApp {
         })
     }
 
-    /// Draw human readable version of cnf variables according to variable type
+    /// Append human readable version of a CNF variable to a LayoutJob, based on variable type
     pub fn append_var_to_layout_job(
+        ready_sudoku: Vec<Vec<SudokuCell>>,
         variable: &CnfVariable,
         text_job: &mut LayoutJob,
         large_font: &FontId,
         small_font: &FontId,
         text_color: Color32,
     ) {
+        let mut underline = Stroke::NONE;
+        let underline_multiplier = 0.1;
+        //0.25 fixes float division error from float to pixels
+        let line_height = Some(small_font.size + (large_font.size - small_font.size) / 2.0 + 0.25);
+
         match variable {
             CnfVariable::Decimal { row, col, value } => {
                 let (lead_char, color) = if *value > 0 {
@@ -229,12 +234,26 @@ impl SATApp {
                     ("~", Color32::RED)
                 };
 
+                if *value
+                    == ready_sudoku[*row as usize - 1][*col as usize - 1]
+                        .value
+                        .unwrap_or(0)
+                    || (*value < 0
+                        && *value
+                            != -ready_sudoku[*row as usize - 1][*col as usize - 1]
+                                .value
+                                .unwrap_or(0))
+                {
+                    underline = Stroke::new(small_font.size * underline_multiplier, color);
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, value.abs()),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -244,6 +263,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -260,12 +281,21 @@ impl SATApp {
                     ("~B", Color32::RED)
                 };
 
+                if variable.get_possible_numbers().contains(
+                    &ready_sudoku[*row as usize - 1][*col as usize - 1]
+                        .value
+                        .unwrap_or(0),
+                ) {
+                    underline = Stroke::new(small_font.size * underline_multiplier, color);
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -275,6 +305,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -293,12 +325,37 @@ impl SATApp {
                     ("~EQ", Color32::RED)
                 };
 
+                let cell1_value = ready_sudoku[*row as usize - 1][*col as usize - 1]
+                    .value
+                    .unwrap_or(0);
+                let cell2_value = ready_sudoku[*row2 as usize - 1][*col2 as usize - 1]
+                    .value
+                    .unwrap_or(0);
+
+                let (vec1, vec2) = variable.get_possible_groups();
+
+                #[allow(clippy::collapsible_else_if)]
+                if *equal {
+                    if vec1.contains(&cell1_value) && vec1.contains(&cell2_value)
+                        || vec2.contains(&cell1_value) && vec2.contains(&cell2_value)
+                    {
+                        underline = Stroke::new(small_font.size * underline_multiplier, color);
+                    }
+                } else {
+                    if vec1.contains(&cell1_value) && vec2.contains(&cell2_value)
+                        || vec2.contains(&cell1_value) && vec1.contains(&cell2_value)
+                    {
+                        underline = Stroke::new(small_font.size * underline_multiplier, color);
+                    }
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -308,6 +365,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );

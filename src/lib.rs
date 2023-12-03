@@ -6,6 +6,7 @@ mod error;
 mod filtering;
 pub mod gui;
 mod sudoku;
+mod warning;
 
 #[cfg(test)]
 mod tests;
@@ -19,9 +20,11 @@ use cadical::Solver;
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf::CnfVariable;
 use error::GenericError;
-use sudoku::{clues_from_string, string_from_grid};
+use sudoku::string_from_grid;
 
-/// Rc<RefCell<Vec<Vec<i32>>>> is used to store the learned cnf_clauses
+/// ConstraintList is used to store the learned cnf_clauses inside a `Rc<RefCell<Vec<Vec<i32>>>>`
+/// This allows for more flexibility with the ownership and borrowing system of Rust
+/// See: <https://doc.rust-lang.org/book/ch15-05-interior-mutability.html#having-multiple-owners-of-mutable-data-by-combining-rct-and-refcellt>
 #[derive(Clone)]
 pub struct ConstraintList(Rc<RefCell<Vec<Vec<i32>>>>);
 
@@ -30,7 +33,7 @@ impl ConstraintList {
         Self(Rc::new(RefCell::new(Vec::new())))
     }
 
-    // for testing
+    /// TODO: rename to `from_constraints`
     pub fn _new(constraints: Rc<RefCell<Vec<Vec<i32>>>>) -> Self {
         Self(constraints)
     }
@@ -66,10 +69,10 @@ impl Default for ConstraintList {
     }
 }
 
-// Datastructure to hold conflict literals and trail data
+/// Datastructure to hold conflict literals and trail data
 #[derive(Clone)]
 pub struct Trail {
-    pub conflict_literals: Rc<RefCell<Vec<(i32, i32)>>>,
+    pub conflict_literals: Rc<RefCell<Vec<Vec<i32>>>>,
     pub trail: Rc<RefCell<Vec<Vec<i32>>>>,
 }
 
@@ -85,17 +88,16 @@ impl Trail {
         (*self.conflict_literals.borrow())
             .clone()
             .into_iter()
-            .map(|tup| {
-                let (literal1_identifier, literal2_identifier) = tup;
-                Vec::from([
-                    CnfVariable::from_cnf(literal1_identifier, encoding),
-                    CnfVariable::from_cnf(literal2_identifier, encoding),
-                ])
+            .map(|conflict| {
+                conflict
+                    .into_iter()
+                    .map(|literal| CnfVariable::from_cnf(literal, encoding))
+                    .collect()
             })
             .collect()
     }
 
-    pub fn push(&mut self, conflict_literals: (i32, i32), trail: Vec<i32>) {
+    pub fn push(&mut self, conflict_literals: Vec<i32>, trail: Vec<i32>) {
         self.conflict_literals.borrow_mut().push(conflict_literals);
         self.trail.borrow_mut().push(trail);
     }
@@ -107,6 +109,10 @@ impl Trail {
 
     pub fn trail_at_index(&self, index: usize) -> Vec<i32> {
         self.trail.borrow()[index].clone()
+    }
+
+    pub fn literals_at_index(&self, index: usize) -> Vec<i32> {
+        self.conflict_literals.borrow()[index].clone()
     }
 
     pub fn len(&self) -> usize {
@@ -124,7 +130,7 @@ impl Default for Trail {
     }
 }
 
-/// Parses the max_length filter input for applying the filter.
+/// Parses numeric inputs given by the user. Inputs are for the max_length filter and page length.
 pub fn parse_numeric_input(input: &str) -> Option<i32> {
     let parse_result: Result<i32, ParseIntError> = input.parse();
     match parse_result {
