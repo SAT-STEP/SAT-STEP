@@ -76,7 +76,10 @@ inline void Internal::search_assign (int lit, Clause * reason) {
   assert (val (-lit) < 0);
   if (!searching_lucky_phases)
     phases.saved[idx] = tmp;                // phase saving during search
+
+  trail_var_is_propagated.push_back(v.reason != nullptr);
   trail.push_back (lit);
+  assert(trail_var_is_propagated.size() == trail.size() && "Unsure if this will fail (It should not). Remove assert or investigate bug if this fails.");
 #ifdef LOGGING
   if (!lit_level) LOG ("root-level unit assign %d @ 0", lit);
   else LOG (reason, "search assign %d @ %d", lit, lit_level);

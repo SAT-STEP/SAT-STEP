@@ -303,6 +303,7 @@ void Internal::assign_original_unit (int lit) {
   vals[-idx] = -tmp;
   assert (val (lit) > 0);
   assert (val (-lit) < 0);
+  trail_var_is_propagated.push_back(v.reason != nullptr);
   trail.push_back (lit);
   LOG ("original unit assign %d", lit);
   mark_fixed (lit);

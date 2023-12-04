@@ -179,6 +179,7 @@ struct Internal {
   size_t target_assigned;       // maximum assigned without conflict
   size_t no_conflict_until;     // largest trail prefix without conflict
   vector<int> trail;            // currently assigned literals
+  vector<bool> trail_var_is_propagated; // Corresponding literal in trail was propagated
   vector<int> clause;           // simplified in parsing & learning
   vector<int> assumptions;      // assumed literals
   vector<int> original;         // original added literals

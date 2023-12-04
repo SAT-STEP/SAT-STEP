@@ -103,11 +103,13 @@ void Internal::backtrack (int new_level) {
       if (!v.level) LOG ("reassign %d @ 0 unit clause %d", lit, lit);
       else LOG (v.reason, "reassign %d @ %d", lit, v.level);
 #endif
+      trail_var_is_propagated[j] = v.reason != nullptr;
       trail[j] = lit;
       v.trail = j++;
       reassigned++;
     }
   }
+  trail_var_is_propagated.resize(j);
   trail.resize (j);
   LOG ("unassigned %d literals %.0f%%",
     unassigned, percent (unassigned, unassigned + reassigned));
