@@ -2,7 +2,7 @@
 
 use cadical::Solver;
 use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
-
+use std::path::Path;
 use super::SATApp;
 
 use crate::{
@@ -516,6 +516,19 @@ impl SATApp {
             );
         })
     }
+
+    fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        let url = Path::new(&self.state.theme.url);
+        ui.horizontal(|ui| {
+            let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
+            let icon = ui.add(
+                egui::Image::new()
+                    .fit_to_fraction(vec2(1.0, 1.0))
+                    .fit_to_exact_size(vec2(image_size, image_size)),
+            );
+        })
+    }
+
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         match self.state.encoding {
             EncodingType::Decimal {
