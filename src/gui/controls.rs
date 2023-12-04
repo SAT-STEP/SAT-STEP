@@ -109,6 +109,8 @@ impl SATApp {
                 self.state.editor_active = false;
                 self.reset_cadical_and_solved_sudoku();
 
+                let clues = self.get_option_value_sudoku();
+
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
                     &mut self.solver,
@@ -126,7 +128,7 @@ impl SATApp {
                         let stats = Statistics::from_cadical_stats(
                             cadical_stats,
                             self.state.encoding,
-                            solved,
+                            clues,
                         );
                         self.state.history.push(stats);
                     }
@@ -314,22 +316,45 @@ impl SATApp {
                     }
 
                     egui::CentralPanel::default().show(ctx, |ui| {
-                        let text_scale = (ui.available_width() / 35.0).max(10.0);
+                        let width = ui.available_width();
+                        let text_scale = (width / 50.0).max(10.0);
+
                         ui.vertical(|ui| {
+                            if ui.button("Clear history").clicked() {
+                                self.state.history.clear();
+                            }
+
                             ScrollArea::vertical()
                                 .auto_shrink([false; 2])
                                 .stick_to_bottom(false)
                                 .show_viewport(ui, |ui, _viewport| {
-                                    for his in self.state.history.iter() {
+                                    for (i, his) in
+                                        self.state.history.clone().iter().rev().enumerate()
+                                    {
+                                        ui.label(
+                                            RichText::new(format!("Sudoku {}:", i + 1))
+                                                .size(text_scale),
+                                        );
+
+                                        let old_spacing = ui.spacing().item_spacing;
+                                        ui.spacing_mut().item_spacing.y = 0f32;
                                         for row in his.sudoku.iter() {
                                             let st: Vec<u8> = row
                                                 .iter()
-                                                .map(|n| n.unwrap() as u8 + b'0')
+                                                .map(|n| {
+                                                    if let Some(n) = n {
+                                                        *n as u8 + b'0'
+                                                    } else {
+                                                        b'X'
+                                                    }
+                                                })
                                                 .collect();
                                             let st = std::str::from_utf8(&st).unwrap();
-
                                             ui.label(RichText::new(st).size(text_scale / 1.5));
+                                            ui.spacing_mut().item_spacing.y = 0f32;
                                         }
+
+                                        ui.spacing_mut().item_spacing = old_spacing;
 
                                         ui.label(
                                             RichText::new(format!(
@@ -380,11 +405,42 @@ impl SATApp {
                                         );
                                         ui.label(
                                             RichText::new(format!(
-                                                "Encoding: {:?}\n",
-                                                his.encoding
+                                                "Encoding: {}",
+                                                match his.encoding {
+                                                    EncodingType::Binary => "Binary",
+                                                    EncodingType::Decimal { .. } => "Decimal",
+                                                }
                                             ))
                                             .size(text_scale),
                                         );
+
+                                        match his.encoding {
+                                            EncodingType::Decimal {
+                                                cell_at_least_one,
+                                                cell_at_most_one,
+                                                sudoku_has_all_values,
+                                                sudoku_has_unique_values,
+                                            } => {
+                                                ui.label(
+                                                    RichText::new("Encoding rules:")
+                                                        .size(text_scale),
+                                                );
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "Cell at least one: {}\n\
+                                                        Cell at most one: {}\n\
+                                                        Sudoku has all values: {}\n\
+                                                        Sudoku has unique values: {}",
+                                                        cell_at_least_one,
+                                                        cell_at_most_one,
+                                                        sudoku_has_all_values,
+                                                        sudoku_has_unique_values
+                                                    ))
+                                                    .size(text_scale/1.5),
+                                                );
+                                            }
+                                            EncodingType::Binary => (),
+                                        }
                                     }
                                 });
                         });
