@@ -2,13 +2,12 @@
 
 use super::SATApp;
 use cadical::Solver;
-use egui::{vec2, Color32, FontId, Key, Label, Response, RichText, TextStyle, Ui};
+use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
     cnf::cnf_encoding_rules_ok,
-    gui::themes::Theme,
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
