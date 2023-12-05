@@ -48,6 +48,7 @@ impl ListFilter {
             final_trail.push(
                 self.trails.literals_at_index(index),
                 self.trails.trail_at_index(index),
+                self.trails.var_is_propagated_at_index(index),
             );
         }
 
