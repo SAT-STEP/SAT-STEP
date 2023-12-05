@@ -301,7 +301,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -346,7 +346,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -387,7 +387,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -438,7 +438,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state: AppState = AppState::new(constraints, trails);
@@ -466,7 +466,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state: AppState = AppState::new(constraints, trails);
@@ -500,7 +500,7 @@ mod tests {
         let mut trails = Trail::new();
 
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -529,7 +529,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -561,7 +561,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -589,7 +589,7 @@ mod tests {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);

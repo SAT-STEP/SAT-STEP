@@ -184,7 +184,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -220,7 +220,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -264,7 +264,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -302,7 +302,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -362,7 +362,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
