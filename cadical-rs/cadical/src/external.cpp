@@ -477,7 +477,11 @@ void External::export_learned_unit_clause (int ilit) {
   } else
     LOG ("not exporting learned unit clause");
 
-  learner->learn_trail(internal->conflict->size, internal->conflict->literals, internal->trail.size(), internal->trail.data());
+  //PAAVO:
+  learner->learn_trail(internal->conflict->size, internal->conflict->literals,
+                        internal->trail_var_is_propagated.size(),
+                        internal->trail_var_is_propagated.data(),
+                        internal->trail.size(), internal->trail.data());
 }
 
 void External::export_learned_large_clause (const vector<int> & clause) {
@@ -493,7 +497,11 @@ void External::export_learned_large_clause (const vector<int> & clause) {
     }
     learner->learn (0);
 
-    learner->learn_trail(internal->conflict->size, internal->conflict->literals, internal->trail.size(), internal->trail.data());
+    //PAAVO:
+    learner->learn_trail(internal->conflict->size, internal->conflict->literals,
+                      internal->trail_var_is_propagated.size(),
+                      internal->trail_var_is_propagated.data(),
+                      internal->trail.size(), internal->trail.data());
 
   } else
     LOG ("not exporting learned clause of size %zu", size);
