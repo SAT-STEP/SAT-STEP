@@ -12,6 +12,7 @@ pub struct Statistics {
     pub decisions: i64,
     pub restarts: i64,
     pub encoding: EncodingType,
+    pub clues: Vec<Vec<Option<i32>>>,
     pub sudoku: Vec<Vec<Option<i32>>>,
 }
 
@@ -19,6 +20,7 @@ impl Statistics {
     pub fn from_cadical_stats(
         stats: CadicalStats,
         encoding: EncodingType,
+        clues: Vec<Vec<Option<i32>>>,
         sudoku: Vec<Vec<Option<i32>>>,
     ) -> Self {
         Self {
@@ -31,6 +33,7 @@ impl Statistics {
             decisions: stats.decisions,
             restarts: stats.restarts,
             encoding,
+            clues,
             sudoku,
         }
     }

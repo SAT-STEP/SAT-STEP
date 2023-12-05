@@ -1,5 +1,10 @@
 //! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
 
+use std::{
+    thread::{self, available_parallelism},
+    time::SystemTime,
+};
+
 use cadical::Solver;
 use egui::{vec2, FontId, Key, Label, Response, RichText, ScrollArea, TextStyle, Ui};
 
@@ -14,7 +19,7 @@ use crate::{
     sudoku::get_sudoku,
     sudoku::write_sudoku,
     sudoku::{get_empty_sudoku, solve_sudoku},
-    Trail,
+    ConstraintList, Trail,
 };
 
 impl SATApp {
@@ -129,8 +134,10 @@ impl SATApp {
                             cadical_stats,
                             self.state.encoding,
                             clues,
+                            solved,
                         );
-                        self.state.history.push(stats);
+                        let mut history = self.state.history.lock().unwrap();
+                        history.push(stats);
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -355,26 +362,67 @@ impl SATApp {
                 ];
 
                 let clues = self.get_option_value_sudoku();
-                for encoding in &encodings {
-                    self.reset_cadical_and_solved_sudoku();
-                    let res = solve_sudoku(&clues, &mut self.solver, encoding);
-                    // dont run if not solvable
-                    if !res.is_ok() {
-                        break;
-                    }
+                let now = SystemTime::now();
 
-                    let cadical_stats = self.solver.stats();
-                    let stats = Statistics::from_cadical_stats(
-                        cadical_stats,
-                        *encoding,
-                        clues.clone(),
-                        );
-                    self.state.history.push(stats);
+                if self.state.process_multithreaded {
+                    let dispatch_amount = match available_parallelism() {
+                        Ok(n) => n.get(),
+                        Err(_) => 2,
+                    };
+
+                    for chunk in encodings.iter().as_slice().chunks(dispatch_amount) {
+                        let mut handles = Vec::new();
+
+                        for encoding in chunk.to_owned() {
+                            let clues = clues.clone();
+                            let history = self.state.history.clone();
+
+                            let handle = thread::spawn(move || {
+                                let mut solver = cadical::Solver::with_config("plain").unwrap();
+
+                                let res = solve_sudoku(&clues, &mut solver, &encoding);
+                                if let Ok(res) = res {
+                                    let cadical_stats = solver.stats();
+                                    let stats =
+                                        Statistics::from_cadical_stats(cadical_stats, encoding, clues, res);
+
+                                    let mut history = history.lock().unwrap();
+                                    history.push(stats);
+                                }
+                            });
+
+                            handles.push(handle);
+                        }
+
+                        for handle in handles {
+                            handle.join().unwrap();
+                        }
+                    }
+                } else {
+                    for encoding in &encodings {
+                        let mut solver = cadical::Solver::with_config("plain").unwrap();
+
+                        let res = solve_sudoku(&clues, &mut solver, &encoding);
+                        if let Ok(res) = res {
+                            let cadical_stats = solver.stats();
+                            let stats =
+                                Statistics::from_cadical_stats(cadical_stats, *encoding, clues.clone(), res);
+
+                            let mut history = self.state.history.lock().unwrap();
+                            history.push(stats);
+                        }
+                    }
                 }
 
-                // little popup as an indication for finish
+                println!("Took: {}s", now.elapsed().unwrap().as_secs_f64());
+
                 self.state.show_statistics = true;
             }
+
+            ui.checkbox(
+                &mut self.state.process_multithreaded,
+                RichText::new("Parallel").size(text_scale),
+            );
         });
 
         if self.state.show_statistics {
@@ -394,16 +442,16 @@ impl SATApp {
 
                         ui.vertical(|ui| {
                             if ui.button("Clear history").clicked() {
-                                self.state.history.clear();
+                                let mut history = self.state.history.lock().unwrap();
+                                history.clear();
                             }
 
                             ScrollArea::vertical()
                                 .auto_shrink([false; 2])
                                 .stick_to_bottom(false)
                                 .show_viewport(ui, |ui, _viewport| {
-                                    for (i, his) in
-                                        self.state.history.clone().iter().rev().enumerate()
-                                    {
+                                    let history = self.state.history.lock().unwrap();
+                                    for (i, his) in history.iter().rev().enumerate() {
                                         ui.label(
                                             RichText::new(format!("Sudoku {}:", i + 1))
                                                 .size(text_scale),
@@ -411,8 +459,13 @@ impl SATApp {
 
                                         let old_spacing = ui.spacing().item_spacing;
                                         ui.spacing_mut().item_spacing.y = 0f32;
-                                        for row in his.sudoku.iter() {
-                                            let st: Vec<u8> = row
+
+                                        ui.label(
+                                            RichText::new("Clues:\tSolved:").size(text_scale),
+                                        );
+
+                                        for (clue_row, res_row) in his.clues.iter().zip(his.sudoku.iter()) {
+                                            let mut chars: Vec<u8> = clue_row
                                                 .iter()
                                                 .map(|n| {
                                                     if let Some(n) = n {
@@ -422,20 +475,15 @@ impl SATApp {
                                                     }
                                                 })
                                                 .collect();
-                                            let st = std::str::from_utf8(&st).unwrap();
+                                            chars.push(b' ');
+                                            chars.extend(res_row.iter().map(|n| n.unwrap() as u8 + b'0'));
+                                            let st = std::str::from_utf8(&chars).unwrap();
                                             ui.label(RichText::new(st).size(text_scale / 1.5));
                                             ui.spacing_mut().item_spacing.y = 0f32;
                                         }
 
                                         ui.spacing_mut().item_spacing = old_spacing;
 
-                                        ui.label(
-                                            RichText::new(format!(
-                                                "Process time: {:.2}s",
-                                                his.process_time
-                                            ))
-                                            .size(text_scale),
-                                        );
                                         ui.label(
                                             RichText::new(format!(
                                                 "Real time: {:.2}s",

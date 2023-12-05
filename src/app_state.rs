@@ -1,5 +1,7 @@
 //! State info for the main app struct SATApp
 
+use std::sync::{Arc, Mutex};
+
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
@@ -100,8 +102,9 @@ pub struct AppState {
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
     pub show_statistics: bool,
-    pub history: Vec<Statistics>,
+    pub history: Arc<Mutex<Vec<Statistics>>>,
     pub show_warning: Warning,
+    pub process_multithreaded: bool,
 }
 
 impl AppState {
@@ -135,8 +138,9 @@ impl AppState {
             editor_active: false,
             highlight_fixed_literals: false,
             show_statistics: false,
-            history: Vec::new(),
+            history: Arc::new(Mutex::new(Vec::new())),
             show_warning: Warning::new(),
+            process_multithreaded: false,
         }
     }
 
