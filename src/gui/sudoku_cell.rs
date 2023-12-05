@@ -205,7 +205,7 @@ impl SudokuCell {
                             Color32::DARK_RED
                         }
                     } else {
-                        Color32::YELLOW
+                        Color32::DARK_GREEN
                     },
                 );
             }
@@ -216,14 +216,14 @@ impl SudokuCell {
                 TextFormat {
                     font_id: font_id.clone(),
                     color: if val.parse::<i32>().is_err() {
-                        Color32::YELLOW
+                        Color32::DARK_GREEN
                     } else if val.parse::<i32>().unwrap() > 0 {
                         Color32::DARK_BLUE
                     } else {
                         Color32::DARK_RED
                     },
                     underline: stroke,
-                    background: if backgrounded.contains(val) { Color32::from_rgb(255, 214, 171) } else {Color32::TRANSPARENT},
+                    background: if backgrounded.contains(val) { Color32::from_gray(220) } else {Color32::TRANSPARENT},
                     ..Default::default()
                 },
             );
