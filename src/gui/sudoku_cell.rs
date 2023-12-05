@@ -200,9 +200,9 @@ impl SudokuCell {
                     size * UNDERLINE_MULTIPLIER,
                     if let Ok(val_i32) = val.parse::<i32>() {
                         if val_i32 > 0 {
-                            Color32::BLUE
+                            Color32::DARK_BLUE
                         } else {
-                            Color32::RED
+                            Color32::DARK_RED
                         }
                     } else {
                         Color32::YELLOW
@@ -218,9 +218,9 @@ impl SudokuCell {
                     color: if val.parse::<i32>().is_err() {
                         Color32::YELLOW
                     } else if val.parse::<i32>().unwrap() > 0 {
-                        Color32::BLUE
+                        Color32::DARK_BLUE
                     } else {
-                        Color32::RED
+                        Color32::DARK_RED
                     },
                     underline: stroke,
                     background: if backgrounded.contains(val) { Color32::from_rgb(255, 214, 171) } else {Color32::TRANSPARENT},
