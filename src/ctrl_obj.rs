@@ -41,7 +41,7 @@ impl ControllableObj for ConstraintList {
                         .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                         .collect();
 
-                    state.set_trail(enum_literals, enum_trail);
+                    state.set_trail(enum_literals, enum_trail, self.trail.var_is_propagated_at_index(i));
                 }
             }
             None => {
@@ -59,7 +59,7 @@ impl ControllableObj for ConstraintList {
                     .map(|&x| CnfVariable::from_cnf(x, &state.encoding))
                     .collect();
 
-                state.set_trail(enum_literals, enum_trail);
+                state.set_trail(enum_literals, enum_trail, self.trail.var_is_propagated_at_index(i));
             }
         }
     }

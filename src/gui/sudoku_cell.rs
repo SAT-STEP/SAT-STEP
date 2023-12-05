@@ -22,8 +22,10 @@ pub struct SudokuCell {
     pub clue: bool,            // Should the cell be darkened (is it a clue)
     pub part_of_conflict: bool, // Should the cell have highlighted borders
     pub fixed: bool, // Is the value of the cell set by fixed literals (used for highlighting)
-    pub eq_symbols: Vec<(String, CnfVariable, bool)>,
-    pub little_numbers: Vec<(i32, bool)>, // Bool tells us if the variable should be underlined (such as if it is part of the conflict)
+    pub eq_symbols: Vec<(String, CnfVariable, bool)>, // Bool tells if symbol should be underlined (the variable is satisfied)
+    // 1. bool tells us if the variable should be underlined (such as if it is part of the conflict)
+    // 2. bool tells if the variable should have background (it is decided, not propagated)
+    pub little_numbers: Vec<(i32, bool, bool)>, 
     pub top_left: Pos2,
     pub bottom_right: Pos2,
 }
@@ -138,6 +140,13 @@ impl SudokuCell {
             .map(|x| if x.1 { x.0.to_string() } else { String::new() })
             .collect();
 
+        let backgrounded: Vec<String> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| if x.2 { x.0.to_string() } else { String::new() })
+            .collect();
+
         underlined.extend(self.eq_symbols.iter().map(|tuple| {
             if tuple.2 {
                 tuple.0.clone()
@@ -214,6 +223,7 @@ impl SudokuCell {
                         Color32::RED
                     },
                     underline: stroke,
+                    background: if backgrounded.contains(val) { Color32::from_rgb(255, 214, 171) } else {Color32::TRANSPARENT},
                     ..Default::default()
                 },
             );

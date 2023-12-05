@@ -86,6 +86,7 @@ pub struct AppState {
     pub clicked_constraint_index: Option<usize>,
     pub conflict_literals: Option<Vec<CnfVariable>>,
     pub trail: Option<Vec<CnfVariable>>,
+    pub trail_var_is_propagated: Option<Vec<bool>>,
     pub page_number: i32,
     pub page_count: i32,
     pub page_length: usize,
@@ -119,6 +120,7 @@ impl AppState {
             clicked_constraint_index: None,
             conflict_literals: None,
             trail: None,
+            trail_var_is_propagated: None,
             page_number: 0,
             page_count: 0,
             page_length: 100,
@@ -267,11 +269,13 @@ impl AppState {
     pub fn clear_trail(&mut self) {
         self.conflict_literals = None;
         self.trail = None;
+        self.trail_var_is_propagated = None;
     }
 
-    pub fn set_trail(&mut self, conflict_literals: Vec<CnfVariable>, trail: Vec<CnfVariable>) {
+    pub fn set_trail(&mut self, conflict_literals: Vec<CnfVariable>, trail: Vec<CnfVariable>, var_is_propagated: Vec<bool>) {
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
+        self.trail_var_is_propagated = Some(var_is_propagated);
     }
 
     pub fn get_encoding_type(&mut self) -> &str {
