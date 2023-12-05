@@ -99,6 +99,7 @@ pub struct AppState {
     pub show_trail: bool,
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
+    pub highlight_decided_vars: bool,
     pub show_warning: Warning,
 }
 
@@ -133,6 +134,7 @@ impl AppState {
             encoding,
             editor_active: false,
             highlight_fixed_literals: false,
+            highlight_decided_vars: false,
             show_warning: Warning::new(),
         }
     }

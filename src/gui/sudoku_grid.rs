@@ -291,7 +291,7 @@ impl SATApp {
                         let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
 
                         cell.draw_big_number = false;
-                        cell.little_numbers.push((value, false, !self.state.trail_var_is_propagated.as_ref().unwrap()[i]));                        
+                        cell.little_numbers.push((value, false, self.state.highlight_decided_vars && !self.state.trail_var_is_propagated.as_ref().unwrap()[i]));                        
                     }
                 }
 
@@ -452,7 +452,7 @@ impl SATApp {
                     // Only keep the numbers compatible with this variable (that is part of the trail)
                     cell.little_numbers
                         .retain(|x| variable.get_possible_numbers().contains(&x.0));
-                    if !self.state.trail_var_is_propagated.as_ref().unwrap()[i] {
+                    if self.state.highlight_decided_vars && !self.state.trail_var_is_propagated.as_ref().unwrap()[i] {
                         for x in &mut cell.little_numbers {
                             x.2 = true;
                         }

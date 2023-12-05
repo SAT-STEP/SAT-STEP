@@ -514,6 +514,12 @@ impl SATApp {
                 &mut self.state.highlight_fixed_literals,
                 RichText::new("Highlight fixed literals").size(text_scale),
             );
+
+            if self.state.show_trail {
+                ui.checkbox(
+                    &mut self.state.highlight_decided_vars, 
+                    RichText::new("Highlight decided variables").size(text_scale));
+            }
         })
     }
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
