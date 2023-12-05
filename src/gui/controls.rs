@@ -517,21 +517,22 @@ impl SATApp {
         })
     }
 
+    /// Icons/buttons for changing between color themes: dark mode or light mode
     fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             let mut _icon = ui.label(RichText::new(""));
             if self.state.theme.dark_mode {
-                let image_size = text_scale * 1.0; // 1.5 chosen with manual testing
+                let image_size = text_scale * 1.5;
                 _icon = ui.add(
-                    egui::Image::new(egui::include_image!("../../assets/half-moon.svg"))
+                    egui::Image::new(egui::include_image!("../../assets/icon-sun-96.png"))
                         .fit_to_fraction(vec2(1.0, 1.0))
                         .fit_to_exact_size(vec2(image_size, image_size))
                         .sense(egui::Sense::click()),
                 );
             } else {
-                let image_size = text_scale * 1.0; // 1.5 chosen with manual testing
+                let image_size = text_scale * 1.5;
                 _icon = ui.add(
-                    egui::Image::new(egui::include_image!("../../assets/sun-light.svg"))
+                    egui::Image::new(egui::include_image!("../../assets/icon-moon-96.png"))
                         .fit_to_fraction(vec2(1.0, 1.0))
                         .fit_to_exact_size(vec2(image_size, image_size))
                         .sense(egui::Sense::click()),
