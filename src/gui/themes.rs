@@ -1,15 +1,15 @@
-use std::include_bytes;
+use egui::Color32;
 
 pub struct Theme {
-    pub url: &[u8]
+    pub dark_mode: bool,
+    pub text_color: Color32,
 }
 
-impl Theme{
-    pub fn new(url: &[u8]) -> Self {
+impl Theme {
+    pub fn new() -> Self {
         Self {
-            url
+            dark_mode: true,
+            text_color: Color32::GRAY,
         }
     }
 }
-pub static DARK_MODE:Theme = Theme::new(include_bytes!("../../assets/half-moon.svg"));
-pub static LIGHT_MODE:Theme = Theme::new(include_bytes!("../../assets/sun-light.svg"));

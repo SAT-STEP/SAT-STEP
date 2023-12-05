@@ -1,14 +1,14 @@
 //! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
 
-use cadical::Solver;
-use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
-use std::path::Path;
 use super::SATApp;
+use cadical::Solver;
+use egui::{vec2, Color32, FontId, Key, Label, Response, RichText, TextStyle, Ui};
 
 use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
     cnf::cnf_encoding_rules_ok,
+    gui::themes::Theme,
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
@@ -29,6 +29,7 @@ impl SATApp {
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
                 self.warning_triangle(ui, text_scale);
+                self.theme_button(ui, text_scale);
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
@@ -518,14 +519,31 @@ impl SATApp {
     }
 
     fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        let url = Path::new(&self.state.theme.url);
         ui.horizontal(|ui| {
-            let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
-            let icon = ui.add(
-                egui::Image::new()
-                    .fit_to_fraction(vec2(1.0, 1.0))
-                    .fit_to_exact_size(vec2(image_size, image_size)),
-            );
+            let mut _icon = ui.label(RichText::new(""));
+            if self.state.theme.dark_mode {
+                let image_size = text_scale * 1.0; // 1.5 chosen with manual testing
+                _icon = ui.add(
+                    egui::Image::new(egui::include_image!("../../assets/half-moon.svg"))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size))
+                        .sense(egui::Sense::click()),
+                );
+            } else {
+                let image_size = text_scale * 1.0; // 1.5 chosen with manual testing
+                _icon = ui.add(
+                    egui::Image::new(egui::include_image!("../../assets/sun-light.svg"))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size))
+                        .sense(egui::Sense::click()),
+                );
+            }
+            if _icon.clicked() {
+                self.state.theme = Theme {
+                    dark_mode: !self.state.theme.dark_mode,
+                    text_color: Color32::GRAY,
+                };
+            }
         })
     }
 

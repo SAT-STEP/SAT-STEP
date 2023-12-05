@@ -3,10 +3,10 @@
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
+    gui::themes::Theme,
     parse_numeric_input,
     warning::Warning,
     CadicalCallbackWrapper, ConstraintList, Solver, Trail,
-    gui::themes::{Theme, DARK_MODE}
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -100,7 +100,7 @@ pub struct AppState {
     pub editor_active: bool,
     pub highlight_fixed_literals: bool,
     pub show_warning: Warning,
-    pub theme: Theme
+    pub theme: Theme,
 }
 
 impl AppState {
@@ -134,7 +134,7 @@ impl AppState {
             editor_active: false,
             highlight_fixed_literals: false,
             show_warning: Warning::new(),
-            theme: DARK_MODE
+            theme: Theme::new(),
         }
     }
 
