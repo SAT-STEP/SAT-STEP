@@ -301,7 +301,7 @@ impl SATApp {
                         let mut visible: Vec<(i32, bool, bool)> = cell.little_numbers.clone();
 
                         // Keep the positive values and underlined negative values (from conflict literals)
-                        visible.retain(|&x| x.0 > 0 || x.1 || x.2);
+                        visible.retain(|&x| x.0 > 0 || x.1 || (x.2 && !cell.clue));
 
                         if !visible.is_empty() {
                             cell.little_numbers = visible;
