@@ -25,7 +25,7 @@ pub struct SudokuCell {
     pub eq_symbols: Vec<(String, CnfVariable, bool)>, // Bool tells if symbol should be underlined (the variable is satisfied)
     // 1. bool tells us if the variable should be underlined (such as if it is part of the conflict)
     // 2. bool tells if the variable should have background (it is decided, not propagated)
-    pub little_numbers: Vec<(i32, bool, bool)>, 
+    pub little_numbers: Vec<(i32, bool, bool)>,
     pub top_left: Pos2,
     pub bottom_right: Pos2,
 }
@@ -223,7 +223,11 @@ impl SudokuCell {
                         Color32::DARK_RED
                     },
                     underline: stroke,
-                    background: if backgrounded.contains(val) { Color32::from_gray(220) } else {Color32::TRANSPARENT},
+                    background: if backgrounded.contains(val) {
+                        Color32::from_gray(220)
+                    } else {
+                        Color32::TRANSPARENT
+                    },
                     ..Default::default()
                 },
             );

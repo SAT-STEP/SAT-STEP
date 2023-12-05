@@ -56,8 +56,16 @@ fn test_trail() {
     let var_propagated_data = vec![vec![false, true, false], vec![true, true, false]];
     let mut trail = Trail::new();
 
-    trail.push(conflict_literals[0].clone(), trail_data[0].clone(), var_propagated_data[0].clone());
-    trail.push(conflict_literals[1].clone(), trail_data[1].clone(), var_propagated_data[1].clone());
+    trail.push(
+        conflict_literals[0].clone(),
+        trail_data[0].clone(),
+        var_propagated_data[0].clone(),
+    );
+    trail.push(
+        conflict_literals[1].clone(),
+        trail_data[1].clone(),
+        var_propagated_data[1].clone(),
+    );
     assert_eq!(trail.len(), 2);
     assert_eq!(trail.trail_at_index(1), vec![4, 5, 6]);
     assert_eq!(trail.literals_at_index(1), vec![300, 301]);

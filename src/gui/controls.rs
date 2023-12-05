@@ -517,8 +517,9 @@ impl SATApp {
 
             if self.state.show_trail {
                 ui.checkbox(
-                    &mut self.state.highlight_decided_vars, 
-                    RichText::new("Highlight decided variables").size(text_scale));
+                    &mut self.state.highlight_decided_vars,
+                    RichText::new("Highlight decided variables").size(text_scale),
+                );
             }
         })
     }

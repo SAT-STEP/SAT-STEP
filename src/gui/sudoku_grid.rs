@@ -207,10 +207,14 @@ impl SATApp {
                 CnfVariable::Decimal { row, col, value } => {
                     let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
 
-                    cell.little_numbers.push((value, {
-                        value == cell.value.unwrap_or(0)
-                            || (value < 0 && value != -cell.value.unwrap_or(0))
-                    }, false));
+                    cell.little_numbers.push((
+                        value,
+                        {
+                            value == cell.value.unwrap_or(0)
+                                || (value < 0 && value != -cell.value.unwrap_or(0))
+                        },
+                        false,
+                    ));
 
                     cell.draw_big_number = false;
                 }
@@ -286,12 +290,17 @@ impl SATApp {
             if let Some(_conflict_index) = self.state.clicked_constraint_index {
                 let variables = self.state.trail.clone().unwrap();
 
-                for (i,variable) in variables.into_iter().enumerate() {
+                for (i, variable) in variables.into_iter().enumerate() {
                     if let CnfVariable::Decimal { row, col, value } = variable {
                         let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
 
                         cell.draw_big_number = false;
-                        cell.little_numbers.push((value, false, self.state.highlight_decided_vars && !self.state.trail_var_is_propagated.as_ref().unwrap()[i]));                        
+                        cell.little_numbers.push((
+                            value,
+                            false,
+                            self.state.highlight_decided_vars
+                                && !self.state.trail_var_is_propagated.as_ref().unwrap()[i],
+                        ));
                     }
                 }
 
@@ -444,7 +453,7 @@ impl SATApp {
                 }
             }
 
-            for (i,variable) in variables.into_iter().enumerate() {
+            for (i, variable) in variables.into_iter().enumerate() {
                 if let CnfVariable::Bit { row, col, .. } = variable {
                     let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
                     cell.draw_big_number = false;
@@ -452,7 +461,9 @@ impl SATApp {
                     // Only keep the numbers compatible with this variable (that is part of the trail)
                     cell.little_numbers
                         .retain(|x| variable.get_possible_numbers().contains(&x.0));
-                    if self.state.highlight_decided_vars && !self.state.trail_var_is_propagated.as_ref().unwrap()[i] {
+                    if self.state.highlight_decided_vars
+                        && !self.state.trail_var_is_propagated.as_ref().unwrap()[i]
+                    {
                         for x in &mut cell.little_numbers {
                             x.2 = true;
                         }

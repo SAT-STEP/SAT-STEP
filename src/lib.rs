@@ -99,7 +99,12 @@ impl Trail {
             .collect()
     }
 
-    pub fn push(&mut self, conflict_literals: Vec<i32>, trail: Vec<i32>, var_is_propagated: Vec<bool>) {
+    pub fn push(
+        &mut self,
+        conflict_literals: Vec<i32>,
+        trail: Vec<i32>,
+        var_is_propagated: Vec<bool>,
+    ) {
         self.conflict_literals.borrow_mut().push(conflict_literals);
         self.trail.borrow_mut().push(trail);
         self.var_is_propagated.borrow_mut().push(var_is_propagated);

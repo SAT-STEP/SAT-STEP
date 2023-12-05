@@ -48,6 +48,10 @@ impl Callbacks for CadicalCallbackWrapper {
     // called when a new derived clause is learnt
     fn learn_trail(&mut self, conflict_literals: &[i32], is_propagated: &[i32], trail: &[i32]) {
         let is_propagated_vec: Vec<bool> = is_propagated.to_vec().iter().map(|x| *x > 0).collect();
-        self.trail.push(conflict_literals.to_vec(), trail.to_vec(), is_propagated_vec)
+        self.trail.push(
+            conflict_literals.to_vec(),
+            trail.to_vec(),
+            is_propagated_vec,
+        )
     }
 }

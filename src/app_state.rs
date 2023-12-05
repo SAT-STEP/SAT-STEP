@@ -274,7 +274,12 @@ impl AppState {
         self.trail_var_is_propagated = None;
     }
 
-    pub fn set_trail(&mut self, conflict_literals: Vec<CnfVariable>, trail: Vec<CnfVariable>, var_is_propagated: Vec<bool>) {
+    pub fn set_trail(
+        &mut self,
+        conflict_literals: Vec<CnfVariable>,
+        trail: Vec<CnfVariable>,
+        var_is_propagated: Vec<bool>,
+    ) {
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
         self.trail_var_is_propagated = Some(var_is_propagated);
