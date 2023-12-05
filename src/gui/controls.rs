@@ -298,10 +298,83 @@ impl SATApp {
                 self.state.show_statistics = true;
             }
 
-            // if ui
-            //     .button(RichText::new("Process with all configurations").size(text_scale))
-            //         .clicked()
-            //         {}
+            if ui
+                .button(RichText::new("Process with all configurations").size(text_scale))
+                .clicked()
+            {
+                let encodings = vec![
+                    EncodingType::Decimal {
+                        cell_at_least_one: true,
+                        cell_at_most_one: false,
+                        sudoku_has_all_values: false,
+                        sudoku_has_unique_values: true,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: true,
+                        cell_at_most_one: true,
+                        sudoku_has_all_values: false,
+                        sudoku_has_unique_values: true,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: true,
+                        cell_at_most_one: false,
+                        sudoku_has_all_values: true,
+                        sudoku_has_unique_values: true,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: false,
+                        cell_at_most_one: true,
+                        sudoku_has_all_values: true,
+                        sudoku_has_unique_values: false,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: false,
+                        cell_at_most_one: true,
+                        sudoku_has_all_values: true,
+                        sudoku_has_unique_values: false,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: true,
+                        cell_at_most_one: true,
+                        sudoku_has_all_values: true,
+                        sudoku_has_unique_values: false,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: false,
+                        cell_at_most_one: true,
+                        sudoku_has_all_values: true,
+                        sudoku_has_unique_values: true,
+                    },
+                    EncodingType::Decimal {
+                        cell_at_least_one: true,
+                        cell_at_most_one: true,
+                        sudoku_has_all_values: true,
+                        sudoku_has_unique_values: true,
+                    },
+                    EncodingType::Binary,
+                ];
+
+                let clues = self.get_option_value_sudoku();
+                for encoding in &encodings {
+                    self.reset_cadical_and_solved_sudoku();
+                    let res = solve_sudoku(&clues, &mut self.solver, encoding);
+                    // dont run if not solvable
+                    if !res.is_ok() {
+                        break;
+                    }
+
+                    let cadical_stats = self.solver.stats();
+                    let stats = Statistics::from_cadical_stats(
+                        cadical_stats,
+                        *encoding,
+                        clues.clone(),
+                        );
+                    self.state.history.push(stats);
+                }
+
+                // little popup as an indication for finish
+                self.state.show_statistics = true;
+            }
         });
 
         if self.state.show_statistics {
@@ -436,11 +509,13 @@ impl SATApp {
                                                         sudoku_has_all_values,
                                                         sudoku_has_unique_values
                                                     ))
-                                                    .size(text_scale/1.5),
+                                                    .size(text_scale / 1.5),
                                                 );
                                             }
                                             EncodingType::Binary => (),
                                         }
+
+                                        ui.label(RichText::new("").size(text_scale));
                                     }
                                 });
                         });
