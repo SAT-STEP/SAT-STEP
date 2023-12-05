@@ -539,10 +539,7 @@ impl SATApp {
                 );
             }
             if _icon.clicked() {
-                self.state.theme = Theme {
-                    dark_mode: !self.state.theme.dark_mode,
-                    text_color: Color32::GRAY,
-                };
+                self.state.theme = self.state.theme.theme_switch();
             }
         })
     }

@@ -134,7 +134,7 @@ impl AppState {
             editor_active: false,
             highlight_fixed_literals: false,
             show_warning: Warning::new(),
-            theme: Theme::new(),
+            theme: Theme::new(true),
         }
     }
 
