@@ -11,6 +11,7 @@ const LITTLE_NUMBER_MULTIPLIER: f32 = 0.225; // Of cell size
 const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.3; // Of cell size
 const TOOLTIP_MULTIPLIER: f32 = 0.3; // Of cell size
 const UNDERLINE_MULTIPLIER: f32 = 0.05; // Of cell size
+const LITTLE_NUMBER_PADDING: f32 = 0.025; // Of cell size
 
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
@@ -95,7 +96,11 @@ impl SudokuCell {
 
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
-            ui.painter().galley(self.top_left, galley);
+            // To pad the little numbers inside the cell
+            let padded_top_left = self.top_left
+                + Vec2::new(size * LITTLE_NUMBER_PADDING, size * LITTLE_NUMBER_PADDING);
+
+            ui.painter().galley(padded_top_left, galley);
             if !self.eq_symbols.is_empty() {
                 rect_action.on_hover_ui(|ui| self.eq_tooltip(ui, size));
             }
