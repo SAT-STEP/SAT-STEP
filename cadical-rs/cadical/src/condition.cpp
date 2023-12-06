@@ -190,9 +190,6 @@ long Internal::condition_round (long delta) {
       const int lit = decide_phase (idx, true);
       condition_assign (lit);
       v.level = level;
-  
-      // VILI: Does not seem to be called with our App, but added just in case
-      trail_var_is_propagated.push_back(v.reason != nullptr);
       trail.push_back (lit);
 #if defined(LOGGING) || !defined(NDEBUG)
       additionally_assigned++;
@@ -823,7 +820,6 @@ long Internal::condition_round (long delta) {
   int additionally_unassigned = 0;
   while (trail.size () > initial_trail_level) {
     int lit = trail.back ();
-    trail_var_is_propagated.pop_back();
     trail.pop_back ();
     condition_unassign (lit);
     additionally_unassigned++;

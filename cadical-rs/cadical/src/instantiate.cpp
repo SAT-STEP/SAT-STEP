@@ -54,7 +54,6 @@ inline void Internal::inst_assign (int lit) {
   assert (!val (lit));
   vals[lit] = 1;
   vals[-lit] = -1;
-  trail_var_is_propagated.push_back(false);
   trail.push_back (lit);
 }
 

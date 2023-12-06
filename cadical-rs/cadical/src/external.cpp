@@ -1,4 +1,5 @@
 #include "internal.hpp"
+#include <cassert>
 
 namespace CaDiCaL {
 
@@ -477,11 +478,21 @@ void External::export_learned_unit_clause (int ilit) {
   } else
     LOG ("not exporting learned unit clause");
 
-  //PAAVO:
-  learner->learn_trail(internal->conflict->size, internal->conflict->literals,
-                        internal->trail_var_is_propagated.size(),
-                        internal->trail_var_is_propagated.data(),
-                        internal->trail.size(), internal->trail.data());
+    //PAAVO:
+    // Could be in a function to remove duplicate code, but I don't think
+    // It matters / is worth the effort, since it's only two copies, and on the cadical side of the codebase
+    vector<int> trail_var_is_propagated;
+    trail_var_is_propagated.reserve(internal->trail.size());
+    for (int &literal : internal->trail) {
+        int idx = vidx(literal);
+        Var &v = internal->vtab[idx];
+        trail_var_is_propagated.push_back(v.reason != nullptr);
+    }
+
+    learner->learn_trail(internal->conflict->size, internal->conflict->literals,
+                      trail_var_is_propagated.size(),
+                      trail_var_is_propagated.data(),
+                      internal->trail.size(), internal->trail.data());
 }
 
 void External::export_learned_large_clause (const vector<int> & clause) {
@@ -498,9 +509,19 @@ void External::export_learned_large_clause (const vector<int> & clause) {
     learner->learn (0);
 
     //PAAVO:
+    // Could be in a function to remove duplicate code, but I don't think
+    // It matters / is worth the effort, since it's only two copies, and on the cadical side of the codebase
+    vector<int> trail_var_is_propagated;
+    trail_var_is_propagated.reserve(internal->trail.size());
+    for (int &literal : internal->trail) {
+        int idx = vidx(literal);
+        Var &v = internal->vtab[idx];
+        trail_var_is_propagated.push_back(v.reason != nullptr);
+    }
+
     learner->learn_trail(internal->conflict->size, internal->conflict->literals,
-                      internal->trail_var_is_propagated.size(),
-                      internal->trail_var_is_propagated.data(),
+                      trail_var_is_propagated.size(),
+                      trail_var_is_propagated.data(),
                       internal->trail.size(), internal->trail.data());
 
   } else
