@@ -198,11 +198,9 @@ impl SudokuCell {
                 );
             }
             let mut empty = "";
-            let text = if val.len() == 1 {
+            let text = (*val).to_string();
+            if val.len() == 1 {
                 empty = "   ";
-                format!("{}", *val)
-            } else {
-                (*val).to_string()
             };
 
             let mut stroke = Stroke::NONE;
