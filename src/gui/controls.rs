@@ -437,10 +437,15 @@ impl SATApp {
                         let text_scale = (width / 60.0).max(10.0);
 
                         ui.vertical(|ui| {
-                            if ui.button("Clear history").clicked() {
-                                let mut history = self.state.history.lock().unwrap();
-                                history.clear();
-                            }
+                            ui.horizontal(|ui| {
+                                if ui.button("Clear history").clicked() {
+                                    let mut history = self.state.history.lock().unwrap();
+                                    history.clear();
+                                }
+                                if ui.button("Export as csv").clicked() {
+                                    self.export_as_csv();
+                                }
+                            });
 
                             ScrollArea::vertical()
                                 .auto_shrink([false; 2])
@@ -565,6 +570,25 @@ impl SATApp {
                     });
                 },
             )
+        }
+    }
+
+    /// Save the statistics to a csv file
+    fn export_as_csv(&mut self) {
+        if let Some(file_path) = rfd::FileDialog::new()
+            .set_file_name("sudoku_statistics.csv")
+            .save_file()
+        {
+            let history = self.state.history.lock().unwrap();
+            let mut csv_string = String::new();
+            csv_string.push_str(&Statistics::csv_header());
+            for statistics in history.iter() {
+                csv_string.push_str(&statistics.csv());
+            }
+            let save_result = write_sudoku(csv_string, &file_path);
+            if let Err(e) = save_result {
+                self.current_error = Some(e);
+            }
         }
     }
 
@@ -833,10 +857,14 @@ impl SATApp {
                     sudoku_has_all_values,
                     sudoku_has_unique_values,
                 ) {
-                    self.state.show_warning.set(Some(
-                        "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
-                        .to_string()),
-                        0); // priority of bad set of encoding constraints is set to 0, the highest
+                    self.state.show_warning.set(
+                        Some(
+                            "Incomplete set of constraints selected for the encoding. \
+                        This may cause the solving to fail or to produce unexpected results."
+                                .to_string(),
+                        ),
+                        0,
+                    ); // priority of bad set of encoding constraints is set to 0, the highest
                 }
             }
             EncodingType::Binary => {}
