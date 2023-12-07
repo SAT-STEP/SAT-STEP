@@ -48,6 +48,7 @@ impl ListFilter {
             final_trail.push(
                 self.trails.literals_at_index(index),
                 self.trails.trail_at_index(index),
+                self.trails.var_is_propagated_at_index(index),
             );
         }
 
@@ -183,7 +184,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -219,7 +220,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -263,7 +264,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -301,7 +302,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -361,7 +362,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);

@@ -2,12 +2,14 @@
 
 use egui::{
     text::{LayoutJob, TextFormat},
-    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, TextStyle, Ui, Vec2,
+    Color32, FontId, Key, Label, NumExt, Rect, Response, RichText, ScrollArea, Stroke, TextStyle,
+    Ui, Vec2,
 };
 use std::ops::Add;
 
 use crate::cnf::CnfVariable;
 use crate::ctrl_obj::{ConstraintList, ControllableObj};
+use crate::gui::SudokuCell;
 
 use super::SATApp;
 
@@ -108,6 +110,7 @@ impl SATApp {
                             // While block constructs the LayoutJob piece by piece
                             while let Some(cnf_var) = identifiers.next() {
                                 Self::append_var_to_layout_job(
+                                    self.sudoku.clone(),
                                     cnf_var,
                                     &mut text_job,
                                     &large_font,
@@ -211,12 +214,18 @@ impl SATApp {
 
     /// Append human readable version of a CNF variable to a LayoutJob, based on variable type
     pub fn append_var_to_layout_job(
+        ready_sudoku: Vec<Vec<SudokuCell>>,
         variable: &CnfVariable,
         text_job: &mut LayoutJob,
         large_font: &FontId,
         small_font: &FontId,
         text_color: Color32,
     ) {
+        let mut underline = Stroke::NONE;
+        let underline_multiplier = 0.1;
+        //0.25 fixes float division error from float to pixels
+        let line_height = Some(small_font.size + (large_font.size - small_font.size) / 2.0 + 0.25);
+
         match variable {
             CnfVariable::Decimal { row, col, value } => {
                 let (lead_char, color) = if *value > 0 {
@@ -225,12 +234,26 @@ impl SATApp {
                     ("~", Color32::RED)
                 };
 
+                if *value
+                    == ready_sudoku[*row as usize - 1][*col as usize - 1]
+                        .value
+                        .unwrap_or(0)
+                    || (*value < 0
+                        && *value
+                            != -ready_sudoku[*row as usize - 1][*col as usize - 1]
+                                .value
+                                .unwrap_or(0))
+                {
+                    underline = Stroke::new(small_font.size * underline_multiplier, color);
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, value.abs()),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -240,6 +263,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -256,12 +281,21 @@ impl SATApp {
                     ("~B", Color32::RED)
                 };
 
+                if variable.get_possible_numbers().contains(
+                    &ready_sudoku[*row as usize - 1][*col as usize - 1]
+                        .value
+                        .unwrap_or(0),
+                ) {
+                    underline = Stroke::new(small_font.size * underline_multiplier, color);
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -271,6 +305,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -289,12 +325,37 @@ impl SATApp {
                     ("~EQ", Color32::RED)
                 };
 
+                let cell1_value = ready_sudoku[*row as usize - 1][*col as usize - 1]
+                    .value
+                    .unwrap_or(0);
+                let cell2_value = ready_sudoku[*row2 as usize - 1][*col2 as usize - 1]
+                    .value
+                    .unwrap_or(0);
+
+                let (vec1, vec2) = variable.get_possible_groups();
+
+                #[allow(clippy::collapsible_else_if)]
+                if *equal {
+                    if vec1.contains(&cell1_value) && vec1.contains(&cell2_value)
+                        || vec2.contains(&cell1_value) && vec2.contains(&cell2_value)
+                    {
+                        underline = Stroke::new(small_font.size * underline_multiplier, color);
+                    }
+                } else {
+                    if vec1.contains(&cell1_value) && vec2.contains(&cell2_value)
+                        || vec2.contains(&cell1_value) && vec1.contains(&cell2_value)
+                    {
+                        underline = Stroke::new(small_font.size * underline_multiplier, color);
+                    }
+                }
+
                 text_job.append(
                     &format!("{}{}", lead_char, bit_index),
                     0.0,
                     TextFormat {
                         font_id: large_font.clone(),
                         color,
+                        underline,
                         ..Default::default()
                     },
                 );
@@ -304,6 +365,8 @@ impl SATApp {
                     TextFormat {
                         font_id: small_font.clone(),
                         color,
+                        line_height,
+                        underline,
                         ..Default::default()
                     },
                 );

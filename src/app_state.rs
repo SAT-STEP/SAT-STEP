@@ -89,6 +89,7 @@ pub struct AppState {
     pub clicked_constraint_index: Option<usize>,
     pub conflict_literals: Option<Vec<CnfVariable>>,
     pub trail: Option<Vec<CnfVariable>>,
+    pub trail_var_is_propagated: Option<Vec<bool>>,
     pub page_number: i32,
     pub page_count: i32,
     pub page_length: usize,
@@ -103,6 +104,7 @@ pub struct AppState {
     pub highlight_fixed_literals: bool,
     pub show_statistics: bool,
     pub history: Arc<Mutex<Vec<Statistics>>>,
+    pub highlight_decided_vars: bool,
     pub show_warning: Warning,
     pub process_multithreaded: bool,
 }
@@ -125,6 +127,7 @@ impl AppState {
             clicked_constraint_index: None,
             conflict_literals: None,
             trail: None,
+            trail_var_is_propagated: None,
             page_number: 0,
             page_count: 0,
             page_length: 100,
@@ -139,6 +142,7 @@ impl AppState {
             highlight_fixed_literals: false,
             show_statistics: false,
             history: Arc::new(Mutex::new(Vec::new())),
+            highlight_decided_vars: false,
             show_warning: Warning::new(),
             process_multithreaded: false,
         }
@@ -276,11 +280,18 @@ impl AppState {
     pub fn clear_trail(&mut self) {
         self.conflict_literals = None;
         self.trail = None;
+        self.trail_var_is_propagated = None;
     }
 
-    pub fn set_trail(&mut self, conflict_literals: Vec<CnfVariable>, trail: Vec<CnfVariable>) {
+    pub fn set_trail(
+        &mut self,
+        conflict_literals: Vec<CnfVariable>,
+        trail: Vec<CnfVariable>,
+        var_is_propagated: Vec<bool>,
+    ) {
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
+        self.trail_var_is_propagated = Some(var_is_propagated);
     }
 
     pub fn get_encoding_type(&mut self) -> &str {
@@ -310,7 +321,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -355,7 +366,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -396,7 +407,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -447,7 +458,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state: AppState = AppState::new(constraints, trails);
@@ -475,7 +486,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state: AppState = AppState::new(constraints, trails);
@@ -509,7 +520,7 @@ mod tests {
         let mut trails = Trail::new();
 
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -538,7 +549,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -570,7 +581,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -598,7 +609,7 @@ mod tests {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);

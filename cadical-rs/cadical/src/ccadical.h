@@ -32,7 +32,7 @@ void ccadical_set_learn (CCaDiCaL *,
 
 // PAAVO:
 void ccadical_set_learn_trail (CCaDiCaL *,
-  void * state, void (*trail)(void * state, unsigned long conflict_size, int * conflict_literals, unsigned long size, int * trail));
+  void * state, void (*trail)(void * state, unsigned long conflict_size, int * conflict_literals, unsigned long propagated_size, int * is_propagated, unsigned long size, int * trail));
 
 double ccadical_process_time (CCaDiCaL *);
 double ccadical_real_time (CCaDiCaL *);
