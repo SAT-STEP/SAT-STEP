@@ -1,4 +1,5 @@
 use crate::app_state::EncodingType;
+use crate::sudoku::string_from_grid;
 use cadical::CadicalStats;
 
 #[derive(Clone, Debug)]
@@ -36,6 +37,71 @@ impl Statistics {
             clues,
             sudoku,
         }
+    }
+
+    pub fn csv_header() -> String {
+        "process_time;\
+            real_time;\
+            max_resident_set_size_mb;\
+            conflicts;\
+            learned_clauses;\
+            learned_literals;\
+            decisions;\
+            restarts;\
+            is_binary;\
+            cell_at_least_one;\
+            cell_at_most_one;\
+            sudoku_has_all_values;\
+            sudoku_has_unique_values;\
+            clues;\
+            sudoku"
+            .to_string()
+    }
+
+    pub fn csv(&self) -> String {
+        let clues_string = string_from_grid(self.clues.clone());
+        let sudoku_string = string_from_grid(self.sudoku.clone());
+        let (
+            is_binary,
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values,
+        ) = if let EncodingType::Decimal {
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values,
+        } = self.encoding
+        {
+            (
+                false,
+                cell_at_least_one,
+                cell_at_most_one,
+                sudoku_has_all_values,
+                sudoku_has_unique_values,
+            )
+        } else {
+            (true, false, false, false, false)
+        };
+        format!(
+            "{};{};{};{};{};{};{};{};{};{};{};{};{};{};{}",
+            self.process_time,
+            self.real_time,
+            self.max_resident_set_size_mb,
+            self.conflicts,
+            self.learned_clauses,
+            self.learned_literals,
+            self.decisions,
+            self.restarts,
+            is_binary,
+            cell_at_least_one,
+            cell_at_most_one,
+            sudoku_has_all_values,
+            sudoku_has_unique_values,
+            clues_string,
+            sudoku_string,
+        )
     }
 }
 
