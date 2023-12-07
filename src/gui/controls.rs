@@ -518,6 +518,7 @@ impl SATApp {
     }
 
     /// Icons/buttons for changing between color themes: dark mode or light mode
+    /// Icons from https://icons8.com/icons
     fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             let mut _icon = ui.label(RichText::new(""));

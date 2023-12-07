@@ -57,7 +57,7 @@ impl SATApp {
             ui.painter().text(
                 editor_label_origin,
                 egui::Align2::LEFT_TOP,
-                "N",
+                "IN",
                 egui::FontId::new(
                     cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
                     egui::FontFamily::Monospace,
