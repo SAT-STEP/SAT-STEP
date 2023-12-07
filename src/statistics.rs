@@ -38,3 +38,35 @@ impl Statistics {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{sudoku::{solve_sudoku, get_sudoku}, app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, ConstraintList, Trail};
+
+    use super::Statistics;
+
+    #[test]
+    fn test_statistics() {
+        let clues = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let constraints = ConstraintList::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: false,
+            sudoku_has_all_values: false,
+            sudoku_has_unique_values: true,
+        };
+        let solved_sudoku = solve_sudoku(&clues, &mut solver, &encoding);
+        
+        let cadical_stats = solver.stats();
+        let stats = Statistics::from_cadical_stats(cadical_stats, encoding, clues, solved_sudoku.unwrap());
+
+        assert_eq!(stats.learned_clauses, constraints.len() as i64);
+        assert!(stats.real_time > 0.0);
+        assert!(stats.max_resident_set_size_mb > 0.0);
+        assert!(stats.decisions > 0);
+    }
+}
