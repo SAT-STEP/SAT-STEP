@@ -152,6 +152,7 @@ impl ListFilter {
         little_number_constraints
     }
 
+    /// Returns ordered list of indexes that should be visible after filtering.
     fn get_filtered_index_list(&self) -> Vec<usize> {
         // Helps with applying the length filter.
         let mut final_set = self.length_filter.clone();

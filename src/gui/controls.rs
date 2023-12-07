@@ -408,6 +408,7 @@ impl SATApp {
         })
     }
 
+    /// Row for modifying the number of rows per page
     fn page_length_input(
         &mut self,
         ui: &mut Ui,
@@ -447,6 +448,7 @@ impl SATApp {
         })
     }
 
+    /// Buttons for navigating to first, previous, next and last page
     fn page_buttons(
         &mut self,
         ui: &mut Ui,
@@ -523,6 +525,8 @@ impl SATApp {
             }
         })
     }
+
+    /// Warning triangle for incomplete set of encoding rules
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         match self.state.encoding {
             EncodingType::Decimal {

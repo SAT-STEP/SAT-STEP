@@ -9,12 +9,14 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Enum denoting which encoding is used for the CNF variables.
+/// Decimal encoding also contains options for the ruleset.
 pub enum EncodingType {
     Decimal {
-        cell_at_least_one: bool,
-        cell_at_most_one: bool,
-        sudoku_has_all_values: bool,
-        sudoku_has_unique_values: bool,
+        cell_at_least_one: bool, // Each cell has at least one value (allows multiple values)
+        cell_at_most_one: bool,  // Each cell has at most one value (allows empty cells)
+        sudoku_has_all_values: bool, // Each row, column and block has all values at least once
+        sudoku_has_unique_values: bool, // Each value in a row, column and block is unique
     },
     Binary,
 }
@@ -80,24 +82,24 @@ impl EncodingType {
 /// Contains data relevant to app state
 pub struct AppState {
     filter: ListFilter,
-    pub max_length: Option<i32>,
-    pub max_length_input: String,
-    pub selected_cell: Option<(i32, i32)>,
+    pub max_length: Option<i32>, // Currently used max length of constraints to show
+    pub max_length_input: String, // Input field value for max length (converted to max_length on submit)
+    pub selected_cell: Option<(i32, i32)>, // Cell currently selected for filtering etc.
     pub clicked_constraint_index: Option<usize>,
     pub conflict_literals: Option<Vec<CnfVariable>>,
     pub trail: Option<Vec<CnfVariable>>,
     pub trail_var_is_propagated: Option<Vec<bool>>,
-    pub page_number: i32,
-    pub page_count: i32,
-    pub page_length: usize,
-    pub page_length_input: String,
-    pub filtered_length: usize,
-    pub show_solved_sudoku: bool,
+    pub page_number: i32,          // Page number of the currently shown page
+    pub page_count: i32,           // Total number of pages
+    pub page_length: usize,        // Current value of rows per page
+    pub page_length_input: String, // Input field value for rows per page (converted to page_length on submit)
+    pub filtered_length: usize,    // Number of rows after applying current filters
+    pub show_solved_sudoku: bool,  // Show or hide solution to sudoku
     pub little_number_constraints: Vec<CnfVariable>,
-    pub encoding: EncodingType,
+    pub encoding: EncodingType, // Currently chosen encoding used for converting sudoku to CNF
     pub show_conflict_literals: bool,
     pub show_trail: bool,
-    pub editor_active: bool,
+    pub editor_active: bool, // Is sudoku input mode active
     pub highlight_fixed_literals: bool,
     pub highlight_decided_vars: bool,
     pub show_warning: Warning,
@@ -166,6 +168,7 @@ impl AppState {
         (enum_constraints, trail)
     }
 
+    /// Resets filtering and paging data
     pub fn reinit(&mut self) {
         self.clear_filters();
         self.filter.reinit(&self.encoding);
