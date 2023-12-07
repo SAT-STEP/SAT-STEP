@@ -54,13 +54,13 @@ impl Statistics {
             sudoku_has_all_values;\
             sudoku_has_unique_values;\
             clues;\
-            sudoku"
+            sudoku\n"
             .to_string()
     }
 
     pub fn csv(&self) -> String {
-        let clues_string = string_from_grid(self.clues.clone());
-        let sudoku_string = string_from_grid(self.sudoku.clone());
+        let clues_string = string_from_grid(self.clues.clone()).replace('\n', "");
+        let sudoku_string = string_from_grid(self.sudoku.clone()).replace('\n', "");
         let (
             is_binary,
             cell_at_least_one,
@@ -85,7 +85,7 @@ impl Statistics {
             (true, false, false, false, false)
         };
         format!(
-            "{};{};{};{};{};{};{};{};{};{};{};{};{};{};{}",
+            "{};{};{};{};{};{};{};{};{};{};{};{};{};\"{}\";\"{}\"\n",
             self.process_time,
             self.real_time,
             self.max_resident_set_size_mb,
