@@ -183,8 +183,10 @@ impl SudokuCell {
                     },
                 );
             }
+            let mut empty = "";
             let text = if val.len() == 1 {
-                format!(" {}", *val)
+                empty = "   ";
+                format!("{}", *val)
             } else {
                 (*val).to_string()
             };
@@ -204,7 +206,14 @@ impl SudokuCell {
                     },
                 );
             }
-
+            text_job.append(
+                empty,
+                0.0,
+                TextFormat {
+                    font_id: space_font_id.clone(),
+                    ..Default::default()
+                },
+            );
             text_job.append(
                 &text,
                 0.0,
