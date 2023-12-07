@@ -41,7 +41,12 @@ impl Statistics {
 
 #[cfg(test)]
 mod tests {
-    use crate::{sudoku::{solve_sudoku, get_sudoku}, app_state::EncodingType, cadical_wrapper::CadicalCallbackWrapper, ConstraintList, Trail};
+    use crate::{
+        app_state::EncodingType,
+        cadical_wrapper::CadicalCallbackWrapper,
+        sudoku::{get_sudoku, solve_sudoku},
+        ConstraintList, Trail,
+    };
 
     use super::Statistics;
 
@@ -60,9 +65,10 @@ mod tests {
             sudoku_has_unique_values: true,
         };
         let solved_sudoku = solve_sudoku(&clues, &mut solver, &encoding);
-        
+
         let cadical_stats = solver.stats();
-        let stats = Statistics::from_cadical_stats(cadical_stats, encoding, clues, solved_sudoku.unwrap());
+        let stats =
+            Statistics::from_cadical_stats(cadical_stats, encoding, clues, solved_sudoku.unwrap());
 
         assert_eq!(stats.learned_clauses, constraints.len() as i64);
         assert!(stats.real_time > 0.0);
