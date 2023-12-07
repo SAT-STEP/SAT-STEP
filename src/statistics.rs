@@ -141,4 +141,57 @@ mod tests {
         assert!(stats.max_resident_set_size_mb > 0.0);
         assert!(stats.decisions > 0);
     }
+
+    #[test]
+    fn test_statistics_csv() {
+        let clues = get_sudoku("data/sample_sudoku.txt".to_string()).unwrap();
+        let mut solver = cadical::Solver::with_config("plain").unwrap();
+        let constraints = ConstraintList::new();
+        let callback_wrapper = CadicalCallbackWrapper::new(constraints.clone(), Trail::new());
+        solver.set_callbacks(Some(callback_wrapper.clone()));
+
+        let encoding = EncodingType::Decimal {
+            cell_at_least_one: true,
+            cell_at_most_one: false,
+            sudoku_has_all_values: false,
+            sudoku_has_unique_values: true,
+        };
+        let solved_sudoku = solve_sudoku(&clues, &mut solver, &encoding);
+
+        let cadical_stats = solver.stats();
+        let stats =
+            Statistics::from_cadical_stats(cadical_stats, encoding, clues, solved_sudoku.unwrap());
+
+        let csv = stats.csv();
+        let parts = csv.split(';').collect::<Vec<&str>>();
+        assert_eq!(parts.len(), 15);
+        assert_eq!(parts[8], "false");
+        assert_eq!(parts[9], "true");
+        assert_eq!(
+            parts[13],
+            "\".......1.4.........2...........5.4.7..8...3....1.9....3..4..2...5.1........8.6...\""
+        );
+        assert_eq!(parts[14], "\"693784512487512936125963874932651487568247391741398625319475268856129743274836159\"\n");
+    }
+
+    #[test]
+    fn test_csv_header() {
+        let header = Statistics::csv_header();
+        let should_be = "process_time;\
+            real_time;\
+            max_resident_set_size_mb;\
+            conflicts;\
+            learned_clauses;\
+            learned_literals;\
+            decisions;\
+            restarts;\
+            is_binary;\
+            cell_at_least_one;\
+            cell_at_most_one;\
+            sudoku_has_all_values;\
+            sudoku_has_unique_values;\
+            clues;\
+            sudoku\n";
+        assert_eq!(header, should_be);
+    }
 }
