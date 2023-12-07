@@ -1,9 +1,8 @@
 //! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
 
+use super::SATApp;
 use cadical::Solver;
 use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
-
-use super::SATApp;
 
 use crate::{
     app_state::EncodingType,
@@ -29,6 +28,7 @@ impl SATApp {
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
                 self.warning_triangle(ui, text_scale);
+                self.theme_button(ui, text_scale);
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
@@ -523,6 +523,35 @@ impl SATApp {
             }
         })
     }
+
+    /// Icons/buttons for changing between color themes: dark mode or light mode
+    /// Icons from https://icons8.com/icons
+    fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
+            let mut _icon = ui.label(RichText::new(""));
+            if self.state.theme.dark_mode {
+                let image_size = text_scale * 1.5;
+                _icon = ui.add(
+                    egui::Image::new(egui::include_image!("../../assets/icon-sun-96.png"))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size))
+                        .sense(egui::Sense::click()),
+                );
+            } else {
+                let image_size = text_scale * 1.5;
+                _icon = ui.add(
+                    egui::Image::new(egui::include_image!("../../assets/icon-moon-96.png"))
+                        .fit_to_fraction(vec2(1.0, 1.0))
+                        .fit_to_exact_size(vec2(image_size, image_size))
+                        .sense(egui::Sense::click()),
+                );
+            }
+            if _icon.clicked() {
+                self.state.theme = self.state.theme.theme_switch();
+            }
+        })
+    }
+
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         match self.state.encoding {
             EncodingType::Decimal {
