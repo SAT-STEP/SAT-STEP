@@ -1,9 +1,6 @@
 //! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
 
-use std::{
-    thread::{self, available_parallelism},
-    time::SystemTime,
-};
+use std::thread::{self, available_parallelism};
 
 use cadical::Solver;
 use egui::{vec2, FontId, Key, Label, Response, RichText, ScrollArea, TextStyle, Ui};
@@ -19,7 +16,7 @@ use crate::{
     sudoku::get_sudoku,
     sudoku::write_sudoku,
     sudoku::{get_empty_sudoku, solve_sudoku},
-    ConstraintList, Trail,
+    Trail,
 };
 
 impl SATApp {
@@ -362,7 +359,6 @@ impl SATApp {
                 ];
 
                 let clues = self.get_option_value_sudoku();
-                let now = SystemTime::now();
 
                 if self.state.process_multithreaded {
                     let dispatch_amount = match available_parallelism() {
@@ -373,7 +369,7 @@ impl SATApp {
                     for chunk in encodings.iter().as_slice().chunks(dispatch_amount) {
                         let mut handles = Vec::new();
 
-                        for encoding in chunk.to_owned() {
+                        for encoding in chunk.iter().copied() {
                             let clues = clues.clone();
                             let history = self.state.history.clone();
 
@@ -383,8 +379,12 @@ impl SATApp {
                                 let res = solve_sudoku(&clues, &mut solver, &encoding);
                                 if let Ok(res) = res {
                                     let cadical_stats = solver.stats();
-                                    let stats =
-                                        Statistics::from_cadical_stats(cadical_stats, encoding, clues, res);
+                                    let stats = Statistics::from_cadical_stats(
+                                        cadical_stats,
+                                        encoding,
+                                        clues,
+                                        res,
+                                    );
 
                                     let mut history = history.lock().unwrap();
                                     history.push(stats);
@@ -402,19 +402,21 @@ impl SATApp {
                     for encoding in &encodings {
                         let mut solver = cadical::Solver::with_config("plain").unwrap();
 
-                        let res = solve_sudoku(&clues, &mut solver, &encoding);
+                        let res = solve_sudoku(&clues, &mut solver, encoding);
                         if let Ok(res) = res {
                             let cadical_stats = solver.stats();
-                            let stats =
-                                Statistics::from_cadical_stats(cadical_stats, *encoding, clues.clone(), res);
+                            let stats = Statistics::from_cadical_stats(
+                                cadical_stats,
+                                *encoding,
+                                clues.clone(),
+                                res,
+                            );
 
                             let mut history = self.state.history.lock().unwrap();
                             history.push(stats);
                         }
                     }
                 }
-
-                println!("Took: {}s", now.elapsed().unwrap().as_secs_f64());
 
                 self.state.show_statistics = true;
             }
@@ -438,7 +440,7 @@ impl SATApp {
 
                     egui::CentralPanel::default().show(ctx, |ui| {
                         let width = ui.available_width();
-                        let text_scale = (width / 50.0).max(10.0);
+                        let text_scale = (width / 60.0).max(10.0);
 
                         ui.vertical(|ui| {
                             if ui.button("Clear history").clicked() {
@@ -460,11 +462,11 @@ impl SATApp {
                                         let old_spacing = ui.spacing().item_spacing;
                                         ui.spacing_mut().item_spacing.y = 0f32;
 
-                                        ui.label(
-                                            RichText::new("Clues:\tSolved:").size(text_scale),
-                                        );
+                                        ui.label(RichText::new("Clues:\tSolved:").size(text_scale));
 
-                                        for (clue_row, res_row) in his.clues.iter().zip(his.sudoku.iter()) {
+                                        for (clue_row, res_row) in
+                                            his.clues.iter().zip(his.sudoku.iter())
+                                        {
                                             let mut chars: Vec<u8> = clue_row
                                                 .iter()
                                                 .map(|n| {
@@ -476,7 +478,9 @@ impl SATApp {
                                                 })
                                                 .collect();
                                             chars.push(b' ');
-                                            chars.extend(res_row.iter().map(|n| n.unwrap() as u8 + b'0'));
+                                            chars.extend(
+                                                res_row.iter().map(|n| n.unwrap() as u8 + b'0'),
+                                            );
                                             let st = std::str::from_utf8(&chars).unwrap();
                                             ui.label(RichText::new(st).size(text_scale / 1.5));
                                             ui.spacing_mut().item_spacing.y = 0f32;
@@ -485,11 +489,8 @@ impl SATApp {
                                         ui.spacing_mut().item_spacing = old_spacing;
 
                                         ui.label(
-                                            RichText::new(format!(
-                                                "Real time: {:.2}s",
-                                                his.real_time
-                                            ))
-                                            .size(text_scale),
+                                            RichText::new(format!("Time: {:.2}s", his.real_time))
+                                                .size(text_scale),
                                         );
                                         ui.label(
                                             RichText::new(format!(
