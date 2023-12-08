@@ -20,8 +20,6 @@ impl SATApp {
     pub fn controls(&mut self, ui: &mut Ui, width: f32, ctx: &egui::Context) -> Response {
         // Text scale magic numbers chosen based on testing through ui
         let text_scale = (width / 35.0).max(10.0);
-        println!("{}", ctx.pixels_per_point());
-        println!("{}", ctx.native_pixels_per_point().unwrap());
 
         egui::Grid::new("controls")
             .num_columns(1)
@@ -293,12 +291,13 @@ impl SATApp {
                             sudoku_has_all_values: true,
                             sudoku_has_unique_values: false,
                         },
-                        "Decimal based CNF encoding",
+                        RichText::new("Decimal based CNF encoding").size(text_scale)
                     );
+
                     ui.selectable_value(
                         &mut self.state.encoding,
                         EncodingType::Binary,
-                        "Binary based CNF encoding",
+                        RichText::new("Binary based CNF encoding").size(text_scale)
                     );
                 });
         });
