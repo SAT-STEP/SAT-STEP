@@ -4,7 +4,6 @@ mod conrollable_list;
 mod controls;
 pub mod sudoku_cell;
 mod sudoku_grid;
-pub mod themes;
 
 use cadical::Solver;
 use eframe::egui;
@@ -149,7 +148,7 @@ impl Default for SATApp {
 impl eframe::App for SATApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui_extras::install_image_loaders(ctx);
-        if !self.state.theme.dark_mode {
+        if !self.state.dark_mode {
             ctx.set_visuals(egui::Visuals::light());
         } else {
             ctx.set_visuals(egui::Visuals::dark());
