@@ -540,7 +540,6 @@ impl SATApp {
                 );
             }
             if _icon.clicked() {
-                
                 self.state.dark_mode = !self.state.dark_mode;
             }
         })

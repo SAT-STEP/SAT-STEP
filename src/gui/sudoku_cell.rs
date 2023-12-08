@@ -186,7 +186,7 @@ impl SudokuCell {
             let mut empty = "";
             let text = if val.len() == 1 {
                 empty = "   ";
-                format!("{}", *val)
+                (*val).to_string()
             } else {
                 (*val).to_string()
             };
