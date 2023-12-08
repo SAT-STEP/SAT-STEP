@@ -53,6 +53,7 @@ impl SATApp {
         }
     }
 
+    /// Converts self.sudoku to a `Vec<Vec<i32>>`. This format is sometimes easier to handle.
     pub fn get_option_value_sudoku(&self) -> Vec<Vec<Option<i32>>> {
         let mut sudoku = Vec::new();
         for row in &self.sudoku {
@@ -65,6 +66,8 @@ impl SATApp {
         sudoku
     }
 
+    /// Converts a sudoku in `Vec<Vec<i32>>` format to a sudoku in `Vec<Vec<SudokuCell>>` format,
+    /// and sets it as the current sudoku.
     pub fn sudoku_from_option_values(
         &mut self,
         sudoku: Vec<Vec<Option<i32>>>,
@@ -98,6 +101,7 @@ impl SATApp {
         }
     }
 
+    /// Resets the solver so that it can be used again. Using the same solver twice does not work.
     fn reset_cadical_and_solved_sudoku(&mut self) {
         self.constraints.clear();
         self.trails.clear();

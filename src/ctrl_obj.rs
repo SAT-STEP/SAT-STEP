@@ -3,6 +3,7 @@
 use crate::app_state::AppState;
 use crate::cnf::CnfVariable;
 use crate::Trail;
+
 pub trait ControllableObj {
     fn clicked(&self, state: &mut AppState, i: usize);
     fn get_clicked(&self, state: &AppState) -> Option<usize>;
