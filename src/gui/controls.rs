@@ -408,6 +408,7 @@ impl SATApp {
         })
     }
 
+    /// Row for modifying the number of rows per page
     fn page_length_input(
         &mut self,
         ui: &mut Ui,
@@ -447,6 +448,7 @@ impl SATApp {
         })
     }
 
+    /// Buttons for navigating to first, previous, next and last page
     fn page_buttons(
         &mut self,
         ui: &mut Ui,
@@ -514,6 +516,13 @@ impl SATApp {
                 &mut self.state.highlight_fixed_literals,
                 RichText::new("Highlight fixed literals").size(text_scale),
             );
+
+            if self.state.show_trail {
+                ui.checkbox(
+                    &mut self.state.highlight_decided_vars,
+                    RichText::new("Highlight decided variables").size(text_scale),
+                );
+            }
         })
     }
 
@@ -545,6 +554,7 @@ impl SATApp {
         })
     }
 
+    /// Warning triangle for incomplete set of encoding rules
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         match self.state.encoding {
             EncodingType::Decimal {

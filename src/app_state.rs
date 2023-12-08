@@ -9,12 +9,14 @@ use crate::{
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Enum denoting which encoding is used for the CNF variables.
+/// Decimal encoding also contains options for the ruleset.
 pub enum EncodingType {
     Decimal {
-        cell_at_least_one: bool,
-        cell_at_most_one: bool,
-        sudoku_has_all_values: bool,
-        sudoku_has_unique_values: bool,
+        cell_at_least_one: bool, // Each cell has at least one value (allows multiple values)
+        cell_at_most_one: bool,  // Each cell has at most one value (allows empty cells)
+        sudoku_has_all_values: bool, // Each row, column and block has all values at least once
+        sudoku_has_unique_values: bool, // Each value in a row, column and block is unique
     },
     Binary,
 }
@@ -80,24 +82,26 @@ impl EncodingType {
 /// Contains data relevant to app state
 pub struct AppState {
     filter: ListFilter,
-    pub max_length: Option<i32>,
-    pub max_length_input: String,
-    pub selected_cell: Option<(i32, i32)>,
+    pub max_length: Option<i32>, // Currently used max length of constraints to show
+    pub max_length_input: String, // Input field value for max length (converted to max_length on submit)
+    pub selected_cell: Option<(i32, i32)>, // Cell currently selected for filtering etc.
     pub clicked_constraint_index: Option<usize>,
     pub conflict_literals: Option<Vec<CnfVariable>>,
     pub trail: Option<Vec<CnfVariable>>,
-    pub page_number: i32,
-    pub page_count: i32,
-    pub page_length: usize,
-    pub page_length_input: String,
-    pub filtered_length: usize,
-    pub show_solved_sudoku: bool,
+    pub trail_var_is_propagated: Option<Vec<bool>>,
+    pub page_number: i32,          // Page number of the currently shown page
+    pub page_count: i32,           // Total number of pages
+    pub page_length: usize,        // Current value of rows per page
+    pub page_length_input: String, // Input field value for rows per page (converted to page_length on submit)
+    pub filtered_length: usize,    // Number of rows after applying current filters
+    pub show_solved_sudoku: bool,  // Show or hide solution to sudoku
     pub little_number_constraints: Vec<CnfVariable>,
-    pub encoding: EncodingType,
+    pub encoding: EncodingType, // Currently chosen encoding used for converting sudoku to CNF
     pub show_conflict_literals: bool,
     pub show_trail: bool,
-    pub editor_active: bool,
+    pub editor_active: bool, // Is sudoku input mode active
     pub highlight_fixed_literals: bool,
+    pub highlight_decided_vars: bool,
     pub show_warning: Warning,
     pub dark_mode: bool,
 }
@@ -120,6 +124,7 @@ impl AppState {
             clicked_constraint_index: None,
             conflict_literals: None,
             trail: None,
+            trail_var_is_propagated: None,
             page_number: 0,
             page_count: 0,
             page_length: 100,
@@ -132,6 +137,7 @@ impl AppState {
             encoding,
             editor_active: false,
             highlight_fixed_literals: false,
+            highlight_decided_vars: false,
             show_warning: Warning::new(),
             dark_mode: true,
         }
@@ -164,6 +170,7 @@ impl AppState {
         (enum_constraints, trail)
     }
 
+    /// Resets filtering and paging data
     pub fn reinit(&mut self) {
         self.clear_filters();
         self.filter.reinit(&self.encoding);
@@ -269,11 +276,18 @@ impl AppState {
     pub fn clear_trail(&mut self) {
         self.conflict_literals = None;
         self.trail = None;
+        self.trail_var_is_propagated = None;
     }
 
-    pub fn set_trail(&mut self, conflict_literals: Vec<CnfVariable>, trail: Vec<CnfVariable>) {
+    pub fn set_trail(
+        &mut self,
+        conflict_literals: Vec<CnfVariable>,
+        trail: Vec<CnfVariable>,
+        var_is_propagated: Vec<bool>,
+    ) {
         self.conflict_literals = Some(conflict_literals);
         self.trail = Some(trail);
+        self.trail_var_is_propagated = Some(var_is_propagated);
     }
 
     pub fn get_encoding_type(&mut self) -> &str {
@@ -303,7 +317,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -348,7 +362,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -389,7 +403,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -440,7 +454,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state: AppState = AppState::new(constraints, trails);
@@ -468,7 +482,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state: AppState = AppState::new(constraints, trails);
@@ -502,7 +516,7 @@ mod tests {
         let mut trails = Trail::new();
 
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -531,7 +545,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -563,7 +577,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);
@@ -591,7 +605,7 @@ mod tests {
         let constraints = ConstraintList::_new(Rc::new(RefCell::new(vec![vec![0]; 10])));
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut state = AppState::new(constraints.clone(), trails);

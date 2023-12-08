@@ -74,6 +74,7 @@ impl Default for ConstraintList {
 pub struct Trail {
     pub conflict_literals: Rc<RefCell<Vec<Vec<i32>>>>,
     pub trail: Rc<RefCell<Vec<Vec<i32>>>>,
+    pub var_is_propagated: Rc<RefCell<Vec<Vec<bool>>>>,
 }
 
 impl Trail {
@@ -81,6 +82,7 @@ impl Trail {
         Self {
             conflict_literals: Rc::new(RefCell::new(Vec::new())),
             trail: Rc::new(RefCell::new(Vec::new())),
+            var_is_propagated: Rc::new(RefCell::new(Vec::new())),
         }
     }
 
@@ -97,14 +99,21 @@ impl Trail {
             .collect()
     }
 
-    pub fn push(&mut self, conflict_literals: Vec<i32>, trail: Vec<i32>) {
+    pub fn push(
+        &mut self,
+        conflict_literals: Vec<i32>,
+        trail: Vec<i32>,
+        var_is_propagated: Vec<bool>,
+    ) {
         self.conflict_literals.borrow_mut().push(conflict_literals);
         self.trail.borrow_mut().push(trail);
+        self.var_is_propagated.borrow_mut().push(var_is_propagated);
     }
 
     pub fn clear(&mut self) {
         self.conflict_literals.borrow_mut().clear();
         self.trail.borrow_mut().clear();
+        self.var_is_propagated.borrow_mut().clear();
     }
 
     pub fn trail_at_index(&self, index: usize) -> Vec<i32> {
@@ -113,6 +122,10 @@ impl Trail {
 
     pub fn literals_at_index(&self, index: usize) -> Vec<i32> {
         self.conflict_literals.borrow()[index].clone()
+    }
+
+    pub fn var_is_propagated_at_index(&self, index: usize) -> Vec<bool> {
+        self.var_is_propagated.borrow()[index].clone()
     }
 
     pub fn len(&self) -> usize {

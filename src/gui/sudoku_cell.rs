@@ -11,6 +11,7 @@ const LITTLE_NUMBER_MULTIPLIER: f32 = 0.225; // Of cell size
 const EMPTY_ROW_MULTIPLIER: f32 = LITTLE_NUMBER_MULTIPLIER * 0.3; // Of cell size
 const TOOLTIP_MULTIPLIER: f32 = 0.3; // Of cell size
 const UNDERLINE_MULTIPLIER: f32 = 0.05; // Of cell size
+const LITTLE_NUMBER_PADDING: f32 = 0.025; // Of cell size
 
 /// Struct representing a cell in the sudoku sudoku_grid
 #[derive(Clone)]
@@ -22,8 +23,10 @@ pub struct SudokuCell {
     pub clue: bool,            // Should the cell be darkened (is it a clue)
     pub part_of_conflict: bool, // Should the cell have highlighted borders
     pub fixed: bool, // Is the value of the cell set by fixed literals (used for highlighting)
-    pub eq_symbols: Vec<(String, CnfVariable, bool)>,
-    pub little_numbers: Vec<(i32, bool)>, // Bool tells us if the variable should be underlined (such as if it is part of the conflict)
+    pub eq_symbols: Vec<(String, CnfVariable, bool)>, // Bool tells if symbol should be underlined (the variable is satisfied)
+    // 1. bool tells us if the variable should be underlined (such as if it is part of the conflict)
+    // 2. bool tells if the variable should have background (it is decided, not propagated)
+    pub little_numbers: Vec<(i32, bool, bool)>,
     pub top_left: Pos2,
     pub bottom_right: Pos2,
 }
@@ -97,7 +100,11 @@ impl SudokuCell {
 
             let galley = ui.fonts(|f| f.layout_job(text_job));
 
-            ui.painter().galley(self.top_left, galley);
+            // To pad the little numbers inside the cell
+            let padded_top_left = self.top_left
+                + Vec2::new(size * LITTLE_NUMBER_PADDING, size * LITTLE_NUMBER_PADDING);
+
+            ui.painter().galley(padded_top_left, galley);
             if !self.eq_symbols.is_empty() {
                 rect_action.on_hover_ui(|ui| self.eq_tooltip(ui, size));
             }
@@ -140,6 +147,13 @@ impl SudokuCell {
             .clone()
             .iter()
             .map(|x| if x.1 { x.0.to_string() } else { String::new() })
+            .collect();
+
+        let backgrounded: Vec<String> = self
+            .little_numbers
+            .clone()
+            .iter()
+            .map(|x| if x.2 { x.0.to_string() } else { String::new() })
             .collect();
 
         underlined.extend(self.eq_symbols.iter().map(|tuple| {
@@ -197,12 +211,12 @@ impl SudokuCell {
                     size * UNDERLINE_MULTIPLIER,
                     if let Ok(val_i32) = val.parse::<i32>() {
                         if val_i32 > 0 {
-                            Color32::BLUE
+                            Color32::DARK_BLUE
                         } else {
-                            Color32::RED
+                            Color32::DARK_RED
                         }
                     } else {
-                        Color32::YELLOW
+                        Color32::DARK_GREEN
                     },
                 );
             }
@@ -220,13 +234,18 @@ impl SudokuCell {
                 TextFormat {
                     font_id: font_id.clone(),
                     color: if val.parse::<i32>().is_err() {
-                        Color32::YELLOW
+                        Color32::DARK_GREEN
                     } else if val.parse::<i32>().unwrap() > 0 {
-                        Color32::BLUE
+                        Color32::DARK_BLUE
                     } else {
-                        Color32::RED
+                        Color32::DARK_RED
                     },
                     underline: stroke,
+                    background: if backgrounded.contains(val) {
+                        Color32::from_gray(220)
+                    } else {
+                        Color32::TRANSPARENT
+                    },
                     ..Default::default()
                 },
             );
