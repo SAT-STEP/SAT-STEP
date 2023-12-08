@@ -535,17 +535,20 @@ impl SATApp {
             if self.state.theme.dark_mode {
                 _icon = ui.add(
                     egui::Button::image(
-                    egui::Image::new(egui::include_image!("../../assets/icon-sun-96.png"))
-                        .fit_to_fraction(vec2(1.0, 1.0))
-                        .fit_to_exact_size(vec2(image_size, image_size)))
-                        .sense(egui::Sense::click()),
+                        egui::Image::new(egui::include_image!("../../assets/icon-sun-96.png"))
+                            .fit_to_fraction(vec2(1.0, 1.0))
+                            .fit_to_exact_size(vec2(image_size, image_size)),
+                    )
+                    .sense(egui::Sense::click()),
                 );
             } else {
                 _icon = ui.add(
-                    egui::Button::image(egui::Image::new(egui::include_image!("../../assets/icon-moon-96.png"))
-                        .fit_to_fraction(vec2(1.0, 1.0))
-                        .fit_to_exact_size(vec2(image_size, image_size)))
-                        .sense(egui::Sense::click()),
+                    egui::Button::image(
+                        egui::Image::new(egui::include_image!("../../assets/icon-moon-96.png"))
+                            .fit_to_fraction(vec2(1.0, 1.0))
+                            .fit_to_exact_size(vec2(image_size, image_size)),
+                    )
+                    .sense(egui::Sense::click()),
                 );
             }
             if _icon.clicked() {
