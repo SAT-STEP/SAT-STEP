@@ -422,7 +422,7 @@ impl SATApp {
             let row_number_label = ui
                 .label(RichText::new("Number of rows per page: ").size(text_scale))
                 .on_hover_text(
-                    RichText::new("Empty and * put all rows on a single page.").italics(),
+                    RichText::new("Empty and * put all rows on a single page").size(text_scale),
                 );
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
@@ -553,7 +553,6 @@ impl SATApp {
             }
         })
     }
-
 
     /// Warning triangle for incomplete set of encoding rules
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
