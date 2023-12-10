@@ -22,13 +22,13 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
 
         egui::Grid::new("controls")
-            .min_col_width(40.0)
+            .num_columns(1)
             .striped(true)
             .spacing([text_scale * 2.0, text_scale * 0.5])
             .max_col_width(width)
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
-                self.warning_triangle(ui, text_scale);
+                self.info(ui, text_scale);
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
@@ -235,7 +235,6 @@ impl SATApp {
             {
                 self.state.quit();
             }
-            self.theme_button(ui, text_scale);
 
         })
     }
@@ -527,6 +526,9 @@ impl SATApp {
                     &mut self.state.highlight_decided_vars,
                     RichText::new("Decided variables").size(text_scale),
                 );
+            } else {
+                //for keeping the gui static
+                ui.label(RichText::new("                  ").size(text_scale));
             }
         })
     }
@@ -534,9 +536,9 @@ impl SATApp {
     /// Icons/buttons for changing between color themes: dark mode or light mode
     /// Icons from https://icons8.com/icons
     fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
-        ui.horizontal_centered(|ui| {
+        ui.horizontal(|ui| {
             let mut _icon = ui.label(RichText::new(""));
-            let image_size = text_scale * 1.15;
+            let image_size = text_scale * 1.5;
             if self.state.theme.dark_mode {
                 _icon = ui.add(
                     egui::Button::image(
@@ -588,7 +590,7 @@ impl SATApp {
 
         ui.horizontal(|ui| {
             if self.state.show_warning.is() {
-                let image_size = text_scale * 1.25; // 1.5 chosen with manual testing
+                let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
                 let warning_img = ui.add(
                     egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
                         .fit_to_fraction(vec2(1.0, 1.0))
@@ -599,8 +601,14 @@ impl SATApp {
                 );
             } else {
                 //For keeping the gui static
-                ui.label(RichText::new("").size(text_scale));
+                ui.label(RichText::new("                 ").size(text_scale));
             }
+        })
+    }
+    fn info(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
+                self.warning_triangle(ui, text_scale);
+                self.theme_button(ui, text_scale);
         })
     }
 }
