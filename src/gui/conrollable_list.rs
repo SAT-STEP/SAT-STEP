@@ -98,6 +98,7 @@ impl SATApp {
                     });
                     let binding = clauses.clauses(&self.state);
                     let mut clause_iter = binding.iter().skip(first_item);
+                    let mut selected_constraint_rect = None;
 
                     // Create element for each constraint
                     for i in first_item..last_item {
@@ -161,6 +162,7 @@ impl SATApp {
                                         0.0,
                                         Color32::YELLOW,
                                     );
+                                    selected_constraint_rect = Some(rect_action);
                                 }
                             }
                             // Text itself
@@ -183,9 +185,10 @@ impl SATApp {
                             - 1;
                     }
 
-                    let mut scroll_delta = Vec2::ZERO;
-
                     if clauses.get_clicked(&self.state).is_some() {
+                        let mut scroll_margin_to_end_of_list = 3.0 * row_height; // Margin between selection and the edge of the view
+                        let mut scrolled_with_keys = false; // Check if the user used arrow keys to scroll
+
                         // Actions when a constraint row is clicked with the ArrowDown button
                         if ctx.input(|i| i.key_pressed(Key::ArrowDown))
                             && current_row < self.state.filtered_length - 1
@@ -193,20 +196,30 @@ impl SATApp {
                             && current_row < current_page_length
                         {
                             clauses.move_down(&mut self.state);
-                            // Check how far down the visible list currently and keep in view
-                            if current_row > last_item - 5 {
-                                // Scroll down with the selection
-                                scroll_delta.y -= row_height;
-                            }
+                            scrolled_with_keys = true;
                         }
 
                         // Actions when a constraint row is clicked with the ArrowUp button
                         if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_row > 0) {
                             clauses.move_up(&mut self.state);
-                            // Scroll up with the selection
-                            scroll_delta.y += row_height;
+                            scrolled_with_keys = true;
+
+                            // Flip y-margin to correct for the different scrolling direction
+                            scroll_margin_to_end_of_list *= -1.0;
                         }
-                        ui.scroll_with_delta(scroll_delta);
+
+                        // If the selected constraint is visible, always scroll to keep it visible
+                        if let Some(mut response) = selected_constraint_rect {
+                            // Scroll to keep constraint visible, if user scrolled with keys
+                            // This check allows the user to scroll freely with the scroll wheel
+                            if scrolled_with_keys {
+                                response.rect = response.rect.translate(Vec2 {
+                                    x: 0.0,
+                                    y: scroll_margin_to_end_of_list,
+                                });
+                                response.scroll_to_me(None);
+                            }
+                        }
                     }
                 });
         })
