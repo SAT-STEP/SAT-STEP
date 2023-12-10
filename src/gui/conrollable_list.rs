@@ -186,30 +186,36 @@ impl SATApp {
                     }
 
                     if clauses.get_clicked(&self.state).is_some() {
-                        // Actions when a constraint row is clicked with the ArrowDown button
-                        if ctx.input(|i| i.key_pressed(Key::ArrowDown))
-                            && current_row < self.state.filtered_length - 1
-                            && current_row % self.state.page_length < self.state.page_length - 1
-                            && current_row < current_page_length
-                        {
-                            clauses.move_down(&mut self.state);
-                            if let Some(mut response) = selected_constraint_rect {
-                                response.rect = response.rect.translate(Vec2 {
-                                    x: 0.0,
-                                    y: 2.0 * row_height,
-                                });
-                                response.scroll_to_me(None);
+                        // If the selected constraint is visible, always scroll to keep it visible
+                        if let Some(mut response) = selected_constraint_rect {
+                            // Action when a constraint row is clicked with the ArrowDown button
+                            if ctx.input(|i| i.key_pressed(Key::ArrowDown))
+                                && current_row < self.state.filtered_length - 1
+                                && current_row % self.state.page_length < self.state.page_length - 1
+                                && current_row < current_page_length
+                            {
+                                clauses.move_down(&mut self.state);
                             }
-                        } else if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_row > 0) {
+
+                            // Zero rows worth of offset minimizes distracting flickering when scrolling down quickly
+                            // Kept in this form to let future devs know how this could be changed
+                            let mut scroll_margin_to_end_of_list = 0.0 * row_height;
+
                             // Actions when a constraint row is clicked with the ArrowUp button
-                            clauses.move_up(&mut self.state);
-                            if let Some(mut response) = selected_constraint_rect {
-                                response.rect = response.rect.translate(Vec2 {
-                                    x: 0.0,
-                                    y: -2.0 * row_height,
-                                });
-                                response.scroll_to_me(None);
+                            if ctx.input(|i| i.key_pressed(Key::ArrowUp)) && (current_row > 0) {
+                                clauses.move_up(&mut self.state);
+
+                                // Flip y-margin and add one row_height to correct for the different scrolling direction
+                                scroll_margin_to_end_of_list =
+                                    -1.0 * (scroll_margin_to_end_of_list + row_height);
                             }
+
+                            // Scroll to keep constraint visible
+                            response.rect = response.rect.translate(Vec2 {
+                                x: 0.0,
+                                y: scroll_margin_to_end_of_list,
+                            });
+                            response.scroll_to_me(None);
                         }
                     }
                 });
