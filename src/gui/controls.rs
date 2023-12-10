@@ -291,13 +291,13 @@ impl SATApp {
                             sudoku_has_all_values: true,
                             sudoku_has_unique_values: false,
                         },
-                        RichText::new("Decimal based CNF encoding").size(text_scale)
+                        RichText::new("Decimal based CNF encoding").size(text_scale),
                     );
 
                     ui.selectable_value(
                         &mut self.state.encoding,
                         EncodingType::Binary,
-                        RichText::new("Binary based CNF encoding").size(text_scale)
+                        RichText::new("Binary based CNF encoding").size(text_scale),
                     );
                 });
         });
@@ -508,20 +508,22 @@ impl SATApp {
     /// Checkboxes for showing/hiding the solved sudoku and fixed literals
     fn show_solved_and_fixed(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
+            let _choose_showables = ui.label(RichText::new("Show: ").size(text_scale));
+
             ui.checkbox(
                 &mut self.state.show_solved_sudoku,
-                RichText::new("Show solved sudoku").size(text_scale),
+                RichText::new("Solved sudoku").size(text_scale),
             );
 
             ui.checkbox(
                 &mut self.state.highlight_fixed_literals,
-                RichText::new("Highlight fixed literals").size(text_scale),
+                RichText::new("Fixed literals").size(text_scale),
             );
 
             if self.state.show_trail {
                 ui.checkbox(
                     &mut self.state.highlight_decided_vars,
-                    RichText::new("Highlight decided variables").size(text_scale),
+                    RichText::new("Decided variables").size(text_scale),
                 );
             }
         })
