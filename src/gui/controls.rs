@@ -236,7 +236,6 @@ impl SATApp {
                 self.state.quit();
             }
             self.theme_button(ui, text_scale);
-
         })
     }
 
@@ -379,7 +378,7 @@ impl SATApp {
         // Row for filtering functionality
         ui.horizontal(|ui| {
             let max_length_label =
-                ui.label(RichText::new("Max. constraint length: ").size(text_scale));
+                ui.label(RichText::new("Max. constraint length:         ").size(text_scale));
 
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -387,8 +386,9 @@ impl SATApp {
             // Text input field is set as 2x text_scale, this allows it to hold 2 digits
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.max_length_input)
-                    .desired_width(2.0 * text_scale)
-                    .font(font),
+                    .desired_width(3.0 * text_scale)
+                    .font(font)
+                    .horizontal_align(egui::Align::RIGHT),
             )
             .labelled_by(max_length_label.id);
 
@@ -423,14 +423,15 @@ impl SATApp {
             let font = FontId::new(text_scale, font_id.family.clone());
 
             let row_number_label = ui
-                .label(RichText::new("Number of rows per page: ").size(text_scale))
+                .label(RichText::new("Number of rows per page:   ").size(text_scale))
                 .on_hover_text(
                     RichText::new("Empty and * put all rows on a single page").size(text_scale),
                 );
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
-                    .desired_width(5.0 * text_scale)
-                    .font(font),
+                    .desired_width(3.0 * text_scale)
+                    .font(font)
+                    .horizontal_align(egui::Align::RIGHT),
             )
             .labelled_by(row_number_label.id);
 
