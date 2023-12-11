@@ -4,6 +4,7 @@ mod conrollable_list;
 mod controls;
 pub mod sudoku_cell;
 mod sudoku_grid;
+mod statistics;
 
 use cadical::Solver;
 use eframe::egui;
