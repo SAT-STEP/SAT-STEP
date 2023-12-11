@@ -103,6 +103,7 @@ pub struct AppState {
     pub highlight_fixed_literals: bool,
     pub highlight_decided_vars: bool,
     pub show_warning: Warning,
+    pub dark_mode: bool,
 }
 
 impl AppState {
@@ -138,6 +139,7 @@ impl AppState {
             highlight_fixed_literals: false,
             highlight_decided_vars: false,
             show_warning: Warning::new(),
+            dark_mode: true,
         }
     }
 

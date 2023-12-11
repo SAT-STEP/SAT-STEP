@@ -78,7 +78,7 @@ impl SATApp {
                     let small_font_size = large_font_size * 0.65;
                     let spacing = 2.0;
                     let top_margin = 5.0;
-                    let bg_color = Color32::from_rgb(15, 15, 15);
+                    let bg_color = ui.visuals().faint_bg_color;
 
                     let large_font = FontId::new(large_font_size, font_id.family.clone());
                     let small_font = FontId::new(small_font_size, font_id.family.clone());

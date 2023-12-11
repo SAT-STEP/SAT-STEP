@@ -152,6 +152,14 @@ impl Default for SATApp {
 impl eframe::App for SATApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui_extras::install_image_loaders(ctx);
+        if let Some(scale) = ctx.native_pixels_per_point() {
+            ctx.set_zoom_factor(scale / 1.66)
+        }
+        if !self.state.dark_mode {
+            ctx.set_visuals(egui::Visuals::light());
+        } else {
+            ctx.set_visuals(egui::Visuals::dark());
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             // per column
             let height = ui.available_height();
