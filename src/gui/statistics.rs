@@ -1,6 +1,6 @@
 use std::thread::{self, available_parallelism};
 
-use egui::{RichText, ScrollArea, Ui};
+use egui::{Label, RichText, ScrollArea, Ui};
 use egui_extras::{Column, TableBuilder};
 
 use crate::{
@@ -170,215 +170,235 @@ impl SATApp {
                                     self.export_as_csv();
                                 }
                             });
+                            let history = self.state.history.lock().unwrap();
+                            let col = Column::auto().clip(false);
 
-                            ScrollArea::vertical()
-                                .auto_shrink([false; 2])
-                                .stick_to_bottom(false)
-                                .show_viewport(ui, |ui, _viewport| {
-                                    let history = self.state.history.lock().unwrap();
+                            TableBuilder::new(ui)
+                                .striped(true)
+                                .columns(Column::auto().clip(false), 10)
+                                .auto_shrink(true)
+                                .header(text_scale, |mut header| {
+                                    header.col(|ui| {
+                                        //ui.heading("Clues");
+                                        let label =
+                                            Label::new(RichText::new("Clues").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
 
-                                    TableBuilder::new(ui)
-                                        .columns(Column::auto().clip(false), 10)
-                                        .header(text_scale, |mut header| {
-                                            header.col(|ui| {
-                                                ui.heading("Clues");
+                                        //ui.label(RichText::new("Clues").size(text_scale));
+                                    });
+                                    header.col(|ui| {
+                                        let label = Label::new(
+                                            RichText::new("Process time").size(text_scale),
+                                        )
+                                        .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("Real time").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label = Label::new(
+                                            RichText::new("Memory usage").size(text_scale),
+                                        )
+                                        .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("Conflicts").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label = Label::new(
+                                            RichText::new("Learned clauses").size(text_scale),
+                                        )
+                                        .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label = Label::new(
+                                            RichText::new("Learned literals").size(text_scale),
+                                        )
+                                        .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("Decisions").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("Restarts").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("Encoding").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                })
+                                .body(|mut body| {
+                                    for (i, his) in history.iter().rev().enumerate() {
+                                        let chars: Vec<u8> = his
+                                            .clues
+                                            .iter()
+                                            .flat_map(|row| {
+                                                let mut chars: Vec<u8> = row
+                                                    .iter()
+                                                    .map(|n| {
+                                                        if let Some(n) = n {
+                                                            *n as u8 + b'0'
+                                                        } else {
+                                                            b'X'
+                                                        }
+                                                    })
+                                                    .collect();
+                                                chars.push(b'\n');
+                                                chars
+                                            })
+                                            .collect();
+
+                                        let st = std::str::from_utf8(&chars).unwrap().to_owned();
+                                        let clues_string =
+                                            RichText::new(st).size(text_scale / 1.5);
+
+                                        body.row((text_scale / 1.5) * 11f32, |mut row| {
+                                            // clues
+                                            row.col(|ui| {
+                                                let label = Label::new(clues_string).wrap(false);
+                                                ui.add(label);
+                                                //ui.label(clues_string);
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Process time");
+
+                                            // process time
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "{:.2}s",
+                                                        his.process_time
+                                                    ))
+                                                    .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Real time");
+
+                                            // real time
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!("{:.2}s", his.real_time))
+                                                        .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Memory usage");
+
+                                            // memory usage
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "{:.2}MB",
+                                                        his.max_resident_set_size_mb
+                                                    ))
+                                                    .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Conflicts");
+
+                                            // conflicts
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!("{}", his.conflicts))
+                                                        .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Learned clauses");
+
+                                            // learned clauses
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "{}",
+                                                        his.learned_clauses
+                                                    ))
+                                                    .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Learned literals");
+
+                                            // learned literals
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "{}",
+                                                        his.learned_literals
+                                                    ))
+                                                    .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Decisions");
+
+                                            // decisions
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!("{}", his.decisions))
+                                                        .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Restarts");
+
+                                            // restarts
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!("{}", his.restarts))
+                                                        .size(text_scale),
+                                                );
                                             });
-                                            header.col(|ui| {
-                                                ui.heading("Encoding");
+
+                                            // encoding
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(format!(
+                                                        "{}",
+                                                        match his.encoding {
+                                                            EncodingType::Binary => "Binary",
+                                                            EncodingType::Decimal { .. } =>
+                                                                "Decimal",
+                                                        }
+                                                    ))
+                                                    .size(text_scale),
+                                                );
                                             });
                                         })
-                                        .body(|mut body| {
-                                            for (i, his) in history.iter().rev().enumerate() {
-                                                let mut st = None;
-                                                for clue_row in his.clues.iter() {
-                                                    let mut chars: Vec<u8> = clue_row
-                                                        .iter()
-                                                        .map(|n| {
-                                                            if let Some(n) = n {
-                                                                *n as u8 + b'0'
-                                                            } else {
-                                                                b'X'
-                                                            }
-                                                        })
-                                                        .collect();
-                                                    chars.push(b'\n');
-                                                    st = Some(
-                                                        std::str::from_utf8(&chars)
-                                                            .unwrap()
-                                                            .to_owned(),
-                                                    );
-                                                }
-                                                let mut clues_string = None;
-                                                if let Some(clues) = st {
-                                                    clues_string =
-                                                        Some(RichText::new(clues).size(text_scale / 1.5));
-                                                }
-                                                let clues_string = clues_string.unwrap();
-                                                body.row((text_scale / 1.5) * 9f32, |mut row| {
-                                                    // clues
-                                                    row.col(|ui| {
-                                                        ui.label(clues_string);
-                                                    });
-
-                                                    // process time
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            format!("{:.2}s", his.process_time), //RichText::new(format!(
-                                                                                                 //    "{:.2}s",
-                                                                                                 //    his.process_time
-                                                                                                 //))
-                                                                                                 //.size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // real time
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{:.2}s",
-                                                                his.real_time
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // memory usage
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{:.2}MB",
-                                                                his.max_resident_set_size_mb
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // conflicts
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{}",
-                                                                his.conflicts
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // learned clauses
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{}",
-                                                                his.learned_clauses
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // learned literals
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{}",
-                                                                his.learned_literals
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // decisions
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{}",
-                                                                his.decisions
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // restarts
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{}",
-                                                                his.restarts
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-
-                                                    // encoding
-                                                    row.col(|ui| {
-                                                        ui.label(
-                                                            RichText::new(format!(
-                                                                "{}",
-                                                                match his.encoding {
-                                                                    EncodingType::Binary =>
-                                                                        "Binary",
-                                                                    EncodingType::Decimal {
-                                                                        ..
-                                                                    } => "Decimal",
-                                                                }
-                                                            ))
-                                                            .size(text_scale),
-                                                        );
-                                                    });
-                                                })
-                                            }
-                                        });
-
-                                    //match his.encoding {
-                                    //    EncodingType::Decimal {
-                                    //        cell_at_least_one,
-                                    //        cell_at_most_one,
-                                    //        sudoku_has_all_values,
-                                    //        sudoku_has_unique_values,
-                                    //    } => {
-                                    //        ui.label(
-                                    //            RichText::new("Encoding rules:").size(text_scale),
-                                    //        );
-                                    //        ui.label(
-                                    //            RichText::new(format!(
-                                    //                "Cell at least one: {}\n\
-                                    //                    Cell at most one: {}\n\
-                                    //                    Sudoku has all values: {}\n\
-                                    //                    Sudoku has unique values: {}",
-                                    //                cell_at_least_one,
-                                    //                cell_at_most_one,
-                                    //                sudoku_has_all_values,
-                                    //                sudoku_has_unique_values
-                                    //            ))
-                                    //            .size(text_scale / 1.5),
-                                    //        );
-                                    //    }
-                                    //    EncodingType::Binary => (),
-                                    //}
+                                    }
                                 });
+
+                            //match his.encoding {
+                            //    EncodingType::Decimal {
+                            //        cell_at_least_one,
+                            //        cell_at_most_one,
+                            //        sudoku_has_all_values,
+                            //        sudoku_has_unique_values,
+                            //    } => {
+                            //        ui.label(
+                            //            RichText::new("Encoding rules:").size(text_scale),
+                            //        );
+                            //        ui.label(
+                            //            RichText::new(format!(
+                            //                "Cell at least one: {}\n\
+                            //                    Cell at most one: {}\n\
+                            //                    Sudoku has all values: {}\n\
+                            //                    Sudoku has unique values: {}",
+                            //                cell_at_least_one,
+                            //                cell_at_most_one,
+                            //                sudoku_has_all_values,
+                            //                sudoku_has_unique_values
+                            //            ))
+                            //            .size(text_scale / 1.5),
+                            //        );
+                            //    }
+                            //    EncodingType::Binary => (),
+                            //}
                         });
                     });
                 },
