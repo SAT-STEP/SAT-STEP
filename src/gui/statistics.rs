@@ -1,4 +1,7 @@
-use std::thread::{self, available_parallelism};
+use std::{
+    iter::repeat,
+    thread::{self, available_parallelism},
+};
 
 use egui::{Label, RichText, ScrollArea, Ui};
 use egui_extras::{Column, TableBuilder};
@@ -141,10 +144,10 @@ impl SATApp {
             );
         });
 
-        self.show_statistics(ui, ctx, text_scale);
+        self.show_statistics(ctx);
     }
 
-    fn show_statistics(&mut self, ui: &mut Ui, ctx: &egui::Context, text_scale: f32) {
+    fn show_statistics(&mut self, ctx: &egui::Context) {
         if self.state.show_statistics {
             ctx.show_viewport_immediate(
                 egui::ViewportId::from_hash_of("immediate_viewport_statistics"),
@@ -158,7 +161,7 @@ impl SATApp {
 
                     egui::CentralPanel::default().show(ctx, |ui| {
                         let width = ui.available_width();
-                        let text_scale = (width / 60.0).max(10.0);
+                        let text_scale = (width / 55.0).max(9.0);
 
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
@@ -171,38 +174,27 @@ impl SATApp {
                                 }
                             });
                             let history = self.state.history.lock().unwrap();
-                            let col = Column::auto().clip(false);
 
                             TableBuilder::new(ui)
                                 .striped(true)
-                                .columns(Column::auto().clip(false), 10)
+                                .columns(Column::auto().clip(false), 14)
                                 .auto_shrink(true)
                                 .header(text_scale, |mut header| {
                                     header.col(|ui| {
-                                        //ui.heading("Clues");
                                         let label =
                                             Label::new(RichText::new("Clues").size(text_scale))
                                                 .wrap(false);
                                         ui.add(label);
-
-                                        //ui.label(RichText::new("Clues").size(text_scale));
-                                    });
-                                    header.col(|ui| {
-                                        let label = Label::new(
-                                            RichText::new("Process time").size(text_scale),
-                                        )
-                                        .wrap(false);
-                                        ui.add(label);
                                     });
                                     header.col(|ui| {
                                         let label =
-                                            Label::new(RichText::new("Real time").size(text_scale))
+                                            Label::new(RichText::new("Time").size(text_scale))
                                                 .wrap(false);
                                         ui.add(label);
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
-                                            RichText::new("Memory usage").size(text_scale),
+                                            RichText::new("Memory\nusage").size(text_scale),
                                         )
                                         .wrap(false);
                                         ui.add(label);
@@ -215,14 +207,14 @@ impl SATApp {
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
-                                            RichText::new("Learned clauses").size(text_scale),
+                                            RichText::new("Learned\nclauses").size(text_scale),
                                         )
                                         .wrap(false);
                                         ui.add(label);
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
-                                            RichText::new("Learned literals").size(text_scale),
+                                            RichText::new("Learned\nliterals").size(text_scale),
                                         )
                                         .wrap(false);
                                         ui.add(label);
@@ -243,6 +235,33 @@ impl SATApp {
                                         let label =
                                             Label::new(RichText::new("Encoding").size(text_scale))
                                                 .wrap(false);
+                                        ui.add(label);
+                                    });
+
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("C. > 0").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label =
+                                            Label::new(RichText::new("C. <= 1").size(text_scale))
+                                                .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label = Label::new(
+                                            RichText::new("Sudoku\nall").size(text_scale),
+                                        )
+                                        .wrap(false);
+                                        ui.add(label);
+                                    });
+                                    header.col(|ui| {
+                                        let label = Label::new(
+                                            RichText::new("Sudoku\nunique").size(text_scale),
+                                        )
+                                        .wrap(false);
                                         ui.add(label);
                                     });
                                 })
@@ -268,8 +287,7 @@ impl SATApp {
                                             .collect();
 
                                         let st = std::str::from_utf8(&chars).unwrap().to_owned();
-                                        let clues_string =
-                                            RichText::new(st).size(text_scale / 1.5);
+                                        let clues_string = RichText::new(st).size(text_scale / 1.5);
 
                                         body.row((text_scale / 1.5) * 11f32, |mut row| {
                                             // clues
@@ -279,34 +297,26 @@ impl SATApp {
                                                 //ui.label(clues_string);
                                             });
 
-                                            // process time
-                                            row.col(|ui| {
-                                                ui.label(
-                                                    RichText::new(format!(
-                                                        "{:.2}s",
-                                                        his.process_time
-                                                    ))
-                                                    .size(text_scale),
-                                                );
-                                            });
-
                                             // real time
                                             row.col(|ui| {
-                                                ui.label(
+                                                let label = Label::new(
                                                     RichText::new(format!("{:.2}s", his.real_time))
                                                         .size(text_scale),
-                                                );
+                                                )
+                                                .wrap(false);
+                                                ui.add(label);
                                             });
 
                                             // memory usage
                                             row.col(|ui| {
-                                                ui.label(
+                                                let label = Label::new(
                                                     RichText::new(format!(
                                                         "{:.2}MB",
                                                         his.max_resident_set_size_mb
                                                     ))
                                                     .size(text_scale),
-                                                );
+                                                ).wrap(false);
+                                                ui.add(label);
                                             });
 
                                             // conflicts
@@ -367,6 +377,56 @@ impl SATApp {
                                                         }
                                                     ))
                                                     .size(text_scale),
+                                                );
+                                            });
+
+                                            let (
+                                                cell_at_least_one,
+                                                cell_at_most_one,
+                                                sudoku_has_all_values,
+                                                sudoku_has_unique_values,
+                                            ) = match his.encoding {
+                                                EncodingType::Decimal {
+                                                    cell_at_least_one,
+                                                    cell_at_most_one,
+                                                    sudoku_has_all_values,
+                                                    sudoku_has_unique_values,
+                                                } => (
+                                                    cell_at_least_one.to_string(),
+                                                    cell_at_most_one.to_string(),
+                                                    sudoku_has_all_values.to_string(),
+                                                    sudoku_has_unique_values.to_string(),
+                                                ),
+                                                EncodingType::Binary => (
+                                                    "".to_owned(),
+                                                    "".to_owned(),
+                                                    "".to_owned(),
+                                                    "".to_owned(),
+                                                ),
+                                            };
+
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(cell_at_least_one)
+                                                        .size(text_scale),
+                                                );
+                                            });
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(cell_at_most_one)
+                                                        .size(text_scale),
+                                                );
+                                            });
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(sudoku_has_all_values)
+                                                        .size(text_scale),
+                                                );
+                                            });
+                                            row.col(|ui| {
+                                                ui.label(
+                                                    RichText::new(sudoku_has_unique_values)
+                                                        .size(text_scale),
                                                 );
                                             });
                                         })
