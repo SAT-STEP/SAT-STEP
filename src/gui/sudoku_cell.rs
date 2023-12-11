@@ -75,7 +75,7 @@ impl SudokuCell {
 
         // Cell border highlight
         let mut border_color = egui::Color32::YELLOW;
-        if !app_state.theme.dark_mode {
+        if !app_state.dark_mode {
             border_color = egui::Color32::DEBUG_COLOR;
         }
         let stroke = Stroke::new(2.0, border_color);

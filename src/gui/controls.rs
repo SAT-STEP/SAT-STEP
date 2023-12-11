@@ -538,7 +538,7 @@ impl SATApp {
         ui.horizontal_centered(|ui| {
             let mut _icon = ui.label(RichText::new(""));
             let image_size = text_scale * 1.15;
-            if self.state.theme.dark_mode {
+            if self.state.dark_mode {
                 _icon = ui.add(
                     egui::Button::image(
                         egui::Image::new(egui::include_image!("../../assets/icon-sun-96.png"))
@@ -558,7 +558,7 @@ impl SATApp {
                 );
             }
             if _icon.clicked() {
-                self.state.theme = self.state.theme.theme_switch();
+                self.state.dark_mode = !self.state.dark_mode
             }
         })
     }

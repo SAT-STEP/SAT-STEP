@@ -4,7 +4,6 @@ mod conrollable_list;
 mod controls;
 pub mod sudoku_cell;
 mod sudoku_grid;
-pub mod themes;
 
 use cadical::Solver;
 use eframe::egui;
@@ -156,7 +155,7 @@ impl eframe::App for SATApp {
         if let Some(scale) = ctx.native_pixels_per_point() {
             ctx.set_zoom_factor(scale / 1.66)
         }
-        if !self.state.theme.dark_mode {
+        if !self.state.dark_mode {
             ctx.set_visuals(egui::Visuals::light());
         } else {
             ctx.set_visuals(egui::Visuals::dark());
