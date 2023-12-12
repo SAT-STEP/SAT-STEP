@@ -87,7 +87,6 @@ impl SATApp {
 
     /// Set a value to specific cell using row and column (1-9 indexed)
     fn set_cell(&mut self, row: i32, col: i32, value: Option<i32>, add_new_clue: bool) {
-
         let target_cell = get_cell(&mut self.sudoku, row, col);
         target_cell.value = value;
 

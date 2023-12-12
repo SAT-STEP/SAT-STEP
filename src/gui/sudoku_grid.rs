@@ -228,12 +228,8 @@ impl SATApp {
                 } => {
                     let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
 
-                    let cell1_value = get_cell(&mut self.sudoku, row, col)
-                        .value
-                        .unwrap_or(0);
-                    let cell2_value = get_cell(&mut self.sudoku, row2, col2)
-                        .value
-                        .unwrap_or(0);
+                    let cell1_value = get_cell(&mut self.sudoku, row, col).value.unwrap_or(0);
+                    let cell2_value = get_cell(&mut self.sudoku, row2, col2).value.unwrap_or(0);
 
                     let (vec1, vec2) = variable.get_possible_groups();
                     let mut underline = false;

@@ -158,8 +158,7 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
     }
 }
 
-/// Get reference to SudokuCell. 
-pub fn get_cell(sudoku: &mut Vec<Vec<SudokuCell>>, row: i32, column: i32) -> &mut SudokuCell {
+/// Get reference to SudokuCell.
+pub fn get_cell(sudoku: &mut [Vec<SudokuCell>], row: i32, column: i32) -> &mut SudokuCell {
     &mut sudoku[row as usize - 1][column as usize - 1]
 }
-
