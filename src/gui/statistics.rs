@@ -11,8 +11,55 @@ use crate::{
 
 use super::SATApp;
 
+const ENCODINGS: [EncodingType; 8] = [
+    EncodingType::Decimal {
+        cell_at_least_one: true,
+        cell_at_most_one: false,
+        sudoku_has_all_values: false,
+        sudoku_has_unique_values: true,
+    },
+    EncodingType::Decimal {
+        cell_at_least_one: true,
+        cell_at_most_one: true,
+        sudoku_has_all_values: false,
+        sudoku_has_unique_values: true,
+    },
+    EncodingType::Decimal {
+        cell_at_least_one: true,
+        cell_at_most_one: false,
+        sudoku_has_all_values: true,
+        sudoku_has_unique_values: true,
+    },
+    EncodingType::Decimal {
+        cell_at_least_one: false,
+        cell_at_most_one: true,
+        sudoku_has_all_values: true,
+        sudoku_has_unique_values: false,
+    },
+    EncodingType::Decimal {
+        cell_at_least_one: true,
+        cell_at_most_one: true,
+        sudoku_has_all_values: true,
+        sudoku_has_unique_values: false,
+    },
+    EncodingType::Decimal {
+        cell_at_least_one: false,
+        cell_at_most_one: true,
+        sudoku_has_all_values: true,
+        sudoku_has_unique_values: true,
+    },
+    EncodingType::Decimal {
+        cell_at_least_one: true,
+        cell_at_most_one: true,
+        sudoku_has_all_values: true,
+        sudoku_has_unique_values: true,
+    },
+    EncodingType::Binary,
+];
+
 impl SATApp {
-    /// Show statistics
+    /// Contains main app buttons and functionality for statistics and processing sudoku with
+    /// multiple configurations
     pub fn statistics(&mut self, ui: &mut Ui, ctx: &egui::Context, text_scale: f32) {
         ui.horizontal(|ui| {
             if ui
@@ -26,52 +73,6 @@ impl SATApp {
                 .button(RichText::new("Process with all configurations").size(text_scale))
                 .clicked()
             {
-                let encodings = vec![
-                    EncodingType::Decimal {
-                        cell_at_least_one: true,
-                        cell_at_most_one: false,
-                        sudoku_has_all_values: false,
-                        sudoku_has_unique_values: true,
-                    },
-                    EncodingType::Decimal {
-                        cell_at_least_one: true,
-                        cell_at_most_one: true,
-                        sudoku_has_all_values: false,
-                        sudoku_has_unique_values: true,
-                    },
-                    EncodingType::Decimal {
-                        cell_at_least_one: true,
-                        cell_at_most_one: false,
-                        sudoku_has_all_values: true,
-                        sudoku_has_unique_values: true,
-                    },
-                    EncodingType::Decimal {
-                        cell_at_least_one: false,
-                        cell_at_most_one: true,
-                        sudoku_has_all_values: true,
-                        sudoku_has_unique_values: false,
-                    },
-                    EncodingType::Decimal {
-                        cell_at_least_one: true,
-                        cell_at_most_one: true,
-                        sudoku_has_all_values: true,
-                        sudoku_has_unique_values: false,
-                    },
-                    EncodingType::Decimal {
-                        cell_at_least_one: false,
-                        cell_at_most_one: true,
-                        sudoku_has_all_values: true,
-                        sudoku_has_unique_values: true,
-                    },
-                    EncodingType::Decimal {
-                        cell_at_least_one: true,
-                        cell_at_most_one: true,
-                        sudoku_has_all_values: true,
-                        sudoku_has_unique_values: true,
-                    },
-                    EncodingType::Binary,
-                ];
-
                 let clues = self.get_option_value_sudoku();
 
                 if self.state.process_multithreaded {
@@ -80,7 +81,7 @@ impl SATApp {
                         Err(_) => 2,
                     };
 
-                    for chunk in encodings.iter().as_slice().chunks(dispatch_amount) {
+                    for chunk in ENCODINGS.iter().as_slice().chunks(dispatch_amount) {
                         let mut handles = Vec::new();
 
                         for encoding in chunk.iter().copied() {
@@ -113,7 +114,7 @@ impl SATApp {
                         }
                     }
                 } else {
-                    for encoding in &encodings {
+                    for encoding in &ENCODINGS {
                         let mut solver = cadical::Solver::with_config("plain").unwrap();
 
                         let res = solve_sudoku(&clues, &mut solver, encoding);
@@ -144,6 +145,7 @@ impl SATApp {
         self.show_statistics(ctx);
     }
 
+    /// Statistics view, works as a separate window from the main app
     fn show_statistics(&mut self, ctx: &egui::Context) {
         if self.state.show_statistics {
             ctx.show_viewport_immediate(
@@ -301,7 +303,6 @@ impl SATApp {
                                             row.col(|ui| {
                                                 let label = Label::new(clues_string).wrap(false);
                                                 ui.add(label);
-                                                //ui.label(clues_string);
                                             });
 
                                             // real time
