@@ -20,6 +20,7 @@ use cadical::Solver;
 use cadical_wrapper::CadicalCallbackWrapper;
 use cnf::CnfVariable;
 use error::GenericError;
+use gui::sudoku_cell::SudokuCell;
 use sudoku::string_from_grid;
 
 /// ConstraintList is used to store the learned cnf_clauses inside a `Rc<RefCell<Vec<Vec<i32>>>>`
@@ -156,3 +157,9 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
         Err(_err) => None,
     }
 }
+
+/// Get reference to SudokuCell. 
+pub fn get_cell(sudoku: &mut Vec<Vec<SudokuCell>>, row: i32, column: i32) -> &mut SudokuCell {
+    &mut sudoku[row as usize - 1][column as usize - 1]
+}
+
