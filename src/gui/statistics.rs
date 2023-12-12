@@ -1,9 +1,6 @@
-use std::{
-    iter::repeat,
-    thread::{self, available_parallelism},
-};
+use std::thread::{self, available_parallelism};
 
-use egui::{Label, RichText, ScrollArea, Ui};
+use egui::{Label, RichText, Ui};
 use egui_extras::{Column, TableBuilder};
 
 use crate::{
@@ -165,11 +162,17 @@ impl SATApp {
 
                         ui.vertical(|ui| {
                             ui.horizontal(|ui| {
-                                if ui.button("Clear history").clicked() {
+                                if ui
+                                    .button(RichText::new("Clear history").size(text_scale))
+                                    .clicked()
+                                {
                                     let mut history = self.state.history.lock().unwrap();
                                     history.clear();
                                 }
-                                if ui.button("Export as csv").clicked() {
+                                if ui
+                                    .button(RichText::new("Export as csv").size(text_scale))
+                                    .clicked()
+                                {
                                     self.export_as_csv();
                                 }
                             });
@@ -223,13 +226,17 @@ impl SATApp {
                                         let label =
                                             Label::new(RichText::new("Decisions").size(text_scale))
                                                 .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text(
+                                            "How many truth value assignments were decided",
+                                        );
                                     });
                                     header.col(|ui| {
                                         let label =
                                             Label::new(RichText::new("Restarts").size(text_scale))
                                                 .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text(
+                                            "How many times the search process was restarted",
+                                        );
                                     });
                                     header.col(|ui| {
                                         let label =
@@ -242,31 +249,31 @@ impl SATApp {
                                         let label =
                                             Label::new(RichText::new("C. > 0").size(text_scale))
                                                 .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text("Cell at least one");
                                     });
                                     header.col(|ui| {
                                         let label =
                                             Label::new(RichText::new("C. <= 1").size(text_scale))
                                                 .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text("Cell at most one");
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
                                             RichText::new("Sudoku\nall").size(text_scale),
                                         )
                                         .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text("Sudoku has all values");
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
                                             RichText::new("Sudoku\nunique").size(text_scale),
                                         )
                                         .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text("Sudoku has unique values");
                                     });
                                 })
                                 .body(|mut body| {
-                                    for (i, his) in history.iter().rev().enumerate() {
+                                    for his in history.iter().rev() {
                                         let chars: Vec<u8> = his
                                             .clues
                                             .iter()
@@ -315,7 +322,8 @@ impl SATApp {
                                                         his.max_resident_set_size_mb
                                                     ))
                                                     .size(text_scale),
-                                                ).wrap(false);
+                                                )
+                                                .wrap(false);
                                                 ui.add(label);
                                             });
 
@@ -368,14 +376,15 @@ impl SATApp {
                                             // encoding
                                             row.col(|ui| {
                                                 ui.label(
-                                                    RichText::new(format!(
-                                                        "{}",
-                                                        match his.encoding {
+                                                    RichText::new(
+                                                        (match his.encoding {
                                                             EncodingType::Binary => "Binary",
-                                                            EncodingType::Decimal { .. } =>
-                                                                "Decimal",
-                                                        }
-                                                    ))
+                                                            EncodingType::Decimal { .. } => {
+                                                                "Decimal"
+                                                            }
+                                                        })
+                                                        .to_string(),
+                                                    )
                                                     .size(text_scale),
                                                 );
                                             });
@@ -432,33 +441,6 @@ impl SATApp {
                                         })
                                     }
                                 });
-
-                            //match his.encoding {
-                            //    EncodingType::Decimal {
-                            //        cell_at_least_one,
-                            //        cell_at_most_one,
-                            //        sudoku_has_all_values,
-                            //        sudoku_has_unique_values,
-                            //    } => {
-                            //        ui.label(
-                            //            RichText::new("Encoding rules:").size(text_scale),
-                            //        );
-                            //        ui.label(
-                            //            RichText::new(format!(
-                            //                "Cell at least one: {}\n\
-                            //                    Cell at most one: {}\n\
-                            //                    Sudoku has all values: {}\n\
-                            //                    Sudoku has unique values: {}",
-                            //                cell_at_least_one,
-                            //                cell_at_most_one,
-                            //                sudoku_has_all_values,
-                            //                sudoku_has_unique_values
-                            //            ))
-                            //            .size(text_scale / 1.5),
-                            //        );
-                            //    }
-                            //    EncodingType::Binary => (),
-                            //}
                         });
                     });
                 },
