@@ -73,6 +73,7 @@ impl SATApp {
                 .button(RichText::new("Process with all configurations").size(text_scale))
                 .clicked()
             {
+                self.reset_cadical_and_solved_sudoku();
                 let clues = self.get_option_value_sudoku();
 
                 if self.state.process_multithreaded {
@@ -222,7 +223,9 @@ impl SATApp {
                                             RichText::new("Learned\nliterals").size(text_scale),
                                         )
                                         .wrap(false);
-                                        ui.add(label);
+                                        ui.add(label).on_hover_text(
+                                            "How many literals inside learned clauses",
+                                        );
                                     });
                                     header.col(|ui| {
                                         let label =
