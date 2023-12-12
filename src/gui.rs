@@ -53,6 +53,7 @@ impl SATApp {
         }
     }
 
+    /// Converts self.sudoku to a `Vec<Vec<i32>>`. This format is sometimes easier to handle.
     pub fn get_option_value_sudoku(&self) -> Vec<Vec<Option<i32>>> {
         let mut sudoku = Vec::new();
         for row in &self.sudoku {
@@ -65,6 +66,8 @@ impl SATApp {
         sudoku
     }
 
+    /// Converts a sudoku in `Vec<Vec<i32>>` format to a sudoku in `Vec<Vec<SudokuCell>>` format,
+    /// and sets it as the current sudoku.
     pub fn sudoku_from_option_values(&mut self, sudoku: &[Vec<Option<i32>>], add_new_clues: bool) {
         for (row_index, row) in sudoku.iter().enumerate() {
             for (col_index, value) in row.iter().enumerate() {
@@ -94,6 +97,7 @@ impl SATApp {
         }
     }
 
+    /// Resets the solver so that it can be used again. Using the same solver twice does not work.
     fn reset_cadical_and_solved_sudoku(&mut self) {
         self.constraints.clear();
         self.trails.clear();
@@ -145,6 +149,14 @@ impl Default for SATApp {
 impl eframe::App for SATApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui_extras::install_image_loaders(ctx);
+        if let Some(scale) = ctx.native_pixels_per_point() {
+            ctx.set_zoom_factor(scale / 1.66)
+        }
+        if !self.state.dark_mode {
+            ctx.set_visuals(egui::Visuals::light());
+        } else {
+            ctx.set_visuals(egui::Visuals::dark());
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             // per column
             let height = ui.available_height();

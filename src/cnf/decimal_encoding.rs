@@ -173,6 +173,8 @@ pub fn identifier_to_tuple(mut identifier: i32) -> (i32, i32, i32) {
     )
 }
 
+/// Returns the value of a cell from the solver. If the cell has no value, -1 is returned.
+/// This should only happen if chosen encoding is not adequate.
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value = -1;
     for val in 1..=9 {

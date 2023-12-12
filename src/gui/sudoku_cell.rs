@@ -74,8 +74,12 @@ impl SudokuCell {
         let center = self.top_left + Vec2::new(size / 2.0, size / 2.0);
 
         // Cell border highlight
+        let mut border_color = egui::Color32::YELLOW;
+        if !app_state.dark_mode {
+            border_color = egui::Color32::DEBUG_COLOR;
+        }
+        let stroke = Stroke::new(2.0, border_color);
         if self.part_of_conflict {
-            let stroke = Stroke::new(2.0, Color32::YELLOW);
             ui.painter().rect_stroke(rect, 0.0, stroke)
         }
 
@@ -193,10 +197,10 @@ impl SudokuCell {
                     },
                 );
             }
-            let text = if val.len() == 1 {
-                format!(" {}", *val)
-            } else {
-                (*val).to_string()
+            let mut empty = "";
+            let text = (*val).to_string();
+            if val.len() == 1 {
+                empty = "   ";
             };
 
             let mut stroke = Stroke::NONE;
@@ -214,7 +218,14 @@ impl SudokuCell {
                     },
                 );
             }
-
+            text_job.append(
+                empty,
+                0.0,
+                TextFormat {
+                    font_id: space_font_id.clone(),
+                    ..Default::default()
+                },
+            );
             text_job.append(
                 &text,
                 0.0,

@@ -1,9 +1,8 @@
 //! GUI code for all the separate controls (buttons, text_input, checkboxes, etc.)
 
+use super::SATApp;
 use cadical::Solver;
 use egui::{vec2, FontId, Key, Label, Response, RichText, TextStyle, Ui};
-
-use super::SATApp;
 
 use crate::{
     app_state::EncodingType,
@@ -24,9 +23,10 @@ impl SATApp {
         let text_scale = (width / 35.0).max(10.0);
 
         egui::Grid::new("controls")
-            .num_columns(1)
+            .min_col_width(40.0)
             .striped(true)
             .spacing([text_scale * 2.0, text_scale * 0.5])
+            .max_col_width(width)
             .show(ui, |ui| {
                 self.buttons(ui, text_scale, ctx);
                 self.warning_triangle(ui, text_scale);
@@ -254,6 +254,7 @@ impl SATApp {
             {
                 self.state.quit();
             }
+            self.theme_button(ui, text_scale);
         })
     }
 
@@ -309,12 +310,13 @@ impl SATApp {
                             sudoku_has_all_values: true,
                             sudoku_has_unique_values: false,
                         },
-                        "Decimal based CNF encoding",
+                        RichText::new("Decimal based CNF encoding").size(text_scale),
                     );
+
                     ui.selectable_value(
                         &mut self.state.encoding,
                         EncodingType::Binary,
-                        "Binary based CNF encoding",
+                        RichText::new("Binary based CNF encoding").size(text_scale),
                     );
                 });
         });
@@ -335,23 +337,24 @@ impl SATApp {
                 ref mut cell_at_most_one,
                 ..
             } => {
-                let cell_at_least_one_checkbox = ui.checkbox(
-                    cell_at_least_one,
-                    RichText::new("Cell at least one").size(text_scale),
-                );
-                let cell_at_most_one_checkbox = ui.checkbox(
-                    cell_at_most_one,
-                    RichText::new("Cell at most one").size(text_scale),
-                );
-
-                cell_at_least_one_checkbox.on_hover_text(
-                    RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
-                        .size(text_scale),
-                );
-                cell_at_most_one_checkbox.on_hover_text(
-                    RichText::new("A cell CAN be empty.\nA cell CAN NOT have multiple values.")
-                        .size(text_scale),
-                );
+                let _cell_at_least_one_checkbox = ui
+                    .checkbox(
+                        cell_at_least_one,
+                        RichText::new("Cell at least one                    ").size(text_scale),
+                    )
+                    .on_hover_text(
+                        RichText::new("A cell CAN NOT be empty.\nA cell CAN have multiple values.")
+                            .size(text_scale),
+                    );
+                let _cell_at_most_one_checkbox = ui
+                    .checkbox(
+                        cell_at_most_one,
+                        RichText::new("Cell at most one").size(text_scale),
+                    )
+                    .on_hover_text(
+                        RichText::new("A cell CAN be empty.\nA cell CAN NOT have multiple values.")
+                            .size(text_scale),
+                    );
             }
             EncodingType::Binary => {}
         });
@@ -362,21 +365,20 @@ impl SATApp {
                 ref mut sudoku_has_unique_values,
                 ..
             } => {
-                let sudoku_has_all_values_checkbox = ui.checkbox(
-                    sudoku_has_all_values,
-                    RichText::new("Sudoku has all values").size(text_scale)
-                );
-                let sudoku_has_unique_values_checkbox = ui.checkbox(
+                let _sudoku_has_unique_values_checkbox = ui.checkbox(
                     sudoku_has_unique_values,
-                    RichText::new("Sudoku has unique values").size(text_scale)
-                );
-
-                sudoku_has_all_values_checkbox.on_hover_text(
-                    RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")
+                    RichText::new("Sudoku has unique values ").size(text_scale)
+                )
+                .on_hover_text(
+                    RichText::new("No row/col/sub-grid can have duplicates.\nA value can apper once, or not at all.")
                     .size(text_scale)
                 );
-                sudoku_has_unique_values_checkbox.on_hover_text(
-                    RichText::new("No row/col/sub-grid can have duplicates.\nA value can apper once, or not at all.")
+                let _sudoku_has_all_values_checkbox = ui.checkbox(
+                    sudoku_has_all_values,
+                    RichText::new("Sudoku has all values").size(text_scale)
+                )
+                .on_hover_text(
+                    RichText::new("Each row/col/sub-grid must have every value.\nA value can apper once, or more.")
                     .size(text_scale)
                 );
             }
@@ -394,7 +396,7 @@ impl SATApp {
         // Row for filtering functionality
         ui.horizontal(|ui| {
             let max_length_label =
-                ui.label(RichText::new("Max. constraint length: ").size(text_scale));
+                ui.label(RichText::new("Max. constraint length:         ").size(text_scale));
 
             let font_id = TextStyle::Body.resolve(ui.style());
             let font = FontId::new(text_scale, font_id.family.clone());
@@ -402,8 +404,9 @@ impl SATApp {
             // Text input field is set as 2x text_scale, this allows it to hold 2 digits
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.max_length_input)
-                    .desired_width(2.0 * text_scale)
-                    .font(font),
+                    .desired_width(3.0 * text_scale)
+                    .font(font)
+                    .horizontal_align(egui::Align::RIGHT),
             )
             .labelled_by(max_length_label.id);
 
@@ -426,6 +429,7 @@ impl SATApp {
         })
     }
 
+    /// Row for modifying the number of rows per page
     fn page_length_input(
         &mut self,
         ui: &mut Ui,
@@ -437,14 +441,15 @@ impl SATApp {
             let font = FontId::new(text_scale, font_id.family.clone());
 
             let row_number_label = ui
-                .label(RichText::new("Number of rows per page: ").size(text_scale))
+                .label(RichText::new("Number of rows per page:   ").size(text_scale))
                 .on_hover_text(
-                    RichText::new("Empty and * put all rows on a single page.").italics(),
+                    RichText::new("Empty and * put all rows on a single page").size(text_scale),
                 );
             ui.add(
                 egui::TextEdit::singleline(&mut self.state.page_length_input)
-                    .desired_width(5.0 * text_scale)
-                    .font(font),
+                    .desired_width(3.0 * text_scale)
+                    .font(font)
+                    .horizontal_align(egui::Align::RIGHT),
             )
             .labelled_by(row_number_label.id);
 
@@ -465,6 +470,7 @@ impl SATApp {
         })
     }
 
+    /// Buttons for navigating to first, previous, next and last page
     fn page_buttons(
         &mut self,
         ui: &mut Ui,
@@ -523,24 +529,59 @@ impl SATApp {
     /// Checkboxes for showing/hiding the solved sudoku and fixed literals
     fn show_solved_and_fixed(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
+            let _choose_showables = ui.label(RichText::new("Show: ").size(text_scale));
+
             ui.checkbox(
                 &mut self.state.show_solved_sudoku,
-                RichText::new("Show solved sudoku").size(text_scale),
+                RichText::new("Solved sudoku").size(text_scale),
             );
 
             ui.checkbox(
                 &mut self.state.highlight_fixed_literals,
-                RichText::new("Highlight fixed literals").size(text_scale),
+                RichText::new("Fixed literals").size(text_scale),
             );
 
             if self.state.show_trail {
                 ui.checkbox(
                     &mut self.state.highlight_decided_vars,
-                    RichText::new("Highlight decided variables").size(text_scale),
+                    RichText::new("Decided variables").size(text_scale),
                 );
             }
         })
     }
+
+    /// Icons/buttons for changing between color themes: dark mode or light mode
+    /// Icons from https://icons8.com/icons
+    fn theme_button(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
+        ui.horizontal_centered(|ui| {
+            let mut _icon = ui.label(RichText::new(""));
+            let image_size = text_scale * 1.15;
+            if self.state.dark_mode {
+                _icon = ui.add(
+                    egui::Button::image(
+                        egui::Image::new(egui::include_image!("../../assets/icon-sun-96.png"))
+                            .fit_to_fraction(vec2(1.0, 1.0))
+                            .fit_to_exact_size(vec2(image_size, image_size)),
+                    )
+                    .sense(egui::Sense::click()),
+                );
+            } else {
+                _icon = ui.add(
+                    egui::Button::image(
+                        egui::Image::new(egui::include_image!("../../assets/icon-moon-96.png"))
+                            .fit_to_fraction(vec2(1.0, 1.0))
+                            .fit_to_exact_size(vec2(image_size, image_size)),
+                    )
+                    .sense(egui::Sense::click()),
+                );
+            }
+            if _icon.clicked() {
+                self.state.dark_mode = !self.state.dark_mode
+            }
+        })
+    }
+
+    /// Warning triangle for incomplete set of encoding rules
     fn warning_triangle(&mut self, ui: &mut Ui, text_scale: f32) -> egui::InnerResponse<()> {
         match self.state.encoding {
             EncodingType::Decimal {
@@ -570,7 +611,7 @@ impl SATApp {
 
         ui.horizontal(|ui| {
             if self.state.show_warning.is() {
-                let image_size = text_scale * 1.5; // 1.5 chosen with manual testing
+                let image_size = text_scale * 1.25; // 1.5 chosen with manual testing
                 let warning_img = ui.add(
                     egui::Image::new(egui::include_image!("../../assets/triangle_rgb.png"))
                         .fit_to_fraction(vec2(1.0, 1.0))
@@ -580,7 +621,8 @@ impl SATApp {
                     RichText::new(self.state.show_warning.banner()).size(text_scale),
                 );
             } else {
-                ui.label(RichText::new(""));
+                //For keeping the gui static
+                ui.label(RichText::new("").size(text_scale));
             }
         })
     }
