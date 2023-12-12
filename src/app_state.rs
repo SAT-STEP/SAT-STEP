@@ -1,9 +1,12 @@
 //! State info for the main app struct SATApp
 
+use std::sync::{Arc, Mutex};
+
 use crate::{
     cnf::{binary_encoding, decimal_encoding, CnfVariable},
     filtering::ListFilter,
     parse_numeric_input,
+    statistics::Statistics,
     warning::Warning,
     CadicalCallbackWrapper, ConstraintList, Solver, Trail,
 };
@@ -101,8 +104,11 @@ pub struct AppState {
     pub show_trail: bool,
     pub editor_active: bool, // Is sudoku input mode active
     pub highlight_fixed_literals: bool,
+    pub show_statistics: bool,
+    pub history: Arc<Mutex<Vec<Statistics>>>,
     pub highlight_decided_vars: bool,
     pub show_warning: Warning,
+    pub process_multithreaded: bool,
     pub dark_mode: bool,
 }
 
@@ -137,8 +143,11 @@ impl AppState {
             encoding,
             editor_active: false,
             highlight_fixed_literals: false,
+            show_statistics: false,
+            history: Arc::new(Mutex::new(Vec::new())),
             highlight_decided_vars: false,
             show_warning: Warning::new(),
+            process_multithreaded: false,
             dark_mode: true,
         }
     }

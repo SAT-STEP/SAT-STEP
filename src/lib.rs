@@ -5,6 +5,7 @@ mod ctrl_obj;
 mod error;
 mod filtering;
 pub mod gui;
+mod statistics;
 mod sudoku;
 mod warning;
 

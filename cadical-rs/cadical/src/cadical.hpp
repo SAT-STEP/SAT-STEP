@@ -602,6 +602,15 @@ public:
   //
   void statistics ();   // print statistics
   void resources ();    // print resource usage (time and memory)
+  
+  double process_time ();
+  double real_time ();
+  double max_resident_set_size ();
+  int64_t conflicts ();
+  int64_t learned_clauses ();
+  int64_t learned_literals ();
+  int64_t decisions ();
+  int64_t restarts ();
 
   //   require (VALID)
   //   ensure (VALID)

@@ -1,5 +1,6 @@
 #include "cadical.hpp"
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
@@ -169,6 +170,38 @@ void ccadical_set_learn_trail(CCaDiCaL * ptr, void *state, void (*trail)(void * 
   Wrapper * wrapper = (Wrapper *) ptr;
   wrapper->learner.state = state;
   wrapper->learner.trail_function = trail;
+}
+
+double ccadical_process_time(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->process_time();
+}
+
+double ccadical_real_time(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->real_time();
+}
+
+double ccadical_max_resident_set_size(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->max_resident_set_size();
+}
+
+int64_t ccadical_conflicts(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->conflicts();
+}
+
+int64_t ccadical_learned_clauses(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->learned_clauses();
+}
+
+int64_t ccadical_learned_literals(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->learned_literals();
+}
+
+int64_t ccadical_decisions(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->decisions();
+}
+
+int64_t ccadical_restarts(CCaDiCaL * wrapper) {
+    return ((Wrapper*) wrapper)->solver->restarts();
 }
 
 

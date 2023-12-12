@@ -8,6 +8,7 @@ use crate::{
     app_state::EncodingType,
     cadical_wrapper::CadicalCallbackWrapper,
     cnf::cnf_encoding_rules_ok,
+    statistics::Statistics,
     string_from_grid,
     sudoku::get_sudoku,
     sudoku::write_sudoku,
@@ -32,6 +33,9 @@ impl SATApp {
                 ui.end_row();
 
                 self.trail_view(ui, text_scale);
+                ui.end_row();
+
+                self.statistics(ui, ctx, text_scale);
                 ui.end_row();
 
                 self.encoding_selection(ui, text_scale);
@@ -76,7 +80,7 @@ impl SATApp {
                     let sudoku_result = get_sudoku(file_path.display().to_string());
                     match sudoku_result {
                         Ok(sudoku_vec) => {
-                            self.sudoku_from_option_values(sudoku_vec, true);
+                            self.sudoku_from_option_values(&sudoku_vec, true);
                             self.constraints.clear();
                             self.trails.clear();
                             self.rendered_constraints = Vec::new();
@@ -105,18 +109,30 @@ impl SATApp {
                 self.state.editor_active = false;
                 self.reset_cadical_and_solved_sudoku();
 
+                let clues = self.get_option_value_sudoku();
+
                 let solve_result = solve_sudoku(
                     &self.get_option_value_sudoku(),
                     &mut self.solver,
                     &self.state.encoding,
                 );
+
                 match solve_result {
                     Ok(solved) => {
-                        self.sudoku_from_option_values(solved, false);
+                        self.sudoku_from_option_values(&solved, false);
                         // Reinitialize filtering for a new sudoku
                         self.state.reinit();
                         (self.rendered_constraints, self.rendered_trails) =
                             self.state.get_filtered();
+                        let cadical_stats = self.solver.stats();
+                        let stats = Statistics::from_cadical_stats(
+                            cadical_stats,
+                            self.state.encoding,
+                            clues,
+                            solved,
+                        );
+                        let mut history = self.state.history.lock().unwrap();
+                        history.push(stats);
                     }
                     Err(err) => {
                         println!("{}", err);
@@ -135,7 +151,10 @@ impl SATApp {
                 let sudoku = get_empty_sudoku();
                 match sudoku {
                     Ok(sudoku_vec) => {
-                        self.sudoku_from_option_values(sudoku_vec, true);
+                        self.sudoku_from_option_values(&sudoku_vec, true);
+                        self.solver = Solver::with_config("plain").unwrap();
+                        self.solver
+                            .set_callbacks(Some(self.callback_wrapper.clone()));
                     }
                     Err(e) => {
                         self.current_error = Some(e);
@@ -258,7 +277,6 @@ impl SATApp {
 
             let how_on = ui.ctx().animate_bool(response.id, self.state.show_trail);
             let visuals = ui.style().interact_selectable(&response, true);
-            let rect = rect.expand(visuals.expansion);
             let radius = 0.5 * rect.height();
             ui.painter()
                 .rect(rect, radius, visuals.bg_fill, visuals.bg_stroke);
@@ -578,10 +596,14 @@ impl SATApp {
                     sudoku_has_all_values,
                     sudoku_has_unique_values,
                 ) {
-                    self.state.show_warning.set(Some(
-                        "Incomplete set of constraints selected for the encoding. This may cause the solving to fail or to produce unexpected results."
-                        .to_string()),
-                        0); // priority of bad set of encoding constraints is set to 0, the highest
+                    self.state.show_warning.set(
+                        Some(
+                            "Incomplete set of constraints selected for the encoding. \
+                        This may cause the solving to fail or to produce unexpected results."
+                                .to_string(),
+                        ),
+                        0,
+                    ); // priority of bad set of encoding constraints is set to 0, the highest
                 }
             }
             EncodingType::Binary => {}

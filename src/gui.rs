@@ -2,6 +2,7 @@
 
 mod conrollable_list;
 mod controls;
+mod statistics;
 pub mod sudoku_cell;
 mod sudoku_grid;
 
@@ -67,11 +68,7 @@ impl SATApp {
 
     /// Converts a sudoku in `Vec<Vec<i32>>` format to a sudoku in `Vec<Vec<SudokuCell>>` format,
     /// and sets it as the current sudoku.
-    pub fn sudoku_from_option_values(
-        &mut self,
-        sudoku: Vec<Vec<Option<i32>>>,
-        add_new_clues: bool,
-    ) {
+    pub fn sudoku_from_option_values(&mut self, sudoku: &[Vec<Option<i32>>], add_new_clues: bool) {
         for (row_index, row) in sudoku.iter().enumerate() {
             for (col_index, value) in row.iter().enumerate() {
                 self.set_cell(
