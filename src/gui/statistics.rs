@@ -161,6 +161,7 @@ impl SATApp {
 
                     egui::CentralPanel::default().show(ctx, |ui| {
                         let width = ui.available_width();
+                        let height = ui.available_height();
                         let text_scale = (width / 55.0).max(9.0);
 
                         ui.vertical(|ui| {
@@ -184,7 +185,8 @@ impl SATApp {
                             TableBuilder::new(ui)
                                 .striped(true)
                                 .columns(Column::auto().clip(false), 14)
-                                .auto_shrink(true)
+                                .auto_shrink([false, false])
+                                .max_scroll_height(height)
                                 .header(text_scale, |mut header| {
                                     header.col(|ui| {
                                         let label =
@@ -224,7 +226,10 @@ impl SATApp {
                                         )
                                         .wrap(false);
                                         ui.add(label).on_hover_text(
-                                            "How many literals inside learned clauses",
+                                            RichText::new(
+                                                "How many literals inside learned clauses",
+                                            )
+                                            .size(text_scale),
                                         );
                                     });
                                     header.col(|ui| {
@@ -232,7 +237,10 @@ impl SATApp {
                                             Label::new(RichText::new("Decisions").size(text_scale))
                                                 .wrap(false);
                                         ui.add(label).on_hover_text(
-                                            "How many truth value assignments were decided",
+                                            RichText::new(
+                                                "How many truth value assignments were decided",
+                                            )
+                                            .size(text_scale),
                                         );
                                     });
                                     header.col(|ui| {
@@ -240,7 +248,10 @@ impl SATApp {
                                             Label::new(RichText::new("Restarts").size(text_scale))
                                                 .wrap(false);
                                         ui.add(label).on_hover_text(
-                                            "How many times the search process was restarted",
+                                            RichText::new(
+                                                "How many times the search process was restarted",
+                                            )
+                                            .size(text_scale),
                                         );
                                     });
                                     header.col(|ui| {
@@ -254,27 +265,36 @@ impl SATApp {
                                         let label =
                                             Label::new(RichText::new("C. > 0").size(text_scale))
                                                 .wrap(false);
-                                        ui.add(label).on_hover_text("Cell at least one");
+                                        ui.add(label).on_hover_text(
+                                            RichText::new("Cell at least one").size(text_scale),
+                                        );
                                     });
                                     header.col(|ui| {
                                         let label =
                                             Label::new(RichText::new("C. <= 1").size(text_scale))
                                                 .wrap(false);
-                                        ui.add(label).on_hover_text("Cell at most one");
+                                        ui.add(label).on_hover_text(
+                                            RichText::new("Cell at most one").size(text_scale),
+                                        );
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
                                             RichText::new("Sudoku\nall").size(text_scale),
                                         )
                                         .wrap(false);
-                                        ui.add(label).on_hover_text("Sudoku has all values");
+                                        ui.add(label).on_hover_text(
+                                            RichText::new("Sudoku has all values").size(text_scale),
+                                        );
                                     });
                                     header.col(|ui| {
                                         let label = Label::new(
                                             RichText::new("Sudoku\nunique").size(text_scale),
                                         )
                                         .wrap(false);
-                                        ui.add(label).on_hover_text("Sudoku has unique values");
+                                        ui.add(label).on_hover_text(
+                                            RichText::new("Sudoku has unique values")
+                                                .size(text_scale),
+                                        );
                                     });
                                 })
                                 .body(|mut body| {
