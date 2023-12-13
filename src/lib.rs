@@ -169,8 +169,7 @@ fn test_get_cell_returns_correct_cell() {
     for i in 0..=9 {
         let mut sudoku_row: Vec<SudokuCell> = vec![];
         for j in 0..=9 {
-            println!("{}, {}, {}", i, j, i*j);
-            let cell = SudokuCell::new(i, j, Some(i*j), false);
+            let cell = SudokuCell::new(i, j, Some(i * j), false);
             sudoku_row.push(cell);
         }
         test_sudoku.push(sudoku_row);
@@ -180,7 +179,6 @@ fn test_get_cell_returns_correct_cell() {
     let val = cell.value;
     assert_eq!(val, Some(25));
 
-    cell.value=Some(1);
+    cell.value = Some(1);
     assert_eq!(test_sudoku[5][5].value, Some(1));
 }
-
