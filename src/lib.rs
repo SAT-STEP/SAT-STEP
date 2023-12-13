@@ -162,3 +162,25 @@ pub fn parse_numeric_input(input: &str) -> Option<i32> {
 pub fn get_cell(sudoku: &mut [Vec<SudokuCell>], row: i32, column: i32) -> &mut SudokuCell {
     &mut sudoku[row as usize - 1][column as usize - 1]
 }
+
+#[test]
+fn test_get_cell_returns_correct_cell() {
+    let mut test_sudoku: Vec<Vec<SudokuCell>> = vec![];
+    for i in 0..=9 {
+        let mut sudoku_row: Vec<SudokuCell> = vec![];
+        for j in 0..=9 {
+            println!("{}, {}, {}", i, j, i*j);
+            let cell = SudokuCell::new(i, j, Some(i*j), false);
+            sudoku_row.push(cell);
+        }
+        test_sudoku.push(sudoku_row);
+    }
+    let cell = get_cell(&mut test_sudoku, 6, 6);
+
+    let val = cell.value;
+    assert_eq!(val, Some(25));
+
+    cell.value=Some(1);
+    assert_eq!(test_sudoku[5][5].value, Some(1));
+}
+
