@@ -4,7 +4,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Ui, Vec2};
 
-use crate::cnf::CnfVariable;
+use crate::{cnf::CnfVariable, get_cell};
 
 use super::SATApp;
 
@@ -192,7 +192,7 @@ impl SATApp {
         for variable in variables {
             match variable {
                 CnfVariable::Bit { row, col, .. } => {
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell = &mut get_cell(&mut self.sudoku, row, col);
 
                     let values = variable
                         .get_possible_numbers()
@@ -205,7 +205,7 @@ impl SATApp {
                     cell.little_numbers.extend(values);
                 }
                 CnfVariable::Decimal { row, col, value } => {
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell = get_cell(&mut self.sudoku, row, col);
 
                     cell.little_numbers.push((
                         value,
@@ -228,12 +228,8 @@ impl SATApp {
                 } => {
                     let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
 
-                    let cell1_value = self.sudoku[row as usize - 1][col as usize - 1]
-                        .value
-                        .unwrap_or(0);
-                    let cell2_value = self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                        .value
-                        .unwrap_or(0);
+                    let cell1_value = get_cell(&mut self.sudoku, row, col).value.unwrap_or(0);
+                    let cell2_value = get_cell(&mut self.sudoku, row2, col2).value.unwrap_or(0);
 
                     let (vec1, vec2) = variable.get_possible_groups();
                     let mut underline = false;
@@ -250,13 +246,13 @@ impl SATApp {
                         underline = true;
                     }
 
-                    let cell1 = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell1 = get_cell(&mut self.sudoku, row, col);
                     cell1.draw_big_number = false;
                     cell1
                         .eq_symbols
                         .push((symbol.clone(), variable.clone(), underline));
 
-                    let cell2 = &mut self.sudoku[row2 as usize - 1][col2 as usize - 1];
+                    let cell2 = get_cell(&mut self.sudoku, row2, col2);
                     cell2.draw_big_number = false;
                     cell2.eq_symbols.push((symbol, variable, underline));
                 }
@@ -276,10 +272,9 @@ impl SATApp {
             if let Some(conflicts) = &self.state.conflict_literals {
                 for conflict in conflicts {
                     if let CnfVariable::Decimal { row, col, value } = conflict {
-                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        let cell = get_cell(&mut self.sudoku, *row, *col);
                         cell.part_of_conflict = true;
                         cell.draw_big_number = false;
-
                         // Add the negations of conflict literals as underlined little numbers (so the user knows what the conflict was)
                         cell.little_numbers.push((-1 * *value, true, false));
                     }
@@ -292,7 +287,7 @@ impl SATApp {
 
                 for (i, variable) in variables.into_iter().enumerate() {
                     if let CnfVariable::Decimal { row, col, value } = variable {
-                        let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                        let cell = get_cell(&mut self.sudoku, row, col);
 
                         cell.draw_big_number = false;
                         cell.little_numbers.push((
@@ -375,7 +370,7 @@ impl SATApp {
                         }
                         .get_possible_numbers();
 
-                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        let cell = get_cell(&mut self.sudoku, *row, *col);
                         cell.part_of_conflict = true;
                         cell.draw_big_number = false;
 
@@ -402,12 +397,12 @@ impl SATApp {
                             equal: !equal,
                         };
 
-                        let cell1 = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        let cell1 = get_cell(&mut self.sudoku, *row, *col);
                         cell1.part_of_conflict = true;
                         cell1.draw_big_number = false;
                         cell1.eq_symbols.push((symbol.clone(), var.clone(), true));
 
-                        let cell2 = &mut self.sudoku[*row2 as usize - 1][*col2 as usize - 1];
+                        let cell2 = get_cell(&mut self.sudoku, *row2, *col2);
                         cell2.part_of_conflict = true;
                         cell2.draw_big_number = false;
                         cell2.eq_symbols.push((symbol, var.clone(), true));
@@ -455,7 +450,7 @@ impl SATApp {
 
             for (i, variable) in variables.into_iter().enumerate() {
                 if let CnfVariable::Bit { row, col, .. } = variable {
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell = get_cell(&mut self.sudoku, row, col);
                     cell.draw_big_number = false;
 
                     // Only keep the numbers compatible with this variable (that is part of the trail)
