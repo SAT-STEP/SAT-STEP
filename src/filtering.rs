@@ -48,6 +48,7 @@ impl ListFilter {
             final_trail.push(
                 self.trails.literals_at_index(index),
                 self.trails.trail_at_index(index),
+                self.trails.var_is_propagated_at_index(index),
             );
         }
 
@@ -151,6 +152,7 @@ impl ListFilter {
         little_number_constraints
     }
 
+    /// Returns ordered list of indexes that should be visible after filtering.
     fn get_filtered_index_list(&self) -> Vec<usize> {
         // Helps with applying the length filter.
         let mut final_set = self.length_filter.clone();
@@ -183,7 +185,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -219,7 +221,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -263,7 +265,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -301,7 +303,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..3 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);
@@ -361,7 +363,7 @@ mod tests {
 
         let mut trails = Trail::new();
         for i in 0..10 {
-            trails.push(vec![i], vec![i]);
+            trails.push(vec![i], vec![i], vec![false]);
         }
 
         let mut filter: ListFilter = ListFilter::new(constraints.clone(), trails);

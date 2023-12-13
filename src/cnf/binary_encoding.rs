@@ -143,6 +143,8 @@ fn eq_variable_init(row: i32, col: i32, row2: i32, col2: i32) -> Vec<Vec<i32>> {
     clauses
 }
 
+/// Gets all bit values of a cell from the solver, and converts thet to a decimal value,
+/// which is returned.
 pub fn get_cell_value(solver: &Solver<CadicalCallbackWrapper>, row: i32, col: i32) -> i32 {
     let mut value: i32 = 1;
     for bit in 0..4 {

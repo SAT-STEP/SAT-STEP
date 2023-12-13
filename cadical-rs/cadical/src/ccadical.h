@@ -2,6 +2,7 @@
 #define _ccadical_h_INCLUDED
 
 /*------------------------------------------------------------------------*/
+#include <cstdint>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,7 +32,16 @@ void ccadical_set_learn (CCaDiCaL *,
 
 // PAAVO:
 void ccadical_set_learn_trail (CCaDiCaL *,
-  void * state, void (*trail)(void * state, unsigned long conflict_size, int * conflict_literals, unsigned long size, int * trail));
+  void * state, void (*trail)(void * state, unsigned long conflict_size, int * conflict_literals, unsigned long propagated_size, int * is_propagated, unsigned long size, int * trail));
+
+double ccadical_process_time (CCaDiCaL *);
+double ccadical_real_time (CCaDiCaL *);
+double ccadical_max_resident_set_size (CCaDiCaL *);
+int64_t ccadical_conflicts (CCaDiCaL *);
+int64_t ccadical_learned_clauses (CCaDiCaL *);
+int64_t ccadical_learned_literals (CCaDiCaL *);
+int64_t ccadical_decisions (CCaDiCaL *);
+int64_t ccadical_restarts(CCaDiCaL *);
 /*------------------------------------------------------------------------*/
 
 // Non-IPASIR conformant 'C' functions.

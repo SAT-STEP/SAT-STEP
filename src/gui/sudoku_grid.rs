@@ -4,7 +4,7 @@ use std::cmp;
 
 use egui::{Color32, Pos2, Ui, Vec2};
 
-use crate::cnf::CnfVariable;
+use crate::{cnf::CnfVariable, get_cell};
 
 use super::SATApp;
 
@@ -57,7 +57,7 @@ impl SATApp {
             ui.painter().text(
                 editor_label_origin,
                 egui::Align2::LEFT_TOP,
-                "N",
+                "IN",
                 egui::FontId::new(
                     cell_size * ROW_COL_NUM_FIELD_MULTIPLIER,
                     egui::FontFamily::Monospace,
@@ -192,12 +192,12 @@ impl SATApp {
         for variable in variables {
             match variable {
                 CnfVariable::Bit { row, col, .. } => {
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell = &mut get_cell(&mut self.sudoku, row, col);
 
                     let values = variable
                         .get_possible_numbers()
                         .into_iter()
-                        .map(|x| (x, { x == cell.value.unwrap_or(0) }));
+                        .map(|x| (x, { x == cell.value.unwrap_or(0) }, false));
 
                     cell.draw_big_number = false;
 
@@ -205,12 +205,16 @@ impl SATApp {
                     cell.little_numbers.extend(values);
                 }
                 CnfVariable::Decimal { row, col, value } => {
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell = get_cell(&mut self.sudoku, row, col);
 
-                    cell.little_numbers.push((value, {
-                        value == cell.value.unwrap_or(0)
-                            || (value < 0 && value != -cell.value.unwrap_or(0))
-                    }));
+                    cell.little_numbers.push((
+                        value,
+                        {
+                            value == cell.value.unwrap_or(0)
+                                || (value < 0 && value != -cell.value.unwrap_or(0))
+                        },
+                        false,
+                    ));
 
                     cell.draw_big_number = false;
                 }
@@ -224,12 +228,8 @@ impl SATApp {
                 } => {
                     let symbol = eq_symbols.next().unwrap_or_else(|| "?".to_string());
 
-                    let cell1_value = self.sudoku[row as usize - 1][col as usize - 1]
-                        .value
-                        .unwrap_or(0);
-                    let cell2_value = self.sudoku[row2 as usize - 1][col2 as usize - 1]
-                        .value
-                        .unwrap_or(0);
+                    let cell1_value = get_cell(&mut self.sudoku, row, col).value.unwrap_or(0);
+                    let cell2_value = get_cell(&mut self.sudoku, row2, col2).value.unwrap_or(0);
 
                     let (vec1, vec2) = variable.get_possible_groups();
                     let mut underline = false;
@@ -246,13 +246,13 @@ impl SATApp {
                         underline = true;
                     }
 
-                    let cell1 = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell1 = get_cell(&mut self.sudoku, row, col);
                     cell1.draw_big_number = false;
                     cell1
                         .eq_symbols
                         .push((symbol.clone(), variable.clone(), underline));
 
-                    let cell2 = &mut self.sudoku[row2 as usize - 1][col2 as usize - 1];
+                    let cell2 = get_cell(&mut self.sudoku, row2, col2);
                     cell2.draw_big_number = false;
                     cell2.eq_symbols.push((symbol, variable, underline));
                 }
@@ -272,12 +272,11 @@ impl SATApp {
             if let Some(conflicts) = &self.state.conflict_literals {
                 for conflict in conflicts {
                     if let CnfVariable::Decimal { row, col, value } = conflict {
-                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        let cell = get_cell(&mut self.sudoku, *row, *col);
                         cell.part_of_conflict = true;
                         cell.draw_big_number = false;
-
                         // Add the negations of conflict literals as underlined little numbers (so the user knows what the conflict was)
-                        cell.little_numbers.push((-1 * *value, true));
+                        cell.little_numbers.push((-1 * *value, true, false));
                     }
                 }
             }
@@ -286,24 +285,27 @@ impl SATApp {
             if let Some(_conflict_index) = self.state.clicked_constraint_index {
                 let variables = self.state.trail.clone().unwrap();
 
-                for variable in variables {
+                for (i, variable) in variables.into_iter().enumerate() {
                     if let CnfVariable::Decimal { row, col, value } = variable {
-                        let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                        let cell = get_cell(&mut self.sudoku, row, col);
 
-                        if !cell.little_numbers.contains(&(value, true)) {
-                            cell.draw_big_number = false;
-                            cell.little_numbers.push((value, false));
-                        }
+                        cell.draw_big_number = false;
+                        cell.little_numbers.push((
+                            value,
+                            false,
+                            self.state.highlight_decided_vars
+                                && !self.state.trail_var_is_propagated.as_ref().unwrap()[i],
+                        ));
                     }
                 }
 
                 // Remove red little literals/numbers (negatives) from cell, if there is at least one blue literal/number (positive) in it
                 for row in self.sudoku.iter_mut() {
                     for cell in row.iter_mut() {
-                        let mut visible: Vec<(i32, bool)> = cell.little_numbers.clone();
+                        let mut visible: Vec<(i32, bool, bool)> = cell.little_numbers.clone();
 
                         // Keep the positive values and underlined negative values (from conflict literals)
-                        visible.retain(|&x| x.0 > 0 || x.1);
+                        visible.retain(|&x| x.0 > 0 || x.1 || (x.2 && !cell.clue));
 
                         if !visible.is_empty() {
                             cell.little_numbers = visible;
@@ -334,15 +336,15 @@ impl SATApp {
         for row in self.sudoku.iter_mut() {
             for cell in row.iter_mut() {
                 cell.little_numbers = vec![
-                    (1, true),
-                    (2, true),
-                    (3, true),
-                    (4, true),
-                    (5, true),
-                    (6, true),
-                    (7, true),
-                    (8, true),
-                    (9, true),
+                    (1, true, false),
+                    (2, true, false),
+                    (3, true, false),
+                    (4, true, false),
+                    (5, true, false),
+                    (6, true, false),
+                    (7, true, false),
+                    (8, true, false),
+                    (9, true, false),
                 ];
             }
         }
@@ -368,7 +370,7 @@ impl SATApp {
                         }
                         .get_possible_numbers();
 
-                        let cell = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        let cell = get_cell(&mut self.sudoku, *row, *col);
                         cell.part_of_conflict = true;
                         cell.draw_big_number = false;
 
@@ -395,12 +397,12 @@ impl SATApp {
                             equal: !equal,
                         };
 
-                        let cell1 = &mut self.sudoku[*row as usize - 1][*col as usize - 1];
+                        let cell1 = get_cell(&mut self.sudoku, *row, *col);
                         cell1.part_of_conflict = true;
                         cell1.draw_big_number = false;
                         cell1.eq_symbols.push((symbol.clone(), var.clone(), true));
 
-                        let cell2 = &mut self.sudoku[*row2 as usize - 1][*col2 as usize - 1];
+                        let cell2 = get_cell(&mut self.sudoku, *row2, *col2);
                         cell2.part_of_conflict = true;
                         cell2.draw_big_number = false;
                         cell2.eq_symbols.push((symbol, var.clone(), true));
@@ -433,27 +435,34 @@ impl SATApp {
             for row in self.sudoku.iter_mut() {
                 for cell in row.iter_mut() {
                     cell.little_numbers.extend(vec![
-                        (1, false),
-                        (2, false),
-                        (3, false),
-                        (4, false),
-                        (5, false),
-                        (6, false),
-                        (7, false),
-                        (8, false),
-                        (9, false),
+                        (1, false, false),
+                        (2, false, false),
+                        (3, false, false),
+                        (4, false, false),
+                        (5, false, false),
+                        (6, false, false),
+                        (7, false, false),
+                        (8, false, false),
+                        (9, false, false),
                     ]);
                 }
             }
 
-            for variable in variables {
+            for (i, variable) in variables.into_iter().enumerate() {
                 if let CnfVariable::Bit { row, col, .. } = variable {
-                    let cell = &mut self.sudoku[row as usize - 1][col as usize - 1];
+                    let cell = get_cell(&mut self.sudoku, row, col);
                     cell.draw_big_number = false;
 
                     // Only keep the numbers compatible with this variable (that is part of the trail)
                     cell.little_numbers
                         .retain(|x| variable.get_possible_numbers().contains(&x.0));
+                    if self.state.highlight_decided_vars
+                        && !self.state.trail_var_is_propagated.as_ref().unwrap()[i]
+                    {
+                        for x in &mut cell.little_numbers {
+                            x.2 = true;
+                        }
+                    }
                 }
             }
 

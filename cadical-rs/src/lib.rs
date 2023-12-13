@@ -7,7 +7,7 @@
 //! overall place. It was written by Armin Biere, and it is available under the
 //! MIT license.
 
-use std::ffi::{CStr, CString};
+use std::ffi::{c_double, CStr, CString};
 use std::mem::ManuallyDrop;
 use std::os::raw::{c_char, c_int, c_ulong, c_void};
 use std::path::Path;
@@ -39,7 +39,17 @@ extern "C" {
     fn ccadical_set_learn_trail(
         ptr: *mut c_void,
         data: *mut c_void,
-        cbs: Option<extern "C" fn(*mut c_void, c_ulong, *const c_int, c_ulong, *const c_int)>,
+        cbs: Option<
+            extern "C" fn(
+                *mut c_void,
+                c_ulong,
+                *const c_int,
+                c_ulong,
+                *const c_int,
+                c_ulong,
+                *const c_int,
+            ),
+        >,
     );
     fn ccadical_status(ptr: *mut c_void) -> c_int;
     fn ccadical_vars(ptr: *mut c_void) -> c_int;
@@ -59,6 +69,14 @@ extern "C" {
     fn ccadical_configure(ptr: *mut c_void, name: *const c_char) -> c_int;
     fn ccadical_limit2(ptr: *mut c_void, name: *const c_char, limit: c_int) -> c_int;
     fn ccadical_fixed(ptr: *mut c_void, lit: c_int) -> c_int;
+    fn ccadical_process_time(ptr: *mut c_void) -> c_double;
+    fn ccadical_real_time(ptr: *mut c_void) -> c_double;
+    fn ccadical_max_resident_set_size(ptr: *mut c_void) -> c_double;
+    fn ccadical_conflicts(ptr: *mut c_void) -> i64;
+    fn ccadical_learned_clauses(ptr: *mut c_void) -> i64;
+    fn ccadical_learned_literals(ptr: *mut c_void) -> i64;
+    fn ccadical_decisions(ptr: *mut c_void) -> i64;
+    fn ccadical_restarts(ptr: *mut c_void) -> i64;
 }
 
 /// The CaDiCaL incremental SAT solver. The literals are unwrapped positive
@@ -312,6 +330,8 @@ impl<C: Callbacks> Solver<C> {
         data: *mut c_void,
         conflict_size: c_ulong,
         conflict_literals: *const c_int,
+        propagated_size: c_ulong,
+        is_propagated: *const c_int,
         size: c_ulong,
         trail: *const c_int,
     ) {
@@ -319,11 +339,15 @@ impl<C: Callbacks> Solver<C> {
             unsafe { slice::from_raw_parts(conflict_literals, conflict_size as usize) };
         let conflict_literals = ManuallyDrop::new(conflict_literals);
 
+        let is_propagated =
+            unsafe { slice::from_raw_parts(is_propagated, propagated_size as usize) };
+        let is_propagated = ManuallyDrop::new(is_propagated);
+
         let trail = unsafe { slice::from_raw_parts(trail, size as usize) };
         let trail = ManuallyDrop::new(trail);
 
         let cbs = unsafe { &mut *(data as *mut C) };
-        cbs.learn_trail(&conflict_literals, &trail);
+        cbs.learn_trail(&conflict_literals, &is_propagated, &trail);
     }
 
     /// Returns a mutable reference to the callbacks.
@@ -365,6 +389,31 @@ impl<C: Callbacks> Solver<C> {
     pub fn fixed(&self, literal: i32) -> i32 {
         unsafe { ccadical_fixed(self.ptr, literal) }
     }
+
+    pub fn stats(&mut self) -> CadicalStats {
+        CadicalStats {
+            process_time: unsafe { ccadical_process_time(self.ptr) },
+            real_time: unsafe { ccadical_real_time(self.ptr) },
+            max_resident_set_size_mb: unsafe { ccadical_max_resident_set_size(self.ptr) },
+            conflicts: unsafe { ccadical_conflicts(self.ptr) },
+            learned_clauses: unsafe { ccadical_learned_clauses(self.ptr) },
+            learned_literals: unsafe { ccadical_learned_literals(self.ptr) },
+            decisions: unsafe { ccadical_decisions(self.ptr) },
+            restarts: unsafe { ccadical_restarts(self.ptr) },
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct CadicalStats {
+    pub process_time: f64,
+    pub real_time: f64,
+    pub max_resident_set_size_mb: f64,
+    pub conflicts: i64,
+    pub learned_clauses: i64,
+    pub learned_literals: i64,
+    pub decisions: i64,
+    pub restarts: i64,
 }
 
 fn dimacs_path(path: &Path) -> Result<CString, Error> {
@@ -419,8 +468,9 @@ pub trait Callbacks {
     #[inline(always)]
     fn learn(&mut self, clause: &[i32]) {}
 
+    // PAAVO:
     #[allow(unused_variables)]
-    fn learn_trail(&mut self, conflict_literals: &[i32], trail: &[i32]) {}
+    fn learn_trail(&mut self, conflict_literals: &[i32], is_propagated: &[i32], trail: &[i32]) {}
 }
 
 /// Callbacks implementing a simple timeout.
