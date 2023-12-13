@@ -78,3 +78,23 @@ fn test_trail() {
     assert_eq!(trail.conflict_literals.borrow().len(), 0);
     assert_eq!(trail.var_is_propagated.borrow().len(), 0);
 }
+
+#[test]
+fn test_get_cell_returns_correct_cell() {
+    let mut test_sudoku: Vec<Vec<SudokuCell>> = vec![];
+    for i in 0..=9 {
+        let mut sudoku_row: Vec<SudokuCell> = vec![];
+        for j in 0..=9 {
+            let cell = SudokuCell::new(i, j, Some(i * j), false);
+            sudoku_row.push(cell);
+        }
+        test_sudoku.push(sudoku_row);
+    }
+    let cell = get_cell(&mut test_sudoku, 6, 6);
+
+    let val = cell.value;
+    assert_eq!(val, Some(25));
+
+    cell.value = Some(1);
+    assert_eq!(test_sudoku[5][5].value, Some(1));
+}
