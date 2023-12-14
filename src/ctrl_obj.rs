@@ -4,6 +4,8 @@ use crate::app_state::AppState;
 use crate::cnf::CnfVariable;
 use crate::Trail;
 
+/// Trait for listed data e.g. constraints or conflicts
+/// Replaces calls to specific lists in gui code
 pub trait ControllableObj {
     fn clicked(&self, state: &mut AppState, i: usize);
     fn get_clicked(&self, state: &AppState) -> Option<usize>;
@@ -13,9 +15,11 @@ pub trait ControllableObj {
     fn move_down(&self, state: &mut AppState);
 }
 
+/// Struct for constraints to be shown in gui
 pub struct ConstraintList {
     pub clauses: Vec<Vec<CnfVariable>>,
     pub trail: Trail,
+    /// Combiner string to join variables for gui
     pub combiner: String,
 }
 

@@ -309,7 +309,7 @@ impl SATApp {
                                                         if let Some(n) = n {
                                                             *n as u8 + b'0'
                                                         } else {
-                                                            b'X'
+                                                            b'_'
                                                         }
                                                     })
                                                     .collect();
