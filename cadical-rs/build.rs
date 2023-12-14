@@ -3,7 +3,6 @@ fn main() -> std::io::Result<()> {
     build
         .cpp(true)
         .flag_if_supported("-std=c++11")
-        // NOTE(Paavo): Too noisy
         .warnings(false)
         .define("NBUILD", None)
         .define("NUNLOCKED", None)
@@ -15,17 +14,14 @@ fn main() -> std::io::Result<()> {
     let version = format!("\"{}\"", version.trim());
     build.define("VERSION", version.as_ref());
 
-    // NOTE(Paavo): degub builds for now
-    build.debug(true);
-
     // assertions only for debug builds with debug feature enabled
-    //if std::env::var("PROFILE").unwrap() == "debug"
-    //    && std::env::var("CARGO_FEATURE_CPP_DEBUG").is_ok()
-    //{
-    //    build.debug(true);
-    //} else {
-    //    build.debug(false).opt_level(3).define("NDEBUG", None);
-    //}
+    if std::env::var("PROFILE").unwrap() == "debug"
+        && std::env::var("CARGO_FEATURE_CPP_DEBUG").is_ok()
+    {
+        build.debug(true);
+    } else {
+        build.debug(false).opt_level(3).define("NDEBUG", None);
+    }
 
     let mut files = vec![
         "src/ccadical.cpp",
